@@ -1,0 +1,70 @@
+{
+    "name": "shinsenter/defer.php",
+    "description": "defer.php is a PHP helper class to efficiently defer JavaScript for your website.",
+    "keywords": [
+        "defer.php",
+        "lazyload",
+        "lazy",
+        "fast",
+        "performance",
+        "pagespeed",
+        "tiny",
+        "compact",
+        "optimized",
+        "php",
+        "composer",
+        "js",
+        "javascript",
+        "script",
+        "css",
+        "style",
+        "image",
+        "img",
+        "iframe",
+        "inline",
+        "website",
+        "100scores"
+    ],
+    "support":
+    {
+        "issues": "https://github.com/shinsenter/defer.php/issues",
+        "source": "https://github.com/shinsenter/defer.php"
+    },
+    "autoload": {
+        "files": [],
+        "psr-4": {
+            "shinsenter\\": "src/"
+        }
+    },
+    "authors": [
+    {
+        "name": "Mai Nhut Tan",
+        "email": "shin@shin.company"
+    }],
+    "scripts":
+    {
+        "fixer": [
+            "php-cs-fixer fix --show-progress=estimating --verbose"
+        ]
+    },
+    "config":
+    {
+        "sort-packages": true,
+        "apcu-autoloader": false,
+        "optimize-autoloader": true,
+        "prepend-autoloader": false,
+        "preferred-install": "dist",
+        "platform":
+        {
+            "php": "5.4"
+        }
+    },
+    "require":
+    {
+        "php": "^5.4"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "type": "library",
+    "license": "MIT"
+}
