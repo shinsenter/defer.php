@@ -21,14 +21,14 @@ class Defer extends DeferBase
 
     public static $deferJs;
 
-    public $enableDeferInlineJs = true;
-    public $enableDeferLinkCss  = true;
-    public $enableDeferStyleCss = true;
-    public $enableDeferImages   = true;
-    public $enableDeferIframes  = true;
+    public $enableDeferScripts = true;
+    public $enableDeferCss     = true;
+    public $enableDeferImages  = true;
+    public $enableDeferIframes = true;
 
     protected $original_html;
 
+    protected $cacheCommentTags;
     protected $cacheScriptTags;
     protected $cacheStyleTags;
     protected $cacheLinkTags;
@@ -39,11 +39,105 @@ class Defer extends DeferBase
     protected $imgPlaceholder;
     protected $iframePlaceholder;
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param string $html
+     * @param string $charset
+     */
     public function __construct(string $html, string $charset = null)
     {
         $this->setHtml($html, $charset);
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
+    public function deferHtml()
+    {
+        if (!is_null($this->cacheOutput)) {
+            return $this->cacheOutput;
+        }
+
+        $html = $this->original_html;
+
+        $offset = 0;
+        $render = $this->sortOffset(array_merge(
+            $this->enableDeferImages ? $this->getOptimizedImgTags() : [],
+            $this->enableDeferIframes ? $this->getOptimizedIframeTags() : []
+        ));
+
+        foreach ($render as $element) {
+            $length    = $element->endPos - $element->startPos;
+            $replace   = $element->toHtml();
+            $newlength = strlen($replace);
+            $html      = substr_replace($html, $replace, $element->startPos - $offset, $length);
+            $offset += ($length - $newlength);
+        }
+
+        $this->original_html = $html;
+
+        $offset = 0;
+        $render = $this->sortOffset(array_merge(
+            $this->getCommentTags(),
+            $this->enableDeferCss ? $this->getLinkTags() : [],
+            $this->enableDeferCss ? $this->getStyleTags() : [],
+            $this->enableDeferScripts ? $this->getScriptTags() : []
+        ));
+
+        foreach ($render as $element) {
+            $length = $element->endPos - $element->startPos;
+            $html   = substr_replace($html, '', $element->startPos - $offset, $length);
+            $offset += $length;
+        }
+
+        $endHead = $this->parseTags('</head', '>', $html, true);
+
+        if (count($endHead) > 0) {
+            $styles = array_map(function ($element) {
+                return $element->toHtml();
+            }, array_merge(
+                [],
+                $this->enableDeferCss ? $this->getLinkTags() : [],
+                $this->enableDeferCss ? $this->getStyleTags() : []
+            ));
+
+            $styles[] = $this->getDeferJs();
+
+            if (count($styles) > 0) {
+                $html = substr_replace($html, "\n" . implode("\n", $styles) . "\n", $endHead[0]->startPos, 0);
+            }
+        }
+
+        $endBody = $this->parseTags('</body', '>', $html, true);
+
+        if (count($endBody) > 0) {
+            $scripts = array_map(function ($element) {
+                return $element->toHtml();
+            }, array_merge(
+                [],
+                $this->enableDeferScripts ? $this->getScriptTags() : []
+            ));
+
+            if (count($scripts) > 0) {
+                $html = substr_replace($html, "\n" . implode("\n", $scripts) . "\n", $endBody[0]->startPos, 0);
+            }
+        }
+
+        $this->cacheOutput = mb_convert_encoding($html, $this->sourceCharset, 'HTML-ENTITIES');
+
+        return $this->cacheOutput;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  string $html
+     * @param  string $charset
+     * @return mixed
+     */
     public function setHtml(string $html, string $charset = null)
     {
         $this->reset();
@@ -53,49 +147,65 @@ class Defer extends DeferBase
         return $this;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function getHtml()
     {
         return $this->original_html ?: '';
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $placeholder
+     */
     public function setImgPlaceholder($placeholder)
     {
         $this->imgPlaceholder = $placeholder;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $placeholder
+     */
     public function setIframePlaceholder($placeholder)
     {
         $this->iframePlaceholder = $placeholder;
     }
 
-    public function getOptimizedScriptTags($closure = null)
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
+    public function getOptimizedCommentTags($closure = null)
     {
         if (!is_callable($closure)) {
-            $closure = [$this, 'optimizedScriptTags'];
+            $closure = [$this, 'optimizedCommentTags'];
         }
 
-        return call_user_func_array($closure, [$this->getScriptTags()]);
+        return call_user_func_array($closure, [$this->getCommentTags()]);
     }
 
-    public function getScriptTags()
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
+    public function getCommentTags()
     {
-        return $this->parseAndCacheScriptTags();
+        return $this->parseAndCacheCommentTags();
     }
 
-    public function getOptimizedStyleTags($closure = null)
-    {
-        if (!is_callable($closure)) {
-            $closure = [$this, 'optimizedStyleTags'];
-        }
-
-        return call_user_func_array($closure, [$this->getStyleTags()]);
-    }
-
-    public function getStyleTags()
-    {
-        return $this->parseAndCacheStyleTags();
-    }
-
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
     public function getOptimizedLinkTags($closure = null)
     {
         if (!is_callable($closure)) {
@@ -105,11 +215,69 @@ class Defer extends DeferBase
         return call_user_func_array($closure, [$this->getLinkTags()]);
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function getLinkTags()
     {
         return $this->parseAndCacheLinkTags();
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
+    public function getOptimizedStyleTags($closure = null)
+    {
+        if (!is_callable($closure)) {
+            $closure = [$this, 'optimizedStyleTags'];
+        }
+
+        return call_user_func_array($closure, [$this->getStyleTags()]);
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
+    public function getStyleTags()
+    {
+        return $this->parseAndCacheStyleTags();
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
+    public function getOptimizedScriptTags($closure = null)
+    {
+        if (!is_callable($closure)) {
+            $closure = [$this, 'optimizedScriptTags'];
+        }
+
+        return call_user_func_array($closure, [$this->getScriptTags()]);
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
+    public function getScriptTags()
+    {
+        return $this->parseAndCacheScriptTags();
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
     public function getOptimizedImgTags($closure = null)
     {
         if (!is_callable($closure)) {
@@ -119,11 +287,21 @@ class Defer extends DeferBase
         return call_user_func_array($closure, [$this->getImgTags()]);
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function getImgTags()
     {
         return $this->parseAndCacheImgTags();
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $closure
+     */
     public function getOptimizedIframeTags($closure = null)
     {
         if (!is_callable($closure)) {
@@ -133,26 +311,21 @@ class Defer extends DeferBase
         return call_user_func_array($closure, [$this->getIframeTags()]);
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function getIframeTags()
     {
         return $this->parseAndCacheIframeTags();
     }
 
-    public function deferHtml()
-    {
-        $render = array_merge(
-            [],
-            $this->getOptimizedLinkTags(),
-            $this->getOptimizedStyleTags(),
-            $this->getOptimizedScriptTags(),
-            // $this->getOptimizedImgTags(),
-            // $this->getOptimizedIframeTags(),
-            []
-        );
-
-        return $this->List2Html($render);
-    }
-
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function toString()
     {
         if (is_null($this->cacheOutput)) {
@@ -165,24 +338,38 @@ class Defer extends DeferBase
     public function getDeferJs()
     {
         if (is_null(static::$deferJs)) {
-            $script          = @file_get_contents(static::DEFER_PLUS_SRC);
-            static::$deferJs = '<script type="text/javascript">' . $script . '</script>';
+            $script = @file_get_contents(static::DEFER_PLUS_SRC);
+
+            if (!empty($script)) {
+                $scripts = [
+                    '<script id="deferjs" type="text/javascript">' . $script . '</script>',
+                    '<script id="deferjs-lazy">deferiframe(\'deferjs\', 500);deferimg(\'deferjs\', 500);</script>',
+                ];
+                static::$deferJs = implode("\n", $scripts);
+            }
         }
 
         return static::$deferJs;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function reset()
     {
         static::$document = null;
 
-        $this->original_html   = '';
-        $this->cacheScriptTags = null;
-        $this->cacheStyleTags  = null;
-        $this->cacheLinkTags   = null;
-        $this->cacheImgTags    = null;
-        $this->cacheIframeTags = null;
-        $this->cacheOutput     = null;
+        $this->original_html = '';
+
+        $this->cacheCommentTags = null;
+        $this->cacheScriptTags  = null;
+        $this->cacheStyleTags   = null;
+        $this->cacheLinkTags    = null;
+        $this->cacheImgTags     = null;
+        $this->cacheIframeTags  = null;
+        $this->cacheOutput      = null;
 
         $this->imgPlaceholder    = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
         $this->iframePlaceholder = 'about:blank';
@@ -190,9 +377,25 @@ class Defer extends DeferBase
         return $this;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     * @return mixed
+     */
+    public function optimizedCommentTags($list)
+    {
+        return $list;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     */
     public function optimizedLinkTags($list)
     {
-        if ($this->enableDeferLinkCss) {
+        if ($this->enableDeferCss) {
             foreach ($list as $element) {
                 if ($element->dom->hasAttribute('onload')) {
                     continue;
@@ -210,6 +413,11 @@ class Defer extends DeferBase
         return $list;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     */
     public function optimizedStyleTags($list)
     {
         // return $list;
@@ -226,7 +434,7 @@ class Defer extends DeferBase
             $media = trim(strtolower($element->dom->getAttribute('media'))) ?: 'all';
 
             if (in_array($media, ['all', 'screen', 'print']) &&
-                !empty($styles = $this->minifyCss($element->dom->textContent))) {
+                !empty($styles = $element->dom->textContent)) {
                 if (!empty($charset = $element->dom->getAttribute('charset')) &&
                     $main_charset != strtolower($charset)) {
                     $styles = mb_convert_encoding($html, $this->sourceCharset, $charset);
@@ -255,7 +463,7 @@ class Defer extends DeferBase
 
         if (count($group['others']) > 0) {
             foreach ($group['others'] as $element) {
-                if ($this->enableDeferLinkCss && !$element->dom->hasAttribute('onload')) {
+                if ($this->enableDeferCss && !$element->dom->hasAttribute('onload')) {
                     $media = $element->dom->getAttribute('media');
                     $element->dom->setAttribute('media', static::LAZY_CSS_MEDIA);
                     $element->dom->setAttribute('onload', "this.media='{$media}';");
@@ -274,22 +482,49 @@ class Defer extends DeferBase
         return $results;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     * @return mixed
+     */
     public function optimizedScriptTags($list)
     {
         return $list;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     * @return mixed
+     */
     public function optimizedImgTags($list)
     {
         return $list;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     * @return mixed
+     */
     public function optimizedIframeTags($list)
     {
         return $list;
     }
 
-    protected function parseTags($startToken, $endToken, $source = null)
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $startToken
+     * @param  $endToken
+     * @param  $source
+     * @param  null  $no_dom
+     * @return mixed
+     */
+    protected function parseTags($startToken, $endToken, $source = null, $no_dom = false)
     {
         $source  = $source ?: $this->original_html;
         $matches = [];
@@ -312,9 +547,11 @@ class Defer extends DeferBase
             $endPos += $endTokenLength;
 
             $html = substr($source, $startPos, $endPos - $startPos);
-            $dom  = $this->HtmlToDom($html);
+            $dom  = $no_dom ? null : $this->HtmlToDom($html);
 
-            if (!$dom->hasAttribute(static::IGNORE_ATTRIBUTE)) {
+            if (is_null($dom) ||
+                is_a($dom, 'DOMComment') ||
+                (is_a($dom, 'DOMElement') && !$dom->hasAttribute(static::IGNORE_ATTRIBUTE))) {
                 $matches[] = new DeferElement($html, $dom, $startPos, $endPos, $this->sourceCharset);
             }
 
@@ -326,14 +563,51 @@ class Defer extends DeferBase
         return $matches;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
+    protected function parseAndCacheCommentTags()
+    {
+        if (is_null($this->cacheCommentTags)) {
+            $parsed = $this->parseTags('<!--', '-->');
+
+            $parsed = array_filter($parsed, function ($element) {
+                switch (true) {
+                    case preg_match('/(<!--[\t\040]*\[if|\/\/[\t\040]*-->$)/i', $element->html):
+                        return false;
+                    default:break;
+                }
+
+                return true;
+            });
+
+            $this->cacheCommentTags = $parsed;
+        }
+
+        return $this->cacheCommentTags;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     protected function parseAndCacheLinkTags()
     {
         if (is_null($this->cacheLinkTags)) {
             $parsed = $this->parseTags('<link', '>');
 
             $parsed = array_filter($parsed, function ($element) {
-                return strtolower($element->dom->getAttribute('rel')) == 'stylesheet' &&
-                !empty($element->dom->getAttribute('href'));
+                switch (true) {
+                    case strtolower($element->dom->getAttribute('rel')) != 'stylesheet':
+                    case empty($element->dom->getAttribute('href')):
+                        return false;
+                    default:break;
+                }
+
+                return true;
             });
 
             $parsed = array_map(function ($element) {
@@ -346,6 +620,11 @@ class Defer extends DeferBase
         return $this->cacheLinkTags;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     protected function parseAndCacheStyleTags()
     {
         if (is_null($this->cacheStyleTags)) {
@@ -361,14 +640,27 @@ class Defer extends DeferBase
         return $this->cacheStyleTags;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     protected function parseAndCacheScriptTags()
     {
         if (is_null($this->cacheScriptTags)) {
             $parsed = $this->parseTags('<script', '</script>');
 
             $parsed = array_filter($parsed, function ($element) {
-                return empty($type = strtolower($element->dom->getAttribute('type'))) ||
-                strstr($type, 'javascript') !== false;
+                $type = strtolower($element->dom->getAttribute('type'));
+
+                switch (true) {
+                    case !empty($type) && strpos($type, 'javascript') === false:
+                    case strpos($element->html, 'document.write(') !== false:
+                        return false;
+                    default:break;
+                }
+
+                return true;
             });
 
             $parsed = array_map(function ($element) {
@@ -381,14 +673,25 @@ class Defer extends DeferBase
         return $this->cacheScriptTags;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     protected function parseAndCacheImgTags()
     {
         if (is_null($this->cacheImgTags)) {
             $parsed = $this->parseTags('<img', '>');
 
             $parsed = array_filter($parsed, function ($element) {
-                return !empty(empty($element->dom->getAttribute('src')))
-                    && empty($element->dom->getAttribute('data-src'));
+                switch (true) {
+                    case !empty($element->dom->getAttribute('data-src')):
+                    case empty($element->dom->getAttribute('src')):
+                        return false;
+                    default:break;
+                }
+
+                return true;
             });
 
             $parsed = array_map(function ($element) {
@@ -401,14 +704,25 @@ class Defer extends DeferBase
         return $this->cacheImgTags;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     protected function parseAndCacheIframeTags()
     {
         if (is_null($this->cacheIframeTags)) {
             $parsed = $this->parseTags('<iframe', '</iframe>');
 
             $parsed = array_filter($parsed, function ($element) {
-                return !empty(empty($element->dom->getAttribute('src')))
-                    && empty($element->dom->getAttribute('data-src'));
+                switch (true) {
+                    case !empty($element->dom->getAttribute('data-src')):
+                    case empty($element->dom->getAttribute('src')):
+                        return false;
+                    default:break;
+                }
+
+                return true;
             });
 
             // TODO: tag manipulation
@@ -422,18 +736,26 @@ class Defer extends DeferBase
         return $this->cacheIframeTags;
     }
 
-    protected function minifyCss($styles)
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $list
+     * @return mixed
+     */
+    protected function sortOffset($list)
     {
-        $styles = str_replace('  ', '', str_replace(["\n", "\r", "\t"], '', $styles));
+        usort($list, function ($a, $b) {
+            return $a->startPos - $b->startPos;
+        });
 
-        return trim($styles);
+        return $list;
     }
 
-    protected function minifyScript($script)
-    {
-        return trim($script);
-    }
-
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $arr
+     */
     protected function List2Html($arr)
     {
         return array_map(function ($element) {

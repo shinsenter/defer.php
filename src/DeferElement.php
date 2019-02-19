@@ -20,6 +20,15 @@ class DeferElement extends DeferBase
     public $startPos;
     public $endPos;
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $html
+     * @param  $dom
+     * @param null $startPos
+     * @param null $endPos
+     * @param null $charset
+     */
     public function __construct($html = '', $dom = null, $startPos = null, $endPos = null, $charset = null)
     {
         if ($dom) {
@@ -34,9 +43,24 @@ class DeferElement extends DeferBase
         $this->setCharset($charset);
     }
 
+    public function __toString()
+    {
+        return "{$this->startPos}:{$this->endPos} " . parent::__toString();
+    }
+
+    public function toHtml()
+    {
+        return parent::__toString();
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function normalizeLinkDom()
     {
-        if ($this->dom) {
+        if (is_a($this->dom, 'DOMElement')) {
             if (strtolower($this->dom->getAttribute('media')) == 'all') {
                 $this->dom->removeAttribute('media');
             }
@@ -57,9 +81,14 @@ class DeferElement extends DeferBase
         return $this;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @return mixed
+     */
     public function normalizeStyleDom()
     {
-        if ($this->dom) {
+        if (is_a($this->dom, 'DOMElement')) {
             if (strtolower($this->dom->getAttribute('media')) == 'all') {
                 $this->dom->removeAttribute('media');
             }
@@ -72,7 +101,7 @@ class DeferElement extends DeferBase
                 $this->dom->removeAttribute('type');
             }
 
-            $this->dom->textContent = trim($this->dom->textContent);
+            $this->dom->textContent = trim(str_replace('  ', '', str_replace(["\n", "\r", "\t"], '', $this->dom->textContent)));
         }
 
         return $this;
@@ -80,14 +109,36 @@ class DeferElement extends DeferBase
 
     public function normalizeScriptDom()
     {
-        if ($this->dom) {
-            if (!empty($this->dom->getAttribute('src'))) {
-                $this->dom->setAttribute('defer', true);
-                $this->dom->setAttribute('async', 'async');
+        if (is_a($this->dom, 'DOMElement')) {
+            $datalazy = null;
+
+            if ($this->dom->hasAttribute('data-lazy')) {
+                $datalazy = (int) $this->dom->getAttribute('data-lazy') ?: 0;
+                $this->dom->removeAttribute('data-lazy');
+            }
+
+            if (!empty($src = $this->dom->getAttribute('src'))) {
+                if (!is_null($datalazy)) {
+                    $id = 'lazy-' . preg_replace(['/^.*\//', '/[^a-z0-9]+/i'], ['', '-'], $src);
+
+                    $this->dom->textContent = "deferscript('{$src}', '{$id}', {$datalazy});";
+                    $this->dom->removeAttribute('src');
+                    $this->dom->removeAttribute('defer');
+                    $this->dom->removeAttribute('async');
+                } else {
+                    $this->dom->setAttribute('defer', true);
+                    $this->dom->setAttribute('async', 'async');
+                }
             } else {
                 $this->dom->removeAttribute('defer');
                 $this->dom->removeAttribute('async');
                 $this->dom->removeAttribute('crossorigin');
+
+                $this->dom->textContent = trim(preg_replace('/(^<!--[\t\040]*|[\t\040]*\/\/[\t\040]*-->$)/u', '', $this->dom->textContent));
+
+                if (!is_null($datalazy)) {
+                    $this->dom->textContent = "defer(function(){ // start defer\n" . $this->dom->textContent . ", {$datalazy}); // end defer";
+                }
             }
 
             if (strtolower($this->dom->getAttribute('charset')) == 'utf-8') {
@@ -99,16 +150,20 @@ class DeferElement extends DeferBase
             if ($type == 'application/javascript' || $type == 'text/javascript' || empty($type)) {
                 $this->dom->removeAttribute('type');
             }
-
-            $this->dom->textContent = trim($this->dom->textContent);
         }
 
         return $this;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $placeholder
+     * @return mixed
+     */
     public function normalizeImgDom($placeholder = null)
     {
-        if ($this->dom) {
+        if (is_a($this->dom, 'DOMElement')) {
             if (empty($this->dom->getAttribute('alt'))) {
                 $this->dom->setAttribute('alt', 'no alt');
             }
@@ -134,9 +189,15 @@ class DeferElement extends DeferBase
         return $this;
     }
 
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  $placeholder
+     * @return mixed
+     */
     public function normalizeIframeDom($placeholder = null)
     {
-        if ($this->dom) {
+        if (is_a($this->dom, 'DOMElement')) {
             if (empty($this->dom->getAttribute('tilte'))) {
                 $this->dom->setAttribute('tilte', 'no title');
             }

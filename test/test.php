@@ -10,7 +10,6 @@
  * @copyright 2019 AppSeeds
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
-
 define('DS', DIRECTORY_SEPARATOR);
 define('BASE', dirname(__FILE__));
 define('ROOT', dirname(BASE));

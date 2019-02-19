@@ -10,7 +10,6 @@
  * @copyright 2019 AppSeeds
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
-
 if (!function_exists('debug')) {
     /**
      * Debug
