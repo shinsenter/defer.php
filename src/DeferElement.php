@@ -101,7 +101,11 @@ class DeferElement extends DeferBase
                 $this->dom->removeAttribute('type');
             }
 
-            $this->dom->textContent = trim(str_replace('  ', '', str_replace(["\n", "\r", "\t"], '', $this->dom->textContent)));
+            $inner = $this->dom->textContent;
+            $inner = preg_replace('/\/\*.*?\*\//', '', $inner);
+            $inner = trim(str_replace('  ', '', str_replace(["\n", "\r", "\t"], '', $inner)));
+
+            $this->dom->textContent = $inner;
         }
 
         return $this;
@@ -134,7 +138,7 @@ class DeferElement extends DeferBase
                 $this->dom->removeAttribute('async');
                 $this->dom->removeAttribute('crossorigin');
 
-                $this->dom->textContent = trim(preg_replace('/(^<!--[\t\040]*|[\t\040]*\/\/[\t\040]*-->$)/u', '', $this->dom->textContent));
+                $this->dom->textContent = trim(preg_replace('/(^<!--[\t\040]*|[\t\040]*\/\/[\t\040]*-->$)/', '', $this->dom->textContent));
 
                 if (!is_null($datalazy)) {
                     $this->dom->textContent = "defer(function(){ // start defer\n" . $this->dom->textContent . ", {$datalazy}); // end defer";

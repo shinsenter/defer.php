@@ -80,6 +80,6 @@ class DeferBase
         $html = static::$document->saveHtml($cloned);
         static::$document->removeChild($cloned);
 
-        return mb_convert_encoding($html, $this->sourceCharset, 'HTML-ENTITIES');
+        return $html;
     }
 }

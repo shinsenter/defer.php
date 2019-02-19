@@ -23,7 +23,7 @@ class Defer extends DeferBase
 
     public $enableDeferScripts = true;
     public $enableDeferCss     = true;
-    public $enableDeferImages  = true;
+    public $enableDeferImages  = false;
     public $enableDeferIframes = true;
 
     protected $original_html;
@@ -100,14 +100,15 @@ class Defer extends DeferBase
                 return $element->toHtml();
             }, array_merge(
                 [],
-                $this->enableDeferCss ? $this->getLinkTags() : [],
-                $this->enableDeferCss ? $this->getStyleTags() : []
+                $this->enableDeferCss ? $this->getOptimizedLinkTags() : [],
+                $this->enableDeferCss ? $this->getOptimizedStyleTags() : []
             ));
 
             $styles[] = $this->getDeferJs();
 
             if (count($styles) > 0) {
-                $html = substr_replace($html, "\n" . implode("\n", $styles) . "\n", $endHead[0]->startPos, 0);
+                $styles = array_unique($styles);
+                $html   = substr_replace($html, "\n" . implode("\n", $styles) . "\n", $endHead[0]->startPos, 0);
             }
         }
 
@@ -118,11 +119,12 @@ class Defer extends DeferBase
                 return $element->toHtml();
             }, array_merge(
                 [],
-                $this->enableDeferScripts ? $this->getScriptTags() : []
+                $this->enableDeferScripts ? $this->getOptimizedScriptTags() : []
             ));
 
             if (count($scripts) > 0) {
-                $html = substr_replace($html, "\n" . implode("\n", $scripts) . "\n", $endBody[0]->startPos, 0);
+                $scripts = array_unique($scripts);
+                $html    = substr_replace($html, "\n" . implode("\n", $scripts) . "\n", $endBody[0]->startPos, 0);
             }
         }
 
@@ -437,7 +439,7 @@ class Defer extends DeferBase
                 !empty($styles = $element->dom->textContent)) {
                 if (!empty($charset = $element->dom->getAttribute('charset')) &&
                     $main_charset != strtolower($charset)) {
-                    $styles = mb_convert_encoding($html, $this->sourceCharset, $charset);
+                    $styles = mb_convert_encoding($styles, $this->sourceCharset, $charset);
                 }
 
                 $group[$media][] = $styles;
