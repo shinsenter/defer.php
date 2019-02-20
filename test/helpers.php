@@ -10,6 +10,7 @@
  * @copyright 2019 AppSeeds
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
+
 if (!function_exists('debug')) {
     /**
      * Debug
@@ -48,12 +49,13 @@ if (!function_exists('mem_info')) {
     /**
      * Debug memory info
      *
+     * @param  null|mixed $msg
      * @return string
      */
-    function mem_info()
+    function mem_info($msg = null)
     {
-        $usage = memory_get_usage(true);
+        $usage = memory_get_peak_usage(true);
 
-        debug('Mem: ' . number_format($usage));
+        debug('Mem: ' . number_format($usage) . ($msg ? ' - ' . $msg : ''));
     }
 }

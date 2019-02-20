@@ -18,6 +18,9 @@ use DOMXPath;
 
 class DeferBase
 {
+    const IGNORE_ATTRIBUTE = 'data-ignore';
+    const LAZY_CSS_MEDIA   = 'screen and (max-width: 1px)';
+
     public static $document;
     protected $sourceCharset = 'UTF-8';
 

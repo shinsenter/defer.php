@@ -10,6 +10,9 @@
  * @copyright 2019 AppSeeds
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
+
+error_reporting(E_ALL);
+
 define('DS', DIRECTORY_SEPARATOR);
 define('BASE', dirname(__FILE__));
 define('ROOT', dirname(BASE));
@@ -34,5 +37,6 @@ foreach ($list as $file) {
     );
 
     $defer->reset();
-    mem_info();
+
+    mem_info(preg_replace('/^.*\//', '', $file));
 }
