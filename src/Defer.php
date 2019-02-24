@@ -19,13 +19,16 @@ class Defer extends DeferBase
 
     public static $deferJs;
 
-    public $minifyOutputHtml   = true;
     public $fixRenderBlocking  = true;
     public $enableDeferScripts = false;
     public $enableDeferCss     = false;
     public $enableDeferImages  = false;
     public $enableDeferIframes = true;
     public $appendDeferJs      = true;
+
+    public $enablePreloading  = true;
+    public $enableDnsPrefetch = true;
+    public $minifyOutputHtml  = true;
 
     protected $original_html;
 
@@ -35,6 +38,9 @@ class Defer extends DeferBase
     protected $cacheLinkTags;
     protected $cacheImgTags;
     protected $cacheIframeTags;
+
+    protected $cacheDnsPrefetch;
+    protected $cachePreload;
     protected $cacheOutput;
 
     protected $imgPlaceholder;
@@ -64,8 +70,6 @@ class Defer extends DeferBase
      */
     public function deferHtml()
     {
-        // return print_r($this->getOptimizedScriptTags(), true);
-
         if (!is_null($this->cacheOutput)) {
             return $this->cacheOutput;
         }
@@ -75,18 +79,6 @@ class Defer extends DeferBase
         // Defer all images and iframes
         $list = $this->getCommentTags();
         $html = $this->replaceMany($html, $list, '');
-        unset($list);
-
-        // Refresh original html for the next steps
-        $this->original_html = $html;
-
-        // Defer all images and iframes
-        $list = array_merge(
-            $this->enableDeferImages ? $this->getOptimizedImgTags() : [],
-            $this->enableDeferIframes ? $this->getOptimizedIframeTags() : []
-        );
-
-        $html = $this->replaceMany($html, $list);
         unset($list);
 
         // Refresh original html for the next steps
@@ -134,7 +126,6 @@ class Defer extends DeferBase
                 }, $this->getOptimizedScriptTags());
 
                 if (count($list) > 0) {
-                    // $list = array_unique($list);
                     $html = substr_replace($html, "\n" . implode("\n", $list) . "\n", $endBody[0]->startPos, 0);
                 }
 
@@ -147,10 +138,36 @@ class Defer extends DeferBase
                 $this->getOptimizedScriptTags(),
                 []
             );
-            // dd(array_map(function ($element) {
-//                     return $element->toHtml();
-//                 }, $list));
+
             $html = $this->replaceMany($html, $list);
+
+            unset($list);
+        }
+
+        // Refresh original html for the next steps
+        $this->original_html = $html;
+
+        // Defer all images and iframes
+        $list = array_merge(
+            $this->enableDeferImages ? $this->getOptimizedImgTags() : [],
+            $this->enableDeferIframes ? $this->getOptimizedIframeTags() : []
+        );
+
+        $html = $this->replaceMany($html, $list);
+        unset($list);
+
+        // Insert styles in the end of <head> block
+        if (count($startHead = $this->parseTags('<head', '>', $html, true)) > 0) {
+            $list = array_filter(array_merge(
+                $this->cacheDnsPrefetch,
+                $this->cachePreload,
+                []
+            ));
+
+            if (count($list) > 0) {
+                $list = array_unique($list);
+                $html = substr_replace($html, "\n" . implode("\n", $list) . "\n", $startHead[0]->endPos, 0);
+            }
 
             unset($list);
         }
@@ -215,7 +232,7 @@ class Defer extends DeferBase
             if (!empty($script)) {
                 $scripts = [
                     '<script id="deferjs" type="text/javascript">' . $script . '</script>',
-                    '<script id="deferjs-lazy">deferiframe(\'deferjs\', 500);deferimg(\'deferjs\', 500);</script>',
+                    '<script id="deferjs-lazy">deferiframe(\'img.lazy\', 500);deferimg(\'iframe.lazy\', 500);</script>',
                 ];
                 static::$deferJs = implode("\n", $scripts);
             }
@@ -241,6 +258,9 @@ class Defer extends DeferBase
         $this->cacheLinkTags    = null;
         $this->cacheImgTags     = null;
         $this->cacheIframeTags  = null;
+
+        $this->cacheDnsPrefetch = [];
+        $this->cachePreload     = [];
         $this->cacheOutput      = null;
 
         $this->imgPlaceholder    = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
@@ -312,14 +332,20 @@ class Defer extends DeferBase
             $parsed = $this->parseTags('<link', '>');
 
             $parsed = array_filter($parsed, function ($element) {
-                switch (true) {
-                    case strtolower($element->dom->getAttribute('rel')) != 'stylesheet':
-                    case empty($element->dom->getAttribute('href')):
-                        return false;
-                    default:break;
+                $rel  = strtolower($element->dom->getAttribute('rel'));
+                $href = $element->dom->getAttribute('href');
+
+                if (empty($href)) {
+                    return false;
                 }
 
-                return true;
+                // if ($this->enableDnsPrefetch && $rel == 'dns-prefetch') {
+                //     if (count($dnsprefect = $this->createLinkDnsPrefetch($href)) > 0) {
+                //         $this->cacheDnsPrefetch = array_merge($this->cacheDnsPrefetch, $dnsprefect);
+                //     }
+                // }
+
+                return $rel == 'stylesheet' ? true : false;
             });
 
             $parsed = array_map(function ($element) {
@@ -368,7 +394,7 @@ class Defer extends DeferBase
                 switch (true) {
                     case !empty($type) && strpos($type, 'javascript') === false:
                     case strpos($element->html, 'document.write(') !== false:
-                    // case strpos($element->dom->getAttribute('src'), 'jquery') !== false:
+                        // case strpos($element->dom->getAttribute('src'), 'jquery') !== false:
                         return false;
                     default:break;
                 }
@@ -563,9 +589,15 @@ class Defer extends DeferBase
      */
     public function optimizedLinkTags($list)
     {
-        if ($this->enableDeferCss) {
-            foreach ($list as $element) {
-                $element->optimizeLinkDom();
+        foreach ($list as $element) {
+            $element->optimizeLinkDom($this->enableDeferCss);
+
+            if ($this->enablePreloading && count($element->preload) > 0) {
+                $this->cachePreload = array_merge($this->cachePreload, $element->preload);
+            }
+
+            if ($this->enableDnsPrefetch && count($element->dnsprefect) > 0) {
+                $this->cacheDnsPrefetch = array_merge($this->cacheDnsPrefetch, $element->dnsprefect);
             }
         }
 
@@ -590,7 +622,7 @@ class Defer extends DeferBase
         $main_charset = strtolower($this->sourceCharset);
 
         foreach ($list as $element) {
-            $element->optimizeStyleDom();
+            $element->optimizeStyleDom($this->enableDeferCss);
 
             $media = trim(strtolower($element->dom->getAttribute('media'))) ?: 'all';
 
@@ -651,9 +683,15 @@ class Defer extends DeferBase
      */
     public function optimizedScriptTags($list)
     {
-        if ($this->enableDeferScripts) {
-            foreach ($list as $element) {
-                $element->optimizeScriptDom();
+        foreach ($list as $element) {
+            $element->optimizeScriptDom($this->enableDeferScripts);
+
+            if ($this->enablePreloading && count($element->preload) > 0) {
+                $this->cachePreload = array_merge($this->cachePreload, $element->preload);
+            }
+
+            if ($this->enableDnsPrefetch && count($element->dnsprefect) > 0) {
+                $this->cacheDnsPrefetch = array_merge($this->cacheDnsPrefetch, $element->dnsprefect);
             }
         }
 
@@ -668,10 +706,8 @@ class Defer extends DeferBase
      */
     public function optimizedImgTags($list)
     {
-        if ($this->enableDeferImages) {
-            foreach ($list as $element) {
-                $element->optimizeImgDom($this->imgPlaceholder);
-            }
+        foreach ($list as $element) {
+            $element->optimizeImgDom($this->imgPlaceholder, $this->enableDeferImages);
         }
 
         return $list;
@@ -685,9 +721,15 @@ class Defer extends DeferBase
      */
     public function optimizedIframeTags($list)
     {
-        if ($this->enableDeferIframes) {
-            foreach ($list as $element) {
-                $element->optimizeIframeDom($this->iframePlaceholder);
+        foreach ($list as $element) {
+            $element->optimizeIframeDom($this->iframePlaceholder, $this->enableDeferIframes);
+
+            if ($this->enablePreloading && count($element->preload) > 0) {
+                $this->cachePreload = array_merge($this->cachePreload, $element->preload);
+            }
+
+            if ($this->enableDnsPrefetch && count($element->dnsprefect) > 0) {
+                $this->cacheDnsPrefetch = array_merge($this->cacheDnsPrefetch, $element->dnsprefect);
             }
         }
 
@@ -768,9 +810,9 @@ class Defer extends DeferBase
             $offset = 0;
 
             foreach ($render as $element) {
-                $to_replace   = is_null($replace) ? $element->toHtml() : $replace;
-                $length       = $element->endPos - $element->startPos;
-                $newlength    = strlen($to_replace);
+                $to_replace = is_null($replace) ? $element->toHtml() : $replace;
+                $length     = $element->endPos - $element->startPos;
+                $newlength  = strlen($to_replace);
 
                 $html = substr_replace($html, $to_replace, $element->startPos - $offset, $length);
                 $offset += ($length - $newlength);

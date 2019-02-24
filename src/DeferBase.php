@@ -20,6 +20,7 @@ class DeferBase
 {
     const IGNORE_ATTRIBUTE = 'data-ignore';
     const LAZY_CSS_MEDIA   = 'screen and (max-width: 1px)';
+    const DOMAIN_PARSER    = '/^((https?\:)?\/\/[^\/\?\#]+).*$/i';
 
     public static $document;
     protected $sourceCharset = 'UTF-8';
@@ -84,5 +85,62 @@ class DeferBase
         static::$document->removeChild($cloned);
 
         return $html;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  mixed $src
+     * @param  mixed $crossorigin
+     * @param  mixed $preconnect
+     * @return mixed
+     */
+    protected function createLinkDnsPrefetch($src, $preconnect = true)
+    {
+        $output = [];
+
+        if ($src = $this->getDnsPrefetch($src)) {
+            $crossorigin = $crossorigin ? 'crossorigin' : '';
+            $output[]    = "<link rel=\"dns-prefetch\" href=\"{$src}/\">";
+
+            if ($preconnect) {
+                $output[] = "<link rel=\"preconnect\"   href=\"{$src}/\" crossorigin>\n";
+            }
+        }
+
+        return $output;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  mixed $src
+     * @param  mixed $type
+     * @return mixed
+     */
+    protected function createLinkPreload($src, $type = 'document')
+    {
+        $output = [];
+
+        if (!empty($src)) {
+            $output[] = "<link rel=\"preload\" href=\"{$src}\" type=\"{$type}\">";
+        }
+
+        return $output;
+    }
+
+    /**
+     * @author Mai Nhut Tan
+     * @since  1.0.0
+     * @param  mixed $url
+     * @return mixed
+     */
+    protected function getDnsPrefetch($url)
+    {
+        if (preg_match(static::DOMAIN_PARSER, $url)) {
+            return preg_replace(static::DOMAIN_PARSER, '$1', $url);
+        }
+
+        return null;
     }
 }

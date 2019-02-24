@@ -20,6 +20,10 @@ class DeferElement extends DeferBase
     public $startPos;
     public $endPos;
 
+    public $dnsprefect;
+    public $preload;
+    public $output;
+
     /**
      * @author Mai Nhut Tan
      * @since  1.0.0
@@ -40,6 +44,10 @@ class DeferElement extends DeferBase
         $this->startPos = $startPos;
         $this->endPos   = $endPos;
 
+        $this->dnsprefect = null;
+        $this->preload    = null;
+        $this->output     = null;
+
         $this->setCharset($charset);
     }
 
@@ -50,6 +58,10 @@ class DeferElement extends DeferBase
 
     public function toHtml()
     {
+        if (!is_null($this->output)) {
+            return $this->output;
+        }
+
         return parent::__toString();
     }
 
@@ -61,6 +73,12 @@ class DeferElement extends DeferBase
     public function normalizeLinkDom()
     {
         if (is_a($this->dom, 'DOMElement')) {
+            if (!empty($src = $this->dom->getAttribute('href'))) {
+                if (preg_match('/^\/\//', $src)) {
+                    $this->dom->setAttribute('href', 'https:' . $src);
+                }
+            }
+
             if (strtolower($this->dom->getAttribute('media')) == 'all') {
                 $this->dom->removeAttribute('media');
             }
@@ -84,18 +102,29 @@ class DeferElement extends DeferBase
     /**
      * @author Mai Nhut Tan
      * @since  1.0.0
+     * @param  mixed $defer
      * @return mixed
      */
-    public function optimizeLinkDom()
+    public function optimizeLinkDom($defer = true)
     {
-        if (is_a($this->dom, 'DOMElement') &&
-            !$this->dom->hasAttribute('onload')) {
-            $media = trim(strtolower($this->dom->getAttribute('media'))) ?: 'all';
-
-            if (!in_array($media, ['all', 'screen', 'print'])) {
-                $this->dom->setAttribute('media', static::LAZY_CSS_MEDIA);
-                $this->dom->setAttribute('onload', "this.media='{$media}'");
+        if (is_a($this->dom, 'DOMElement')) {
+            // Generate preload
+            if (!empty($src = $this->dom->getAttribute('href'))) {
+                $this->preload    = $this->createLinkPreload($src, 'style');
+                $this->dnsprefect = $this->createLinkDnsPrefetch($src);
             }
+
+            if ($defer && !$this->dom->hasAttribute('onload')) {
+                $media = trim(strtolower($this->dom->getAttribute('media'))) ?: 'all';
+
+                if (!in_array($media, ['all', 'screen', 'print'])) {
+                    $this->dom->setAttribute('media', static::LAZY_CSS_MEDIA);
+                    $this->dom->setAttribute('onload', "this.media='{$media}'");
+                }
+            }
+
+            // Cache the output
+            $this->output = $this->toHtml();
         }
 
         return $this;
@@ -128,9 +157,10 @@ class DeferElement extends DeferBase
     /**
      * @author Mai Nhut Tan
      * @since  1.0.0
+     * @param  mixed $defer
      * @return mixed
      */
-    public function optimizeStyleDom()
+    public function optimizeStyleDom($defer = true)
     {
         if (is_a($this->dom, 'DOMElement')) {
             $inner = $this->dom->textContent;
@@ -138,6 +168,9 @@ class DeferElement extends DeferBase
             $inner = str_replace('  ', '', str_replace(["\n", "\r", "\t"], '', $inner));
 
             $this->dom->textContent = trim($inner);
+
+            // Cache the output
+            $this->output = $this->toHtml();
         }
 
         return $this;
@@ -151,10 +184,15 @@ class DeferElement extends DeferBase
     public function normalizeScriptDom()
     {
         if (is_a($this->dom, 'DOMElement')) {
-            if (empty($this->dom->getAttribute('src'))) {
+            if (empty($src = $this->dom->getAttribute('src'))) {
                 $this->dom->removeAttribute('defer');
                 $this->dom->removeAttribute('async');
                 $this->dom->removeAttribute('crossorigin');
+                $this->dom->textContent = trim(preg_replace('/(^<!--[\t\040]*|[\t\040]*\/\/[\t\040]*-->$)/u', '', $this->dom->textContent));
+            } else {
+                if (preg_match('/^\/\//', $src)) {
+                    $this->dom->setAttribute('src', 'https:' . $src);
+                }
             }
 
             if (strtolower($this->dom->getAttribute('charset')) == strtolower($this->sourceCharset)) {
@@ -174,37 +212,45 @@ class DeferElement extends DeferBase
     /**
      * @author Mai Nhut Tan
      * @since  1.0.0
+     * @param  mixed $defer
      * @return mixed
      */
-    public function optimizeScriptDom()
+    public function optimizeScriptDom($defer = true)
     {
         if (is_a($this->dom, 'DOMElement')) {
-            $datalazy = null;
-
-            if ($this->dom->hasAttribute('data-lazy')) {
-                $datalazy = (int) $this->dom->getAttribute('data-lazy') ?: 0;
-                $this->dom->removeAttribute('data-lazy');
-            }
-
+            // Generate preload
             if (!empty($src = $this->dom->getAttribute('src'))) {
-                if (!is_null($datalazy)) {
-                    $id = 'lazy-' . preg_replace(['/^.*\//', '/[^a-z0-9]+/i'], ['', '-'], $src);
+                $this->preload    = $this->createLinkPreload($src, 'script');
+                $this->dnsprefect = $this->createLinkDnsPrefetch($src);
+            }
 
-                    $this->dom->textContent = "deferscript('{$src}', '{$id}', {$datalazy});";
-                    $this->dom->removeAttribute('src');
-                    $this->dom->removeAttribute('defer');
-                    $this->dom->removeAttribute('async');
-                } else {
-                    $this->dom->setAttribute('defer', true);
-                    $this->dom->setAttribute('async', 'async');
+            if ($defer) {
+                $datalazy = null;
+
+                if ($this->dom->hasAttribute('data-lazy')) {
+                    $datalazy = (int) $this->dom->getAttribute('data-lazy') ?: 0;
+                    $this->dom->removeAttribute('data-lazy');
                 }
-            } else {
-                $this->dom->textContent = trim(preg_replace('/(^<!--[\t\040]*|[\t\040]*\/\/[\t\040]*-->$)/', '', $this->dom->textContent));
 
                 if (!is_null($datalazy)) {
-                    $this->dom->textContent = "defer(function(){ // start defer\n" . $this->dom->textContent . ", {$datalazy}); // end defer";
+                    if (!empty($src)) {
+                        $id = 'lazy-' . preg_replace(['/^.*\//', '/[^a-z0-9]+/i'], ['', '-'], $src);
+
+                        $this->dom->textContent = "deferscript('{$src}', '{$id}', {$datalazy});";
+                        $this->dom->removeAttribute('src');
+                        $this->dom->removeAttribute('defer');
+                        $this->dom->removeAttribute('async');
+                    } else {
+                        $this->dom->textContent = "defer(function(){ // start defer\n" . $this->dom->textContent . ", {$datalazy}); // end defer";
+                    }
+                } elseif (!empty($src)) {
+                    $this->dom->setAttribute('defer', true);
+                    // $this->dom->setAttribute('async', 'async');
                 }
             }
+
+            // Cache the output
+            $this->output = $this->toHtml();
         }
 
         return $this;
@@ -231,12 +277,13 @@ class DeferElement extends DeferBase
      * @author Mai Nhut Tan
      * @since  1.0.0
      * @param  $placeholder
+     * @param  mixed $defer
      * @return mixed
      */
-    public function optimizeImgDom($placeholder = null)
+    public function optimizeImgDom($placeholder = null, $defer = true)
     {
         if (is_a($this->dom, 'DOMElement')) {
-            if (empty($this->dom->getAttribute('data-src')) &&
+            if ($defer && empty($this->dom->getAttribute('data-src')) &&
                 !empty($src = $this->dom->getAttribute('src'))) {
                 $this->dom->setAttribute('data-src', $src);
 
@@ -247,16 +294,19 @@ class DeferElement extends DeferBase
                 }
 
                 $class_names   = explode(' ', $this->dom->getAttribute('class') ?: '');
-                $class_names[] = 'deferjs';
+                $class_names[] = 'lazy';
                 $class_names   = array_unique(array_filter($class_names));
                 $this->dom->setAttribute('class', implode(' ', $class_names));
             }
 
-            if (empty($this->dom->getAttribute('data-srcset')) &&
+            if ($defer && empty($this->dom->getAttribute('data-srcset')) &&
                 !empty($srcset = $this->dom->getAttribute('srcset'))) {
                 $this->dom->setAttribute('data-srcset', $srcset);
                 $this->dom->removeAttribute('srcset');
             }
+
+            // Cache the output
+            $this->output = $this->toHtml();
         }
 
         return $this;
@@ -287,26 +337,35 @@ class DeferElement extends DeferBase
      * @author Mai Nhut Tan
      * @since  1.0.0
      * @param  $placeholder
+     * @param  mixed $defer
      * @return mixed
      */
-    public function optimizeIframeDom($placeholder = null)
+    public function optimizeIframeDom($placeholder = null, $defer = true)
     {
         if (is_a($this->dom, 'DOMElement')) {
-            if (empty($this->dom->getAttribute('data-src')) &&
-                !empty($src = $this->dom->getAttribute('src'))) {
-                $this->dom->setAttribute('data-src', $src);
+            if (!empty($src = $this->dom->getAttribute('src'))) {
+                if ($defer && empty($this->dom->getAttribute('data-src'))) {
+                    $this->dom->setAttribute('data-src', $src);
 
-                if (!empty($placeholder)) {
-                    $this->dom->setAttribute('src', $placeholder);
-                } else {
-                    $this->dom->removeAttribute('src');
+                    if (!empty($placeholder)) {
+                        $this->dom->setAttribute('src', $placeholder);
+                    } else {
+                        $this->dom->removeAttribute('src');
+                    }
+
+                    $class_names   = explode(' ', $this->dom->getAttribute('class') ?: '');
+                    $class_names[] = 'lazy';
+                    $class_names   = array_unique(array_filter($class_names));
+                    $this->dom->setAttribute('class', implode(' ', $class_names));
                 }
 
-                $class_names   = explode(' ', $this->dom->getAttribute('class') ?: '');
-                $class_names[] = 'deferjs';
-                $class_names   = array_unique(array_filter($class_names));
-                $this->dom->setAttribute('class', implode(' ', $class_names));
+                // Generate preload
+                $this->preload    = $this->createLinkPreload($src, 'iframe');
+                $this->dnsprefect = $this->createLinkDnsPrefetch($src);
             }
+
+            // Cache the output
+            $this->output = $this->toHtml();
         }
 
         return $this;
