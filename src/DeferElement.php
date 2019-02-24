@@ -360,7 +360,7 @@ class DeferElement extends DeferBase
                 }
 
                 // Generate preload
-                $this->preload    = $this->createLinkPreload($src, 'iframe');
+                $this->preload    = $this->createLinkPreload($src, 'document');
                 $this->dnsprefect = $this->createLinkDnsPrefetch($src);
             }
 

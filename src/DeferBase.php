@@ -123,7 +123,7 @@ class DeferBase
         $output = [];
 
         if (!empty($src)) {
-            $output[] = "<link rel=\"preload\" href=\"{$src}\" type=\"{$type}\">";
+            $output[] = "<link rel=\"preload\" href=\"{$src}\" as=\"{$type}\">";
         }
 
         return $output;
