@@ -174,7 +174,7 @@ class Defer extends DeferBase
 
         // Minify final html output
         if ($this->minifyOutputHtml) {
-            // TODO
+            $html = $this->minify($html);
         }
 
         $this->cacheOutput = mb_convert_encoding($html, $this->sourceCharset, 'HTML-ENTITIES');
@@ -821,5 +821,52 @@ class Defer extends DeferBase
         }
 
         return $html;
+    }
+
+    public function minify($html)
+    {
+        /**
+         * To remove useless whitespace from generated HTML, except for Javascript.
+         * [Regex Source]
+         * https://github.com/bcit-ci/codeigniter/wiki/compress-html-output
+         *
+         * %# Collapse ws everywhere but in blacklisted elements.
+         * (?>             # Match all whitespaces other than single space.
+         * [^\S ]\s*     # Either one [\t\r\n\f\v] and zero or more ws,
+         * | \s{2,}        # or two or more consecutive-any-whitespace.
+         * ) # Note: The remaining regex consumes no text at all...
+         * (?=             # Ensure we are not in a blacklist tag.
+         * (?:           # Begin (unnecessary) group.
+         * (?:         # Zero or more of...
+         * [^<]++    # Either one or more non-"<"
+         * | <         # or a < starting a non-blacklist tag.
+         * (?!/?(?:textarea|pre|style)\b)
+         * )*+         # (This could be "unroll-the-loop"ified.)
+         * )             # End (unnecessary) group.
+         * (?:           # Begin alternation group.
+         * <           # Either a blacklist start tag.
+         * (?>textarea|pre|style)\b
+         * | \z          # or end of file.
+         * )             # End alternation group.
+         * )  # If we made it here, we are not in a blacklist tag.
+         * %ix
+         */
+        $whiteSpaceRule = '%(?>[^\S ]\s*| \s{2,})(?=(?:(?:[^<]++| <(?!/?(?:textarea|pre|style)\b))*+)(?:<(?>textarea|pre|style)\b|\z))%ix';
+
+        // Remove all comments
+        $commentRule = '/<!--.*?-->/ms';
+
+        $new_buffer = preg_replace(
+            [$whiteSpaceRule, $commentRule],
+            ['', ''],
+            $html
+        );
+
+        // We are going to check if processing has working
+        if ($new_buffer === null) {
+            $new_buffer = $html;
+        }
+
+        return trim($new_buffer);
     }
 }
