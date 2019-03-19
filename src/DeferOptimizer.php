@@ -319,22 +319,21 @@ trait DeferOptimizer
 
             if (!empty($src = $node->getAttribute(static::ATTR_SRCSET))) {
                 $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
-                $node->setAttribute(static::ATTR_SRCSET, $this->empty_gif);
             }
 
-            if (!empty($this->empty_gif)) {
+            if ($this->empty_gif != false) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
             } else {
                 $node->removeAttribute(static::ATTR_SRC);
                 $node->removeAttribute(static::ATTR_SRCSET);
+            }
 
-                // Add some placeholder color
-                // https://github.com/axe312ger/sqip
-                if ($this->use_color_placeholder) {
-                    $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
-                    $style       = (string) $node->getAttribute('style');
-                    $node->setAttribute('style', $placeholder . $style);
-                }
+            // Add some placeholder color
+            // https://github.com/axe312ger/sqip
+            if ($this->use_color_placeholder) {
+                $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+                $style       = (string) $node->getAttribute('style');
+                $node->setAttribute('style', $placeholder . $style);
             }
         }
     }
