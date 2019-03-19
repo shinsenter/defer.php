@@ -26,21 +26,22 @@ require_once BASE . DS . 'helpers.php';
 $defer = new shinsenter\Defer();
 
 // Set test options
-$defer->debug_mode           = false;
-$defer->hide_warnings        = true;
-$defer->append_defer_js      = true;
-$defer->default_defer_time   = 100;
-$defer->enable_preloading    = true;
-$defer->enable_dns_prefetch  = true;
-$defer->fix_render_blocking  = true;
-$defer->minify_output_html   = true;
-$defer->enable_defer_css     = true;
-$defer->enable_defer_scripts = false;
-$defer->enable_defer_images  = true;
-$defer->enable_defer_iframes = true;
-$defer->defer_web_fonts      = true;
-$defer->empty_gif            = '';
-$defer->empty_src            = '';
+$defer->debug_mode            = false;
+$defer->hide_warnings         = true;
+$defer->append_defer_js       = true;
+$defer->default_defer_time    = 100;
+$defer->enable_preloading     = true;
+$defer->enable_dns_prefetch   = true;
+$defer->fix_render_blocking   = true;
+$defer->minify_output_html    = true;
+$defer->enable_defer_css      = true;
+$defer->enable_defer_scripts  = false;
+$defer->enable_defer_images   = true;
+$defer->enable_defer_iframes  = true;
+$defer->defer_web_fonts       = true;
+$defer->empty_gif             = '';
+$defer->empty_src             = '';
+$defer->use_color_placeholder = true;
 
 // Scan test files
 $list = glob(INPUT . '*.html');

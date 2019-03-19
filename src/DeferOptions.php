@@ -17,45 +17,46 @@ trait DeferOptions
 {
     public $options = [
         // Debug optimized tags (instead of optimized HTML)
-        'debug_mode'           => false,
+        'debug_mode'            => false,
 
         // Disable libxml errors and warnings
-        'hide_warnings'        => true,
+        'hide_warnings'         => true,
 
         // Library injection
-        'append_defer_js'      => false,
-        'default_defer_time'   => 10,
+        'append_defer_js'       => false,
+        'default_defer_time'    => 10,
 
         // Page optimizations
-        'enable_preloading'    => true,
-        'enable_dns_prefetch'  => true,
-        'fix_render_blocking'  => true,
-        'minify_output_html'   => true,
+        'enable_preloading'     => true,
+        'enable_dns_prefetch'   => true,
+        'fix_render_blocking'   => true,
+        'minify_output_html'    => true,
 
         // Tag optimizations
-        'enable_defer_css'     => true,
-        'enable_defer_scripts' => true,
-        'enable_defer_images'  => true,
-        'enable_defer_iframes' => true,
+        'enable_defer_css'      => true,
+        'enable_defer_scripts'  => true,
+        'enable_defer_images'   => true,
+        'enable_defer_iframes'  => true,
 
         // Web-font optimizations
-        'defer_web_fonts'      => true,
-        'web_fonts_patterns'   => [
+        'defer_web_fonts'       => true,
+        'web_fonts_patterns'    => [
             '_debugbar.*stylesheets',
             'fonts\.google(apis)?\.com',
             '(font-awesome|typicons|devicons|iconset)([-_][\d\.]+)?(\.min)?\.css',
         ],
 
         // Blacklist patterns
-        'do_not_optimize'      => [
+        'do_not_optimize'       => [
             'document\.write\s*\(',
             'modernizr([-_][\d\.]+)?(\.min)?\.js',
             '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
-        'empty_gif'            => 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
-        'empty_src'            => 'about:blank',
+        'use_color_placeholder' => false,
+        'empty_gif'             => 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
+        'empty_src'             => 'about:blank',
     ];
 
     /**

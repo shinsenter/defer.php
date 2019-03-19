@@ -26,7 +26,7 @@ abstract class DeferInterface
     const FINGERPRINT_CACHE = __DIR__ . '/../cache/fingerprint.php';
 
     // Simple fade-in effect
-    const FADEIN_EFFECT = 'html.no-deferjs img[data-src],img[src=""],img:not([src]){display:none!important}' .
+    const FADEIN_EFFECT = 'html.no-deferjs img[data-src]{display:none!important}' .
         '[data-lazied]{opacity:.1!important;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear;min-width:5px;min-height:5px;display:inline-block}[data-lazied].in{opacity:1!important}';
 
     // Content tags

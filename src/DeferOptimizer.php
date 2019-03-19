@@ -292,7 +292,7 @@ trait DeferOptimizer
             return;
         }
 
-        foreach ($this->img_cache as $node) {
+        foreach ($this->img_cache as $i => $node) {
             $src = $node->getAttribute(static::ATTR_SRC);
 
             if ($this->isBlacklistedNode($node, $src)) {
@@ -315,21 +315,25 @@ trait DeferOptimizer
 
                 // Append data-src into the image
                 $node->setAttribute(static::ATTR_DATA_SRC, $src);
-
-                if (!empty($this->empty_gif)) {
-                    $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-                } else {
-                    $node->removeAttribute(static::ATTR_SRC);
-                }
             }
 
             if (!empty($src = $node->getAttribute(static::ATTR_SRCSET))) {
                 $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
+                $node->setAttribute(static::ATTR_SRCSET, $this->empty_gif);
+            }
 
-                if (!empty($this->empty_gif)) {
-                    $node->setAttribute(static::ATTR_SRCSET, $this->empty_gif);
-                } else {
-                    $node->removeAttribute(static::ATTR_SRCSET);
+            if (!empty($this->empty_gif)) {
+                $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
+            } else {
+                $node->removeAttribute(static::ATTR_SRC);
+                $node->removeAttribute(static::ATTR_SRCSET);
+
+                // Add some placeholder color
+                // https://github.com/axe312ger/sqip
+                if ($this->use_color_placeholder) {
+                    $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+                    $style       = (string) $node->getAttribute('style');
+                    $node->setAttribute('style', $placeholder . $style);
                 }
             }
         }
