@@ -20,45 +20,75 @@ composer require shinsenter/defer.php:dev-master
 
 
 
-### Library usage
+### Basic usage
 
 ```php
 // Include the library
 require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 
-// Library options
-$options = [
-    // Library injection
-    'append_defer_js'      => true,
-    'default_defer_time'   => 500,
+// Create a Defer object
+$defer = new \shinsenter\Defer();
 
-    // Page optimizations
-    'enable_preloading'    => true,
-    'enable_dns_prefetch'  => true,
-    'fix_render_blocking'  => true,
-    'minify_output_html'   => true,
-
-    // Tag optimizations
-    'enable_defer_css'     => true,
-    'enable_defer_scripts' => true,
-    'enable_defer_images'  => true,
-    'enable_defer_iframes' => true,
-
-    // Web-font optimizations
-    'defer_web_fonts'      => true,
-];
+// Process the HTML
+$response->setContent($defer->from()->toHtml($html));
 
 // Read HTML source from file
 $html_source = file_get_contents('mypage.html');
 
-// Create a Defer object, then get the output
-$defer = new \shinsenter\Defer($html_source, $options);
-$result = $defer->toHtml();
+// Then get the optimized output
+$result = $defer->fromHtml($html_source)->toHtml($html);
 var_dump($result);
 
 // Load another HTML without creating new object
 // You can write all methods in one line like this
 $result = $defer->fromHtml(file_get_contents('otherpage.html'))->toHtml();
+var_dump($result);
+```
+
+
+
+### Library's options
+
+```php
+// Include the library
+require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
+
+// Create a Defer object
+$defer = new \shinsenter\Defer();
+
+// Turn off warning and debug
+$defer->debug_mode            = false;
+$defer->hide_warnings         = true;
+
+// Library injection
+$defer->append_defer_js       = true;
+$defer->default_defer_time    = 100;
+
+// Page optimizations
+$defer->enable_preloading     = true;
+$defer->enable_dns_prefetch   = true;
+$defer->fix_render_blocking   = true;
+$defer->minify_output_html    = true;
+
+// Tag optimizations
+$defer->enable_defer_css      = true;
+$defer->enable_defer_scripts  = false;
+$defer->enable_defer_images   = true;
+$defer->enable_defer_iframes  = true;
+
+// Web-font optimizations
+$defer->defer_web_fonts       = true;
+
+// Image and iframe placeholders
+$defer->empty_gif             = '';
+$defer->empty_src             = '';
+$defer->use_color_placeholder = true;
+
+// Blacklist
+$defer->do_not_optimize = [];
+
+// Then get the optimized output
+$result = $defer->fromHtml(file_get_contents('mypage.html'))->toHtml();
 var_dump($result);
 ```
 
