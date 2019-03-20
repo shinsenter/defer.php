@@ -26,6 +26,7 @@ trait DeferOptimizer
     protected function optimize()
     {
         // Add defer.js library
+        $this->initLoaderJs();
         $this->addDeferJs();
 
         // Basic optimizations
@@ -50,6 +51,37 @@ trait DeferOptimizer
     | For defer.js
     |--------------------------------------------------------------------------
      */
+
+    /**
+     * Include the loader init script into the HTML
+     *
+     * @since  1.0.0
+     */
+    protected function initLoaderJs()
+    {
+        // Page rendering support
+        if (empty(static::$loader_scripts)) {
+            $timeout = $this->default_defer_time;
+
+            static::$loader_scripts = [
+                // Lazyload fallback fix
+                'var _=document.children.item(0);_.className=_.className.replace(/no-deferjs/i,\'\')+\' deferjs\'',
+
+                // Load polyfill
+                "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)",
+
+                // Lazyload <img> and <iframe> tags
+                'var deferjsloader=function(a){a.getAttribute("data-src")==a.src?a.className+=" in":a.onload=a.onerror=function(){a.className+=" in"}}',
+                'deferimg(\'img[data-src],[data-style]\',' . $timeout . ',\'lazied\',deferjsloader,{rootMargin:\'500px\'})',
+                'deferiframe(\'iframe[data-src],frame[data-src],video[data-src]\',' . $timeout . ',\'lazied\',deferjsloader,{rootMargin:\'1000px\'})',
+            ];
+        }
+
+        // Append simple effect for deferred contents
+        $style_tag = $this->dom->createElement(static::STYLE_TAG, static::FADEIN_EFFECT);
+        $this->head->appendChild($style_tag);
+        $style_tag = null;
+    }
 
     /**
      * Include the defer.js library into the HTML
@@ -111,11 +143,6 @@ trait DeferOptimizer
         $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
         $this->head->insertBefore($script_tag, $the_anchor);
         $script_tag = null;
-
-        // Append simple effect for deferred contents
-        $style_tag = $this->dom->createElement(static::STYLE_TAG, static::FADEIN_EFFECT);
-        $this->head->appendChild($style_tag);
-        $style_tag = null;
 
         // Free memory
         $the_anchor = null;
@@ -299,7 +326,7 @@ trait DeferOptimizer
                 continue;
             }
 
-            if (!empty($src)) {
+            if ($src) {
                 // Create noscript tag for normal image fallback
                 if (!$this->debug_mode) {
                     $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
@@ -317,11 +344,11 @@ trait DeferOptimizer
                 $node->setAttribute(static::ATTR_DATA_SRC, $src);
             }
 
-            if (!empty($src = $node->getAttribute(static::ATTR_SRCSET))) {
+            if ($src = $node->getAttribute(static::ATTR_SRCSET)) {
                 $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
             }
 
-            if ($this->empty_gif != false) {
+            if ($this->empty_gif) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
             } else {
                 $node->removeAttribute(static::ATTR_SRC);
@@ -356,9 +383,22 @@ trait DeferOptimizer
                 continue;
             }
 
-            if (!empty($src)) {
+            if ($src) {
                 $node->setAttribute(static::ATTR_DATA_SRC, $src);
+            }
+
+            if ($this->empty_src) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_src);
+            } else {
+                $node->removeAttribute(static::ATTR_SRC);
+            }
+
+            // Add some placeholder color
+            // https://github.com/axe312ger/sqip
+            if ($this->use_color_placeholder) {
+                $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+                $style       = (string) $node->getAttribute('style');
+                $node->setAttribute('style', $placeholder . $style);
             }
         }
     }

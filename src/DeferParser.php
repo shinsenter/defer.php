@@ -65,23 +65,6 @@ trait DeferParser
         $this->preconnect_map = [];
         $this->preload_map    = [];
 
-        if (empty(static::$loader_scripts)) {
-            $timeout = $this->default_defer_time;
-
-            static::$loader_scripts = [
-                // Lazyload fallback fix
-                'var _=document.children.item(0);_.className=_.className.replace(/no-deferjs/i,\'deferjs\')',
-
-                // Load polyfill
-                "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)",
-
-                // Lazyload <img> and <iframe> tags
-                'var deferfilter=function(n){n.onload=function(){n.className+=" in"}}',
-                'deferimg(\'img[data-src],[data-style]\',' . $timeout . ',\'lazied\',deferfilter,{rootMargin:\'500px\'})',
-                'deferiframe(\'iframe[data-src],frame[data-src],video[data-src]\',' . $timeout . ',\'lazied\',deferfilter,{rootMargin:\'1000px\'})',
-            ];
-        }
-
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
             $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
@@ -122,12 +105,12 @@ trait DeferParser
         $this->isAmp = $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
 
         // Check if the <head> tag exists
-        if (!empty($attempt = $this->xpath->query('//head'))) {
+        if ($attempt = $this->xpath->query('//head')) {
             $this->head = $attempt->item(0);
         }
 
         // Check if the <body> tag exists
-        if (!empty($attempt = $this->xpath->query('//body'))) {
+        if ($attempt = $this->xpath->query('//body')) {
             $this->body = $attempt->item(0);
         }
 
@@ -256,7 +239,7 @@ trait DeferParser
         foreach ($this->xpath->query(static::SCRIPT_XPATH) as $node) {
             $src = $this->normalizeUrl($node, static::ATTR_SRC);
 
-            if (empty($src)) {
+            if (!$src) {
                 $node->removeAttribute(static::ATTR_SRC);
                 $node->removeAttribute(static::ATTR_DEFER);
                 $node->removeAttribute(static::ATTR_ASYNC);
@@ -285,7 +268,7 @@ trait DeferParser
         foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
             $this->normalizeUrl($node, static::ATTR_SRC);
 
-            if (empty($node->getAttribute(static::ATTR_ALT))) {
+            if (!$node->hasAttribute(static::ATTR_ALT)) {
                 $node->setAttribute(static::ATTR_ALT, '');
             }
 
@@ -307,6 +290,10 @@ trait DeferParser
 
         foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
             $this->normalizeUrl($node, static::ATTR_SRC);
+
+            if (!$node->hasAttribute(static::ATTR_TITLE)) {
+                $node->setAttribute(static::ATTR_TITLE, '');
+            }
 
             $output[] = $node;
         }
