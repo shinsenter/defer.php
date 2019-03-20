@@ -319,7 +319,7 @@ trait DeferOptimizer
             return;
         }
 
-        foreach ($this->img_cache as $i => $node) {
+        foreach ($this->img_cache as $node) {
             $src = $node->getAttribute(static::ATTR_SRC);
 
             if ($this->isBlacklistedNode($node, $src)) {
@@ -355,13 +355,7 @@ trait DeferOptimizer
                 $node->removeAttribute(static::ATTR_SRCSET);
             }
 
-            // Add some placeholder color
-            // https://github.com/axe312ger/sqip
-            if ($this->use_color_placeholder) {
-                $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
-                $style       = (string) $node->getAttribute('style');
-                $node->setAttribute('style', $placeholder . $style);
-            }
+            $this->addBackgroundColor($node);
         }
     }
 
@@ -393,13 +387,7 @@ trait DeferOptimizer
                 $node->removeAttribute(static::ATTR_SRC);
             }
 
-            // Add some placeholder color
-            // https://github.com/axe312ger/sqip
-            if ($this->use_color_placeholder) {
-                $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
-                $style       = (string) $node->getAttribute('style');
-                $node->setAttribute('style', $placeholder . $style);
-            }
+            $this->addBackgroundColor($node);
         }
     }
 
@@ -795,5 +783,22 @@ trait DeferOptimizer
         } while ($startPos !== false);
 
         return $results;
+    }
+
+    /**
+     * Add random background color for a node
+     *
+     * @since  1.0.6
+     * @param DOMNode $ode
+     * @param mixed   $node
+     * @see    https://github.com/axe312ger/sqip
+     */
+    protected function addBackgroundColor($node)
+    {
+        if ($this->use_color_placeholder) {
+            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+            $style       = (string) $node->getAttribute(static::ATTR_STYLE);
+            $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
+        }
     }
 }

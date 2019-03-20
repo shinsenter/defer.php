@@ -80,6 +80,7 @@ abstract class DeferInterface
     const ATTR_REL         = 'rel';
     const ATTR_SRC         = 'src';
     const ATTR_SRCSET      = 'srcset';
+    const ATTR_STYLE       = 'style';
     const ATTR_TITLE       = 'title';
     const ATTR_TYPE        = 'type';
 
