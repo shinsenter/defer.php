@@ -39,8 +39,6 @@ $defer->enable_defer_scripts  = false;
 $defer->enable_defer_images   = true;
 $defer->enable_defer_iframes  = true;
 $defer->defer_web_fonts       = true;
-$defer->empty_gif             = '';
-$defer->empty_src             = '';
 $defer->use_color_placeholder = true;
 
 // Scan test files

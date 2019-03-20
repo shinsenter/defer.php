@@ -17,8 +17,8 @@ abstract class DeferInterface
 {
     // Library constants
     const DEFERJS_EXPIRY = 86400;
-    const DEFERJS_URL    = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js/dist/defer_plus.min.js';
-    const POLYFILL_URL   = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js/dist/polyfill.min.js';
+    const DEFERJS_URL    = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@latest/dist/defer_plus.min.js';
+    const POLYFILL_URL   = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@latest/dist/polyfill.min.js';
     const DEFERJS_CACHE  = __DIR__ . '/../cache/deferjs.php';
 
     // Library's fingerprint
@@ -27,7 +27,9 @@ abstract class DeferInterface
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src]{display:none!important}' .
-        '[data-lazied]{opacity:.1!important;-webkit-transition:opacity .15s linear;-o-transition:opacity .15s linear;transition:opacity .15s linear;min-width:5px;min-height:5px;display:inline-block}[data-lazied].in{opacity:1!important}';
+        '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%}' .
+        '[data-lazied]{opacity:.1!important;background-color:transparent!important;transition:opacity .15s linear}' .
+        '[data-lazied].in{opacity:1!important}';
 
     // Content tags
     const AUDIO_TAG    = 'audio';
@@ -78,6 +80,7 @@ abstract class DeferInterface
     const ATTR_REL         = 'rel';
     const ATTR_SRC         = 'src';
     const ATTR_SRCSET      = 'srcset';
+    const ATTR_TITLE       = 'title';
     const ATTR_TYPE        = 'type';
 
     // Xpath query expressions
