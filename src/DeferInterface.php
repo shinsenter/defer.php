@@ -14,7 +14,7 @@
 namespace shinsenter;
 
 if (!defined('DEFER_JS_VERSION')) {
-    define('DEFER_JS_VERSION', 'latest');
+    define('DEFER_JS_VERSION', '1.1.3');
 }
 
 if (!defined('DEFER_JS_CACHE_SUFFIX')) {
@@ -45,7 +45,7 @@ abstract class DeferInterface
     const POLYFILL_URL   = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
 
     // Simple fade-in effect
-    const FADEIN_EFFECT = 'html.no-deferjs img[data-src]{display:none!important}' .
+    const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
         '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
         '[data-lazied]{opacity:.1!important;transition:opacity .15s linear}' .
         '[data-lazied].in{background-color:transparent!important;opacity:1!important}';

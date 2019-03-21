@@ -29,19 +29,23 @@ trait DeferOptimizer
         $this->initLoaderJs();
         $this->addDeferJs();
 
-        // Basic optimizations
+        // Meta optimizations
         $this->optimizeCommentTags();
         $this->optimizeDnsTags();
         $this->optimizePreloadTags();
+
+        // Page optimiztions
+        $this->enablePreloading();
+        $this->enableDnsPrefetch();
+        $this->fixRenderBlocking();
+
+        // Elements optimizations
         $this->optimizeStyleTags();
         $this->optimizeScriptTags();
         $this->optimizeImgTags();
         $this->optimizeIframeTags();
 
-        // Advanced optimizations
-        $this->enablePreloading();
-        $this->enableDnsPrefetch();
-        $this->fixRenderBlocking();
+        // Minify
         $this->minifyOutputHTML();
         $this->addFingerprint();
     }
@@ -167,7 +171,7 @@ trait DeferOptimizer
 
     /*
     |--------------------------------------------------------------------------
-    | Basic optimizations
+    | Meta optimizations
     |--------------------------------------------------------------------------
      */
 
@@ -201,185 +205,9 @@ trait DeferOptimizer
     {
     }
 
-    /**
-     * Optimize parsed <style> tags
-     *
-     * @since  1.0.0
-     */
-    protected function optimizeStyleTags()
-    {
-        if (!$this->enable_defer_css) {
-            return;
-        }
-
-        foreach ($this->style_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_HREF);
-
-            if ($this->isBlacklistedNode($node, $src)) {
-                continue;
-            }
-
-            if ($node->nodeName == static::LINK_TAG) {
-                if ($this->defer_web_fonts &&
-                    $this->isWebfontUrl($src) &&
-                    empty($node->getAttribute(static::ATTR_ONLOAD))) {
-                    // Make a fake media type, force browser to load this as the lowest priority
-                    $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width: 1px)');
-
-                    // The switch to the right media type when it is loaded
-                    $node->setAttribute(static::ATTR_ONLOAD, sprintf(
-                        'var self=this;defer(function(){self.media="%s"},%s)',
-                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all'),
-                        $this->getDeferTime()
-                    ));
-                }
-            } else {
-                $code = $node->textContent;
-
-                // Strip comments
-                // See: https://gist.github.com/orangexception/1292778
-                $code = preg_replace('/\/\*(?:(?!\*\/).)*+\*\//', '', $code);
-
-                // Minify the css code
-                // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
-                $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
-                $code = str_replace(';}', '}', $code);
-
-                $node->textContent = trim($code);
-                $code              = null;
-            }
-        }
-    }
-
-    /**
-     * Optimize parsed <script> tags
-     *
-     * @since  1.0.0
-     */
-    protected function optimizeScriptTags()
-    {
-        foreach ($this->script_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
-                continue;
-            }
-
-            $rewrite = false;
-            $code    = $node->textContent;
-
-            if ($this->enable_defer_scripts) {
-                if (!empty($src)) {
-                    $id = substr(md5($src), -8);
-                    $node->removeAttribute(static::ATTR_SRC);
-                    $node->removeAttribute(static::ATTR_DEFER);
-                    $node->removeAttribute(static::ATTR_ASYNC);
-                    $code    = sprintf('deferscript(\'%s\',\'%s\',%d);', $src, $id, $this->getDeferTime());
-                    $rewrite = true;
-                } elseif (!empty($code)) {
-                    try {
-                        $code    = JsMin::minify($code);
-                        $rewrite = true;
-
-                        $code = $this->replaceJqueryOnload($code);
-                        $code = $this->wrapWithDeferJs($code);
-                    } catch (Exception $e) {
-                        unset($e);
-                    }
-                }
-            }
-
-            if ($rewrite) {
-                $node->textContent = $code;
-            }
-        }
-    }
-
-    /**
-     * Optimize parsed <img> tags
-     *
-     * @since  1.0.0
-     */
-    protected function optimizeImgTags()
-    {
-        if (!$this->enable_defer_images) {
-            return;
-        }
-
-        foreach ($this->img_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
-                continue;
-            }
-
-            if ($src) {
-                // Create noscript tag for normal image fallback
-                if (!$this->debug_mode) {
-                    $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
-                    $node->parentNode->insertBefore($noscript, $node->nextSibling);
-
-                    // Append normal image into the <noscript> tag
-                    $clone = $node->cloneNode();
-                    $noscript->appendChild($clone);
-
-                    // Cleanup
-                    $noscript = $clone = null;
-                }
-
-                // Append data-src into the image
-                $node->setAttribute(static::ATTR_DATA_SRC, $src);
-                $node->removeAttribute(static::ATTR_SRC);
-            }
-
-            if ($src = $node->getAttribute(static::ATTR_SRCSET)) {
-                $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
-                $node->removeAttribute(static::ATTR_SRCSET);
-            }
-
-            if ($this->empty_gif) {
-                $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-            }
-
-            $this->addBackgroundColor($node);
-        }
-    }
-
-    /**
-     * Optimize parsed <iframe> tags
-     *
-     * @since  1.0.0
-     */
-    protected function optimizeIframeTags()
-    {
-        if (!$this->enable_defer_iframes) {
-            return;
-        }
-
-        foreach ($this->iframe_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
-                continue;
-            }
-
-            if ($src) {
-                $node->setAttribute(static::ATTR_DATA_SRC, $src);
-            }
-
-            if ($this->empty_src) {
-                $node->setAttribute(static::ATTR_SRC, $this->empty_src);
-            } else {
-                $node->removeAttribute(static::ATTR_SRC);
-            }
-
-            $this->addBackgroundColor($node);
-        }
-    }
-
     /*
     |--------------------------------------------------------------------------
-    | Advanced optimizations
+    | Page optimizations
     |--------------------------------------------------------------------------
      */
 
@@ -482,15 +310,19 @@ trait DeferOptimizer
             return;
         }
 
+        $the_anchor = $this->body->childNodes->item(0);
+
         foreach ($this->style_cache as $node) {
             $node->parentNode->removeChild($node);
-            $this->head->appendChild($node);
+            $this->body->insertBefore($node, $the_anchor);
         }
 
         foreach ($this->script_cache as $node) {
             $node->parentNode->removeChild($node);
             $this->body->appendChild($node);
         }
+
+        $the_anchor = null;
     }
 
     /**
@@ -506,6 +338,191 @@ trait DeferOptimizer
 
         foreach ($this->xpath->query('//text()[not(normalize-space())]') as $node) {
             $node->nodeValue = '';
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Elements optimizations
+    |--------------------------------------------------------------------------
+     */
+
+    /**
+     * Optimize parsed <style> tags
+     *
+     * @since  1.0.0
+     */
+    protected function optimizeStyleTags()
+    {
+        if (!$this->enable_defer_css) {
+            return;
+        }
+
+        foreach ($this->style_cache as $node) {
+            $src = $node->getAttribute(static::ATTR_HREF);
+
+            if ($this->isBlacklistedNode($node, $src)) {
+                continue;
+            }
+
+            if ($node->nodeName == static::LINK_TAG) {
+                if ($this->defer_web_fonts &&
+                    $this->isWebfontUrl($src) &&
+                    empty($node->getAttribute(static::ATTR_ONLOAD))) {
+                    // Make a noscript fallback
+                    $this->makeNoScript($node);
+
+                    // The switch to the right media type when it is loaded
+                    $node->setAttribute(static::ATTR_ONLOAD, sprintf(
+                        'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},%s)',
+                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all'),
+                        $this->getDeferTime()
+                    ));
+
+                    // Make a fake media type, force browser to load this as the lowest priority
+                    $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width: 1px)');
+                }
+            } else {
+                $code = $node->textContent;
+
+                // Strip comments
+                // See: https://gist.github.com/orangexception/1292778
+                $code = preg_replace('/\/\*(?:(?!\*\/).)*+\*\//', '', $code);
+
+                // Minify the css code
+                // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
+                $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
+                $code = trim(str_replace(';}', '}', $code));
+
+                if (!empty($code)) {
+                    $node->textContent = $code;
+                } else {
+                    $node->parentNode->removeChild($node);
+                }
+
+                $code = null;
+            }
+        }
+    }
+
+    /**
+     * Optimize parsed <script> tags
+     *
+     * @since  1.0.0
+     */
+    protected function optimizeScriptTags()
+    {
+        foreach ($this->script_cache as $node) {
+            $src = $node->getAttribute(static::ATTR_SRC);
+
+            if ($this->isBlacklistedNode($node, $src)) {
+                continue;
+            }
+
+            $rewrite = false;
+            $code    = $node->textContent;
+
+            if ($this->enable_defer_scripts) {
+                if (!empty($src)) {
+                    $id = substr(md5($src), -8);
+                    $node->removeAttribute(static::ATTR_SRC);
+                    $node->removeAttribute(static::ATTR_DEFER);
+                    $node->removeAttribute(static::ATTR_ASYNC);
+                    $code    = sprintf('deferscript(\'%s\',\'%s\',%d);', $src, $id, $this->getDeferTime());
+                    $rewrite = true;
+                } elseif (!empty($code)) {
+                    try {
+                        $code    = JsMin::minify($code);
+                        $rewrite = true;
+
+                        $code = $this->replaceJqueryOnload($code);
+                        $code = $this->wrapWithDeferJs($code);
+                    } catch (Exception $e) {
+                        unset($e);
+                    }
+                } else {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+
+            if ($rewrite) {
+                $node->textContent = $code;
+            }
+        }
+    }
+
+    /**
+     * Optimize parsed <img> tags
+     *
+     * @since  1.0.0
+     */
+    protected function optimizeImgTags()
+    {
+        if (!$this->enable_defer_images) {
+            return;
+        }
+
+        foreach ($this->img_cache as $node) {
+            $src = $node->getAttribute(static::ATTR_SRC);
+
+            if ($this->isBlacklistedNode($node, $src)) {
+                continue;
+            }
+
+            if ($src) {
+                // Make a noscript fallback
+                $this->makeNoScript($node);
+
+                // Set alternative src data
+                $node->setAttribute(static::ATTR_DATA_SRC, $src);
+                $node->removeAttribute(static::ATTR_SRC);
+            }
+
+            if ($src = $node->getAttribute(static::ATTR_SRCSET)) {
+                $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
+                $node->removeAttribute(static::ATTR_SRCSET);
+            }
+
+            if ($this->empty_gif) {
+                $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
+            }
+
+            $this->addBackgroundColor($node);
+        }
+    }
+
+    /**
+     * Optimize parsed <iframe> tags
+     *
+     * @since  1.0.0
+     */
+    protected function optimizeIframeTags()
+    {
+        if (!$this->enable_defer_iframes) {
+            return;
+        }
+
+        foreach ($this->iframe_cache as $node) {
+            $src = $node->getAttribute(static::ATTR_SRC);
+
+            if ($this->isBlacklistedNode($node, $src)) {
+                continue;
+            }
+
+            if ($src) {
+                // Make a noscript fallback
+                $this->makeNoScript($node);
+
+                // Set alternative src data
+                $node->setAttribute(static::ATTR_DATA_SRC, $src);
+                $node->removeAttribute(static::ATTR_SRC);
+            }
+
+            if ($this->empty_src) {
+                $node->setAttribute(static::ATTR_SRC, $this->empty_src);
+            }
+
+            $this->addBackgroundColor($node);
         }
     }
 
@@ -813,6 +830,22 @@ trait DeferOptimizer
             foreach ($files as $file) {
                 @unlink($file);
             }
+        }
+    }
+
+    protected function makeNoScript($node)
+    {
+        // Create noscript tag for normal image fallback
+        if (!$this->debug_mode) {
+            $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
+            $node->parentNode->insertBefore($noscript, $node->nextSibling);
+
+            // Append normal image into the <noscript> tag
+            $clone = $node->cloneNode();
+            $noscript->appendChild($clone);
+
+            // Cleanup
+            $noscript = $clone = null;
         }
     }
 }

@@ -68,7 +68,6 @@ trait DeferParser
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
             $this->preload_map[static::HELPERS_URL]  = static::PRELOAD_SCRIPT;
-            $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
         }
 
         return $this;
