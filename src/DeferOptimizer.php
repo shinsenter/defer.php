@@ -809,7 +809,7 @@ trait DeferOptimizer
     protected function addBackgroundColor($node)
     {
         if ($this->use_color_placeholder) {
-            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,95%);';
             $style       = (string) $node->getAttribute(static::ATTR_STYLE);
             $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
         }
