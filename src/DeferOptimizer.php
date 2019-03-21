@@ -59,22 +59,38 @@ trait DeferOptimizer
      */
     protected function initLoaderJs()
     {
-        // Page rendering support
-        if (empty(static::$loader_scripts)) {
-            $timeout = $this->default_defer_time;
+        // Load and cache the defer.js library
+        if (file_exists(static::DEFERJS_CACHE) && time() - filemtime(static::DEFERJS_CACHE) < static::DEFERJS_EXPIRY) {
+            require_once static::DEFERJS_CACHE;
+        } else {
+            $cache_template         = "<?php\n" .
+                        "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
+                        'use \shinsenter\Defer as DeferJs;' .
+                        'DeferJs::$deferjs_script="%s";' .
+                        'DeferJs::$fingerprint=base64_decode("%s");';
 
-            static::$loader_scripts = [
-                // Lazyload fallback fix
-                'var _=document.children.item(0);_.className=_.className.replace(/no-deferjs/i,\'\')+\' deferjs\'',
+            $comment  = '/* ' . static::DEFERJS_URL . ' */';
+            $source   = @file_get_contents(static::DEFERJS_URL);
+            $helpers  = @file_get_contents(static::HELPERS_URL);
+            $polyfill = "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1);";
 
-                // Load polyfill
-                "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)",
+            static::$deferjs_script = $comment . $source . $helpers . $polyfill;
+            static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
 
-                // Lazyload <img> and <iframe> tags
-                'var deferjsloader=function(a){a.getAttribute("data-src")==a.src?a.className+=" in":a.onload=a.onerror=function(){a.className+=" in"}}',
-                'deferimg(\'img[data-src],[data-style]\',' . $timeout . ',\'lazied\',deferjsloader,{rootMargin:\'500px\'})',
-                'deferiframe(\'iframe[data-src],frame[data-src],video[data-src]\',' . $timeout . ',\'lazied\',deferjsloader,{rootMargin:\'1000px\'})',
-            ];
+            $this->cleanupLibraryCache();
+            @file_put_contents(
+                static::DEFERJS_CACHE,
+                sprintf(
+                    $cache_template,
+                    date('Y-m-d H:i:s'),
+                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$deferjs_script),
+                    base64_encode(static::$fingerprint)
+                )
+            );
+        }
+
+        if (!$this->append_defer_js) {
+            static::$deferjs_script = '';
         }
 
         // Append simple effect for deferred contents
@@ -94,7 +110,7 @@ trait DeferOptimizer
             return;
         }
 
-        $cleanup = '//script[@id="defer-js" or @id="defer-script"]|//link[@id="polyfill-js"]';
+        $cleanup = '//script[@id="defer-js" or @id="defer-helpers" or @id="defer-script"]|//link[@id="polyfill-js"]';
 
         foreach ($this->xpath->query($cleanup) as $node) {
             $node->parentNode->removeChild($node);
@@ -103,30 +119,6 @@ trait DeferOptimizer
 
         $the_anchor = $this->head->childNodes->item(0);
 
-        if ($this->append_defer_js) {
-            if (empty(static::$deferjs_script)
-                && file_exists(static::DEFERJS_CACHE)
-                && time() - filemtime(static::DEFERJS_CACHE) < static::DEFERJS_EXPIRY) {
-                require_once static::DEFERJS_CACHE;
-            }
-
-            if (empty(static::$deferjs_script)
-                && !empty($source = @file_get_contents(static::DEFERJS_URL))) {
-                static::$deferjs_script = '/* ' . static::DEFERJS_URL . ' */' . $source;
-                $cache_template         = '<?php ' .
-                    '/* https://github.com/shinsenter/defer.js cached on %s */ ' .
-                    '\shinsenter\Defer::$deferjs_script = "%s";';
-
-                @mkdir(dirname(static::DEFERJS_CACHE), 0755, true);
-                @file_put_contents(
-                    static::DEFERJS_CACHE,
-                    sprintf($cache_template, date('Y-m-d H:i:s'), str_replace('"', '\"', static::$deferjs_script))
-                );
-            }
-        } else {
-            static::$deferjs_script = '';
-        }
-
         // Append defer.js library loaded script is empty
         if (empty(static::$deferjs_script)) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
@@ -134,15 +126,24 @@ trait DeferOptimizer
             $script_tag->setAttribute(static::ATTR_ID, 'defer-js');
             $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
+
+            $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
+            $script_tag->setAttribute(static::ATTR_SRC, static::HELPERS_URL);
+            $script_tag->setAttribute(static::ATTR_ID, 'defer-helpers');
+            $this->head->insertBefore($script_tag, $the_anchor);
+            $script_tag = null;
         }
 
-        // Append defer.js helpers
-        $script = static::$deferjs_script;
-        $script .= implode(';', static::$loader_scripts);
-        $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim($script));
-        $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
-        $this->head->insertBefore($script_tag, $the_anchor);
-        $script_tag = null;
+        // Other custom scripts
+        $script     = static::$deferjs_script;
+        $script .= implode(';', $this->loader_scripts);
+
+        if (!empty($script)) {
+            $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim($script));
+            $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
+            $this->head->insertBefore($script_tag, $the_anchor);
+            $script_tag = null;
+        }
 
         // Free memory
         $the_anchor = null;
@@ -155,22 +156,8 @@ trait DeferOptimizer
      */
     protected function addFingerprint()
     {
-        if (empty(static::$fingerprint)
-            && file_exists(static::FINGERPRINT_CACHE)
-            && time() - filemtime(static::FINGERPRINT_CACHE) < static::DEFERJS_EXPIRY) {
-            require_once static::FINGERPRINT_CACHE;
-        }
-
-        if (empty(static::$fingerprint)
-            && !empty($source = @file_get_contents(static::FINGERPRINT_URL))) {
-            static::$fingerprint = "\n" . $source . "\n";
-            $cache_template      = '<?php \shinsenter\Defer::$fingerprint = "%s";';
-
-            @mkdir(dirname(static::FINGERPRINT_CACHE), 0755, true);
-            @file_put_contents(
-                static::FINGERPRINT_CACHE,
-                sprintf($cache_template, static::$fingerprint)
-            );
+        if (empty(static::$fingerprint)) {
+            return;
         }
 
         $fingerprint = $this->dom->createComment(static::$fingerprint);
@@ -236,12 +223,15 @@ trait DeferOptimizer
                 if ($this->defer_web_fonts &&
                     $this->isWebfontUrl($src) &&
                     empty($node->getAttribute(static::ATTR_ONLOAD))) {
-                    $defer_script = 'var self=this;defer(function(){self.media="' .
-                    addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all') . '"},' .
-                    $this->getDeferTime() . ')';
-
+                    // Make a fake media type, force browser to load this as the lowest priority
                     $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width: 1px)');
-                    $node->setAttribute(static::ATTR_ONLOAD, $defer_script);
+
+                    // The switch to the right media type when it is loaded
+                    $node->setAttribute(static::ATTR_ONLOAD, sprintf(
+                        'var self=this;defer(function(){self.media="%s"},%s)',
+                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all'),
+                        $this->getDeferTime()
+                    ));
                 }
             } else {
                 $code = $node->textContent;
@@ -275,7 +265,8 @@ trait DeferOptimizer
                 continue;
             }
 
-            $code = $node->textContent;
+            $rewrite = false;
+            $code    = $node->textContent;
 
             if ($this->enable_defer_scripts) {
                 if (!empty($src)) {
@@ -283,27 +274,23 @@ trait DeferOptimizer
                     $node->removeAttribute(static::ATTR_SRC);
                     $node->removeAttribute(static::ATTR_DEFER);
                     $node->removeAttribute(static::ATTR_ASYNC);
-                    $code = sprintf('deferscript(\'%s\',\'%s\',%d);', $src, $id, $this->getDeferTime());
-                } else {
-                    $code = $this->replaceJqueryOnload($code);
-                    $code = $this->wrapWithDeferJs($code);
+                    $code    = sprintf('deferscript(\'%s\',\'%s\',%d);', $src, $id, $this->getDeferTime());
+                    $rewrite = true;
+                } elseif (!empty($code)) {
+                    try {
+                        $code    = JsMin::minify($code);
+                        $rewrite = true;
+
+                        $code = $this->replaceJqueryOnload($code);
+                        $code = $this->wrapWithDeferJs($code);
+                    } catch (Exception $e) {
+                        unset($e);
+                    }
                 }
             }
 
-            if (!empty($code)) {
-                $error = false;
-
-                try {
-                    $code = JsMin::minify($code);
-                } catch (Exception $e) {
-                    $error = true;
-                }
-
-                if (!$error) {
-                    $node->textContent = $code;
-                }
-
-                $code = null;
+            if ($rewrite) {
+                $node->textContent = $code;
             }
         }
     }
@@ -466,17 +453,19 @@ trait DeferOptimizer
             $the_anchor = $this->head->childNodes->item(0);
 
             foreach ($this->preload_map as $url => $node) {
-                $as = $this->getPreloadType($node);
-
-                if (!empty($as) && !empty($url)) {
-                    $link_tag = $this->dom->createElement(static::LINK_TAG);
-                    $link_tag->setAttribute(static::ATTR_REL, static::REL_PRELOAD);
-                    $link_tag->setAttribute(static::ATTR_AS, $as);
-                    $link_tag->setAttribute(static::ATTR_HREF, $url);
-
-                    $this->head->insertBefore($link_tag, $the_anchor);
-                    $link_tag = null;
+                if (empty($url)
+                    || $this->isWebfontUrl($url)
+                    || empty($as = $this->getPreloadType($node))) {
+                    continue;
                 }
+
+                $link_tag = $this->dom->createElement(static::LINK_TAG);
+                $link_tag->setAttribute(static::ATTR_REL, static::REL_PRELOAD);
+                $link_tag->setAttribute(static::ATTR_AS, $as);
+                $link_tag->setAttribute(static::ATTR_HREF, $url);
+
+                $this->head->insertBefore($link_tag, $the_anchor);
+                $link_tag = null;
             }
 
             $the_anchor = null;
@@ -557,10 +546,14 @@ trait DeferOptimizer
 
         if (is_array($blacklist)) {
             foreach ($blacklist as $pattern) {
-                $regex = '/' . $pattern . '/';
+                $regex = '#' . str_replace('#', '\#', $pattern) . '#';
 
-                if (preg_match($regex, $src . $node->textContent)) {
-                    return true;
+                try {
+                    if (preg_match($regex, $src . $node->textContent)) {
+                        return true;
+                    }
+                } catch (Exception $e) {
+                    unset($e);
                 }
             }
         }
@@ -581,10 +574,14 @@ trait DeferOptimizer
 
         if (!empty($src) && is_array($list)) {
             foreach ($list as $pattern) {
-                $regex = '/' . $pattern . '/';
+                $regex = '#' . str_replace('#', '\#', $pattern) . '#';
 
-                if (preg_match($regex, $src)) {
-                    return true;
+                try {
+                    if (preg_match($regex, $src)) {
+                        return true;
+                    }
+                } catch (Exception $e) {
+                    unset($e);
                 }
             }
         }
@@ -700,12 +697,12 @@ trait DeferOptimizer
      */
     protected function wrapWithDeferJs($script)
     {
-        $delay_time = $this->getDeferTime(500);
         $pattern    = '/((?<![\d\w\]\(])[!\(]*\s*function\s*\([^\)]*\)\s*{.*?}\s*[\)]?\s*\([^\)]*\)*)([;,]*)/';
 
         if (preg_match($pattern, $script)) {
-            $replace = 'defer(function(){$1},' . $delay_time . ')$2';
-            $script  = preg_replace($pattern, $replace, $script);
+            $delay_time = $this->getDeferTime(500);
+            $replace    = 'defer(function(){$1},' . $delay_time . ')$2';
+            $script     = preg_replace($pattern, $replace, $script);
         }
 
         return $script;
@@ -799,6 +796,24 @@ trait DeferOptimizer
             $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
             $style       = (string) $node->getAttribute(static::ATTR_STYLE);
             $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
+        }
+    }
+
+    /**
+     * Cleanup library cache directory
+     *
+     * @since  1.0.7
+     */
+    protected function cleanupLibraryCache()
+    {
+        @mkdir($dir = dirname(static::DEFERJS_CACHE), 0755, true);
+
+        $files = glob($dir . '/*.php', GLOB_MARK);
+
+        if (!empty($files)) {
+            foreach ($files as $file) {
+                @unlink($file);
+            }
         }
     }
 }

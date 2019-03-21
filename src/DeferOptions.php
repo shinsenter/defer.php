@@ -43,8 +43,12 @@ trait DeferOptions
         'web_fonts_patterns'    => [
             '_debugbar.*stylesheets',
             'fonts\.google(apis)?\.com',
+            '(gadget|popup|modal)[^\/]*\.css',
             '(font-awesome|typicons|devicons|iconset)([-_][\d\.]+)?(\.min)?\.css',
         ],
+
+        // Custom loader scripts
+        'loader_scripts' => [],
 
         // Blacklist patterns
         'do_not_optimize'       => [
@@ -102,7 +106,7 @@ trait DeferOptions
             if (isset($this->options[$key])) {
                 switch (true) {
                     case is_array($this->options[$key]):
-                        $this->options[$key] = array_merge($this->options[$key], (array) $flag);
+                        $this->options[$key] = (array) $flag;
                         break;
                     case is_numeric($this->options[$key]):
                         $this->options[$key] = (int) $flag;
