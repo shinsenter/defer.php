@@ -13,23 +13,42 @@
 
 namespace shinsenter;
 
+if (!defined('DEFER_JS_VERSION')) {
+    define('DEFER_JS_VERSION', 'latest');
+}
+
+if (!defined('DEFER_JS_CACHE_SUFFIX')) {
+    define('DEFER_JS_CACHE_SUFFIX', '_' . DEFER_JS_VERSION);
+}
+
+if (!defined('DEFER_JS_CDN')) {
+    define('DEFER_JS_CDN', 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@' . DEFER_JS_VERSION);
+}
+
+if (!defined('DEFER_JS_IGNORE')) {
+    define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::noscript)');
+}
+
 abstract class DeferInterface
 {
-    // Library constants
+    // For defer.js library
     const DEFERJS_EXPIRY = 86400;
-    const DEFERJS_URL    = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@latest/dist/defer_plus.min.js';
-    const POLYFILL_URL   = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@latest/dist/polyfill.min.js';
-    const DEFERJS_CACHE  = __DIR__ . '/../cache/deferjs.php';
+    const DEFERJS_CACHE  = __DIR__ . '/../cache/deferjs' . DEFER_JS_CACHE_SUFFIX . '.php';
+    const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
+    const HELPERS_URL    = DEFER_JS_CDN . '/dist/helpers.min.js';
 
     // Library's fingerprint
+    const FINGERPRINT_CACHE = __DIR__ . '/../cache/fingerprint' . DEFER_JS_CACHE_SUFFIX . '.php';
     const FINGERPRINT_URL   = 'https://raw.githubusercontent.com/shinsenter/defer.js/master/src/fingerprint';
-    const FINGERPRINT_CACHE = __DIR__ . '/../cache/fingerprint.php';
+
+    // Polyfill
+    const POLYFILL_URL   = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src]{display:none!important}' .
-        '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%}' .
-        '[data-lazied]{opacity:.1!important;background-color:transparent!important;transition:opacity .15s linear}' .
-        '[data-lazied].in{opacity:1!important}';
+        '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
+        '[data-lazied]{opacity:.1!important;transition:opacity .15s linear}' .
+        '[data-lazied].in{background-color:transparent!important;opacity:1!important}';
 
     // Content tags
     const AUDIO_TAG    = 'audio';
@@ -88,13 +107,12 @@ abstract class DeferInterface
     const COMMENT_XPATH = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
     const DNSCONN_XPATH = '//link[@rel="dns-prefetch" or @rel="preconnect"]';
     const PRELOAD_XPATH = '//link[@rel="preload"]';
-    const STYLE_XPATH   = '//style[not(@data-ignore)]|//link[not(@data-ignore) and @rel="stylesheet"]';
-    const SCRIPT_XPATH  = '//script[not(@data-ignore) and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH     = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and not(@data-ignore) and not(@data-src)]';
-    const IFRAME_XPATH  = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and not(@data-ignore) and not(@data-src)]';
+    const STYLE_XPATH   = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
+    const SCRIPT_XPATH  = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
+    const IMG_XPATH     = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
+    const IFRAME_XPATH  = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
 
     // Variable holders
     public static $deferjs_script = null;
     public static $fingerprint    = null;
-    public static $loader_scripts = [];
 }

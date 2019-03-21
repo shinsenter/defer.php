@@ -67,6 +67,7 @@ trait DeferParser
 
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
+            $this->preload_map[static::HELPERS_URL]  = static::PRELOAD_SCRIPT;
             $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
         }
 
@@ -94,6 +95,9 @@ trait DeferParser
         if (stripos($html, '</html>') === false) {
             throw new DeferException('Invalid HTML content.', 1);
         }
+
+        // Force HTML5 doctype
+        $html = preg_replace('/<!DOCTYPE html[^>]*?>/i', '<!DOCTYPE html>', $html, 1);
 
         // Create DOM document
         $this->dom = new \DOMDocument('1.0', $this->charset);
@@ -124,7 +128,8 @@ trait DeferParser
             $html            = $this->xpath->query('/html')->item(0);
             $current_class   = explode(' ', (string) $html->getAttribute('class'));
             $current_class[] = 'no-deferjs';
-            $html->setAttribute(static::ATTR_CLASS, implode(' ', array_unique($current_class)));
+            $current_class   = array_filter(array_unique($current_class));
+            $html->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
             $html = null;
         }
 
