@@ -53,9 +53,8 @@
     }],
     "scripts":
     {
-        "fixer": [
-            "php-cs-fixer fix --show-progress=estimating --verbose"
-        ]
+        "fixer": "php-cs-fixer fix --show-progress=estimating --verbose",
+        "test": "php test/test.php"
     },
     "config":
     {

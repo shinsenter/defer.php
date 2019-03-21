@@ -106,23 +106,23 @@ WordPress remains one of the most popular CMS platform until now. This is a Word
 
 
 - Become a stargazer:
-  https://github.com/shinsenter/defer.php/stargazers
+  [https://github.com/shinsenter/defer.php/stargazers](https://github.com/shinsenter/defer.php/stargazers)
 - Report an issue:
-  https://github.com/shinsenter/defer.php/issues
+  [https://github.com/shinsenter/defer.php/issues](https://github.com/shinsenter/defer.php/issues)
 - Keep up-to-date with new releases:
-  https://github.com/shinsenter/defer.php/releases
+  [https://github.com/shinsenter/defer.php/releases](https://github.com/shinsenter/defer.php/releases)
 
 
 
 ## Follow my defer.js project:
 
-https://github.com/shinsenter/defer.js/releases
+[https://github.com/shinsenter/defer.js/releases](https://github.com/shinsenter/defer.js/releases)
 
-https://github.com/shinsenter/defer.js/stargazers
+[https://github.com/shinsenter/defer.js/stargazers](https://github.com/shinsenter/defer.js/stargazers)
 
 ---
 
 Released under the MIT license.
-https://appseeds.net/defer.php/LICENSE
+[https://appseeds.net/defer.php/LICENSE](https://appseeds.net/defer.php/LICENSE)
 
 Copyright (c) 2019 Mai Nhut Tan &lt;[shin@shin.company](mailto:shin@shin.company)&gt;
