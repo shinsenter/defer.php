@@ -329,17 +329,16 @@ trait DeferOptimizer
 
                 // Append data-src into the image
                 $node->setAttribute(static::ATTR_DATA_SRC, $src);
+                $node->removeAttribute(static::ATTR_SRC);
             }
 
             if ($src = $node->getAttribute(static::ATTR_SRCSET)) {
                 $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
+                $node->removeAttribute(static::ATTR_SRCSET);
             }
 
             if ($this->empty_gif) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-            } else {
-                $node->removeAttribute(static::ATTR_SRC);
-                $node->removeAttribute(static::ATTR_SRCSET);
             }
 
             $this->addBackgroundColor($node);
