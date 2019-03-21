@@ -29,9 +29,6 @@ require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 // Create a Defer object
 $defer = new \shinsenter\Defer();
 
-// Process the HTML
-$response->setContent($defer->from()->toHtml($html));
-
 // Read HTML source from file
 $html_source = file_get_contents('mypage.html');
 
