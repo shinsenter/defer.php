@@ -117,8 +117,10 @@ trait DeferOptimizer
         $cleanup = '//script[@id="defer-js" or @id="defer-helpers" or @id="defer-script"]|//link[@id="polyfill-js"]';
 
         foreach ($this->xpath->query($cleanup) as $node) {
-            $node->parentNode->removeChild($node);
-            $node = null;
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+                $node = null;
+            }
         }
 
         $the_anchor = $this->head->childNodes->item(0);
@@ -160,6 +162,12 @@ trait DeferOptimizer
      */
     protected function addFingerprint()
     {
+        if ($this->enable_defer_scripts) {
+            $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim(static::DEFER_INLINE));
+            $this->head->appendChild($script_tag);
+            $script_tag = null;
+        }
+
         if (empty(static::$fingerprint)) {
             return;
         }
@@ -223,7 +231,10 @@ trait DeferOptimizer
         }
 
         foreach ($this->dns_cache as $node) {
-            $node->parentNode->removeChild($node);
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+                $node = null;
+            }
         }
 
         $new_cache  = [];
@@ -273,7 +284,10 @@ trait DeferOptimizer
         }
 
         foreach ($this->preload_cache as $node) {
-            $node->parentNode->removeChild($node);
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+                $node = null;
+            }
         }
 
         if (!empty($this->preload_map)) {
@@ -313,12 +327,10 @@ trait DeferOptimizer
         $the_anchor = $this->body->childNodes->item(0);
 
         foreach ($this->style_cache as $node) {
-            $node->parentNode->removeChild($node);
             $this->body->insertBefore($node, $the_anchor);
         }
 
         foreach ($this->script_cache as $node) {
-            $node->parentNode->removeChild($node);
             $this->body->appendChild($node);
         }
 
@@ -337,7 +349,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->xpath->query('//text()[not(normalize-space())]') as $node) {
-            $node->nodeValue = '';
+            $node->nodeValue = ' ';
         }
     }
 
@@ -374,9 +386,8 @@ trait DeferOptimizer
 
                     // The switch to the right media type when it is loaded
                     $node->setAttribute(static::ATTR_ONLOAD, sprintf(
-                        'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},%s)',
-                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all'),
-                        $this->getDeferTime()
+                        'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
+                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
                     ));
 
                     // Make a fake media type, force browser to load this as the lowest priority
@@ -396,7 +407,7 @@ trait DeferOptimizer
 
                 if (!empty($code)) {
                     $node->textContent = $code;
-                } else {
+                } elseif ($node->parentNode) {
                     $node->parentNode->removeChild($node);
                 }
 
@@ -419,29 +430,19 @@ trait DeferOptimizer
                 continue;
             }
 
+            if ($this->enable_defer_scripts) {
+                $node->setAttribute(static::ATTR_TYPE, 'deferscript');
+            }
+
             $rewrite = false;
             $code    = $node->textContent;
 
-            if ($this->enable_defer_scripts) {
-                if (!empty($src)) {
-                    $id = substr(md5($src), -8);
-                    $node->removeAttribute(static::ATTR_SRC);
-                    $node->removeAttribute(static::ATTR_DEFER);
-                    $node->removeAttribute(static::ATTR_ASYNC);
-                    $code    = sprintf('deferscript(\'%s\',\'%s\',%d);', $src, $id, $this->getDeferTime());
+            if (!empty($code)) {
+                try {
+                    $code    = JsMin::minify($code);
                     $rewrite = true;
-                } elseif (!empty($code)) {
-                    try {
-                        $code    = JsMin::minify($code);
-                        $rewrite = true;
-
-                        $code = $this->replaceJqueryOnload($code);
-                        $code = $this->wrapWithDeferJs($code);
-                    } catch (Exception $e) {
-                        unset($e);
-                    }
-                } else {
-                    $node->parentNode->removeChild($node);
+                } catch (Exception $e) {
+                    unset($e);
                 }
             }
 
@@ -485,9 +486,10 @@ trait DeferOptimizer
 
             if ($this->empty_gif) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
+            } else {
+                $this->setPlaceholderSrc($node);
+                $this->addBackgroundColor($node);
             }
-
-            $this->addBackgroundColor($node);
         }
     }
 
@@ -554,7 +556,7 @@ trait DeferOptimizer
      */
     protected function isBlacklistedNode($node, $src = '')
     {
-        if ($node->parentNode->nodeName == static::NOSCRIPT_TAG) {
+        if ($node->parentNode && $node->parentNode->nodeName == static::NOSCRIPT_TAG) {
             return false;
         }
 
@@ -628,8 +630,7 @@ trait DeferOptimizer
                     $as = static::PRELOAD_STYLE;
                     break;
                 case static::SCRIPT_TAG:
-                    // $as = static::PRELOAD_SCRIPT;
-                    continue;
+                    $as = static::PRELOAD_SCRIPT;
                     break;
                 case static::IMG_TAG:
                     // $as = static::PRELOAD_IMAGE;
@@ -665,154 +666,38 @@ trait DeferOptimizer
     }
 
     /**
-     * Replace the `jQuery(document).ready` calls with defer.js
-     *
-     * @since  1.0.0
-     * @param  string $script
-     * @return string
-     */
-    protected function replaceJqueryOnload($script)
-    {
-        $delay_time = $this->getDeferTime(500);
-
-        $pattern = '/((jQuery|\$)\s*(\(\s*document\s*\)\.ready\s*)?\(\s*function\s*\([^\)]*\))/';
-
-        if (preg_match_all($pattern, $script, $matches)) {
-            $search  = $matches[1];
-            $results = $this->searchToken($script, $search, '(', ')');
-
-            foreach ($results as $original) {
-                $replace = preg_replace($pattern, 'defer(function()', $original);
-                $replace = preg_replace('/\s*\)$/', ',' . $delay_time . ')', $replace);
-                $script  = str_replace($original, $replace, $script);
-            }
-        }
-
-        $pattern = '/((jQuery|\$)\s*\(\s*document\s*\)\.ready\s*\(\s*)/';
-
-        if (preg_match_all($pattern, $script, $matches)) {
-            $search  = $matches[1];
-            $results = $this->searchToken($script, $search, '(', ')');
-
-            foreach ($results as $original) {
-                $replace = preg_replace($pattern, 'defer(', $original);
-                $replace = preg_replace('/\s*\)$/', ',' . $delay_time . ')', $replace);
-                $script  = str_replace($original, $replace, $script);
-            }
-        }
-
-        return $script;
-    }
-
-    /**
-     * Wrap all self-invoke JavaScript functions with defer.js
-     *
-     * @since  1.0.0
-     * @param  string $script
-     * @return string
-     */
-    protected function wrapWithDeferJs($script)
-    {
-        $pattern    = '/((?<![\d\w\]\(])[!\(]*\s*function\s*\([^\)]*\)\s*{.*?}\s*[\)]?\s*\([^\)]*\)*)([;,]*)/';
-
-        if (preg_match($pattern, $script)) {
-            $delay_time = $this->getDeferTime(500);
-            $replace    = 'defer(function(){$1},' . $delay_time . ')$2';
-            $script     = preg_replace($pattern, $replace, $script);
-        }
-
-        return $script;
-    }
-
-    /**
-     * Internal utility for searching strings
-     *
-     * @since  1.0.0
-     * @param  string $source
-     * @param  array  $search
-     * @param  string $startToken
-     * @param  string $endToken
-     * @param  string $startFrom
-     * @return array
-     */
-    protected function searchToken($source, $search, $startToken = '{', $endToken = '}', $startFrom = 0)
-    {
-        $results = [];
-
-        if (empty($search)) {
-            return $results;
-        }
-
-        $keyword        = array_shift($search);
-        $endTokenLength = strlen($endToken);
-
-        $startPos = strpos($source, $keyword, $startFrom);
-        $nextPos  = $startPos + strlen($keyword);
-        $endPos   = 0;
-        $counter  = 0;
-
-        do {
-            $startTokenPos = strpos($source, $startToken, $nextPos);
-            $endTokenPos   = strpos($source, $endToken, $nextPos);
-
-            switch (true) {
-                case $startTokenPos !== false && $endTokenPos !== false:
-                    $endPos = min($startTokenPos, $endTokenPos);
-                    break;
-                case $startTokenPos !== false:
-                    $endPos = $startTokenPos;
-                    break;
-                case $endTokenPos !== false:
-                    $endPos = $endTokenPos;
-                    break;
-                default:
-                    $endPos = fasle;
-                    break;
-            }
-
-            if ($endPos == $startTokenPos) {
-                $counter++;
-            } elseif ($endPos == $endTokenPos) {
-                $counter--;
-            } else {
-                break;
-            }
-
-            $nextPos = $endPos + $endTokenLength;
-
-            if ($counter < 0) {
-                $counter   = 0;
-                $endPos    = $nextPos;
-                $results[] = substr($source, $startPos, $endPos - $startPos);
-
-                if (count($search) > 0) {
-                    $keyword  = array_shift($search);
-                    $startPos = strpos($source, $keyword, $endPos);
-                    $nextPos  = $startPos + strlen($keyword);
-                } else {
-                    break;
-                }
-            }
-        } while ($startPos !== false);
-
-        return $results;
-    }
-
-    /**
      * Add random background color for a node
      *
      * @since  1.0.6
-     * @param DOMNode $ode
-     * @param mixed   $node
+     * @param DOMNode $node
      * @see    https://github.com/axe312ger/sqip
      */
     protected function addBackgroundColor($node)
     {
         if ($this->use_color_placeholder) {
-            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,85%);';
+            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,90%);';
             $style       = (string) $node->getAttribute(static::ATTR_STYLE);
             $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
         }
+    }
+
+    /**
+     * Set placeholder src for the media
+     *
+     * @since  1.0.6
+     * @param DOMNode $node
+     */
+    protected function setPlaceholderSrc($node)
+    {
+        $w = (int) $node->getAttribute(static::ATTR_WIDTH);
+        $h = (int) $node->getAttribute(static::ATTR_HEIGHT);
+
+        if ($w < 1 || $h < 1) {
+            $w = $h = 1;
+        }
+
+        $placeholder = str_replace(['<', '>'], ['%3C', '%3E'], sprintf(static::SVG_PLACEHOLDER, $w, $h));
+        $node->setAttribute(static::ATTR_SRC, 'data:image/svg+xml,' . $placeholder);
     }
 
     /**
@@ -833,10 +718,16 @@ trait DeferOptimizer
         }
     }
 
+    /**
+     * Append a <noscript> tag for content fallback
+     *
+     * @since  1.0.7
+     * @param DOMNode $node
+     */
     protected function makeNoScript($node)
     {
         // Create noscript tag for normal image fallback
-        if (!$this->debug_mode) {
+        if (!$this->debug_mode && $node->parentNode) {
             $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
             $node->parentNode->insertBefore($noscript, $node->nextSibling);
 

@@ -34,7 +34,7 @@ trait DeferOptions
 
         // Tag optimizations
         'enable_defer_css'      => true,
-        'enable_defer_scripts'  => true,
+        'enable_defer_scripts'  => false,
         'enable_defer_images'   => true,
         'enable_defer_iframes'  => true,
 
@@ -59,7 +59,7 @@ trait DeferOptions
 
         // Content placeholders
         'use_color_placeholder' => false,
-        'empty_gif'             => 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==',
+        'empty_gif'             => '',
         'empty_src'             => 'about:blank',
     ];
 
