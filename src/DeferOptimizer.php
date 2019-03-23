@@ -76,9 +76,8 @@ trait DeferOptimizer
             $comment  = '/* ' . static::DEFERJS_URL . ' */';
             $source   = @file_get_contents(static::DEFERJS_URL);
             $helpers  = @file_get_contents(static::HELPERS_URL);
-            $polyfill = "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1);";
 
-            static::$deferjs_script = $comment . $source . $helpers . $polyfill;
+            static::$deferjs_script = $comment . $source . $helpers;
             static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
 
             $this->cleanupLibraryCache();
@@ -140,9 +139,11 @@ trait DeferOptimizer
             $script_tag = null;
         }
 
-        // Other custom scripts
-        $script     = static::$deferjs_script;
-        $script .= implode(';', $this->loader_scripts);
+        // Append polyfill, extra scripts
+        $extra_scripts   = (array) $this->loader_scripts;
+        $polyfill        = "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)";
+        $extra_scripts[] = $polyfill;
+        $script          = static::$deferjs_script . implode(';', $extra_scripts);
 
         if (!empty($script)) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim($script));
