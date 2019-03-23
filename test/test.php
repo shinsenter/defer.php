@@ -38,7 +38,7 @@ $defer->fix_render_blocking   = true;
 $defer->minify_output_html    = true;
 
 $defer->enable_defer_css      = true;
-$defer->enable_defer_scripts  = true;
+$defer->enable_defer_scripts  = false;
 $defer->enable_defer_images   = true;
 $defer->enable_defer_iframes  = true;
 

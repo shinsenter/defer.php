@@ -14,7 +14,7 @@
 namespace shinsenter;
 
 if (!defined('DEFER_JS_VERSION')) {
-    define('DEFER_JS_VERSION', '1.1.3');
+    define('DEFER_JS_VERSION', 'latest');
 }
 
 if (!defined('DEFER_JS_CACHE_SUFFIX')) {
@@ -26,7 +26,7 @@ if (!defined('DEFER_JS_CDN')) {
 }
 
 if (!defined('DEFER_JS_IGNORE')) {
-    define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::noscript)');
+    define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::*[@data-ignore]) and not(ancestor::noscript)');
 }
 
 abstract class DeferInterface
@@ -47,8 +47,14 @@ abstract class DeferInterface
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
         '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
-        '[data-lazied]{opacity:.5!important;transition:opacity .15s linear}' .
+        '[data-lazied]{opacity:.1!important;transition:opacity .15s ease-in-out}' .
         '[data-lazied].in{background-color:transparent!important;opacity:1!important}';
+
+    // Fake defer attribute for inline scripts
+    const DEFER_INLINE = 'defer(function(){var e=window.document.head,r=defer_helper.h.querySelectorAll("script[type=deferscript]");[].forEach.call(r,function(r,t){r.parentNode.removeChild(r),r.type="text/javascript",e.appendChild(r)})},3)';
+
+    // SVG placeholder
+    const SVG_PLACEHOLDER = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 %d %d'></svg>";
 
     // Content tags
     const AUDIO_TAG    = 'audio';
@@ -92,6 +98,7 @@ abstract class DeferInterface
     const ATTR_DATA_SRC    = 'data-src';
     const ATTR_DATA_SRCSET = 'data-srcset';
     const ATTR_DEFER       = 'defer';
+    const ATTR_HEIGHT      = 'height';
     const ATTR_HREF        = 'href';
     const ATTR_ID          = 'id';
     const ATTR_MEDIA       = 'media';
@@ -102,6 +109,7 @@ abstract class DeferInterface
     const ATTR_STYLE       = 'style';
     const ATTR_TITLE       = 'title';
     const ATTR_TYPE        = 'type';
+    const ATTR_WIDTH       = 'width';
 
     // Xpath query expressions
     const COMMENT_XPATH = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
@@ -109,7 +117,7 @@ abstract class DeferInterface
     const PRELOAD_XPATH = '//link[@rel="preload"]';
     const STYLE_XPATH   = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH  = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH     = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
+    const IMG_XPATH     = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(ancestor::header)]';
     const IFRAME_XPATH  = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
 
     // Variable holders
