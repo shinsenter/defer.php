@@ -58,7 +58,7 @@ trait DeferOptions
         ],
 
         // Content placeholders
-        'use_color_placeholder' => false,
+        'use_color_placeholder' => true,
         'empty_gif'             => '',
         'empty_src'             => 'about:blank',
     ];
