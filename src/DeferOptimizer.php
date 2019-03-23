@@ -675,7 +675,7 @@ trait DeferOptimizer
     protected function addBackgroundColor($node)
     {
         if ($this->use_color_placeholder) {
-            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,90%);';
+            $placeholder = 'background-color:hsl(' . rand(1, 360) . ',100%,96%);';
             $style       = (string) $node->getAttribute(static::ATTR_STYLE);
             $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
         }
