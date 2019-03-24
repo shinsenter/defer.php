@@ -36,6 +36,7 @@
 (function(window, document, console, name) {
     var NOOP            = Function();
     var GET_ATTRIBUTE   = 'getAttribute';
+    var REM_ATTRIBUTE   = 'removeAttribute';
     var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
 
     var COMMON_EXCEPTIONS   = ':not([data-lazied])';
@@ -128,6 +129,8 @@
     function mediafilter(media) {
         function onload() {
             addClass(media, helper.f);
+            media[REM_ATTRIBUTE]('data-src');
+            media[REM_ATTRIBUTE]('data-srcset');
         }
 
         if (media.src == media[GET_ATTRIBUTE]('data-src') || media[GET_ATTRIBUTE]('data-style')) {

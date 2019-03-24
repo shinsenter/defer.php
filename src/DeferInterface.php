@@ -50,7 +50,7 @@ abstract class DeferInterface
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
-        '[data-src],[data-srcset],[data-style]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
+        '[data-src],[data-srcset],[data-style]{min-width:1px;min-height:1px;max-width:100%;visibility:visible}' .
         '[data-lazied]{opacity:.3!important;transition:opacity .15s ease-in-out}' .
         '[data-lazied].in,[data-style][data-lazied]{background-color:transparent!important;opacity:inherit!important}';
 

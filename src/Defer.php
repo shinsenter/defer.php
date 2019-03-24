@@ -127,6 +127,10 @@ class Defer extends DeferInterface
             $output = mb_convert_encoding($output, $this->charset, $encoding);
         }
 
+        if (!empty($this->bug72288_body)) {
+            $output = str_replace('<body>', $this->bug72288_body, $output);
+        }
+
         return $output;
     }
 
