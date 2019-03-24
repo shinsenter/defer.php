@@ -44,6 +44,7 @@ trait DeferOptimizer
         $this->optimizeScriptTags();
         $this->optimizeImgTags();
         $this->optimizeIframeTags();
+        $this->optimizeBackgroundTags();
 
         // Minify
         $this->minifyOutputHTML();
@@ -71,14 +72,15 @@ trait DeferOptimizer
                         "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
                         'use \shinsenter\Defer as DeferJs;' .
                         'DeferJs::$deferjs_script="%s";' .
+                        'DeferJs::$helpers="%s";' .
                         'DeferJs::$fingerprint=base64_decode("%s");';
 
             $comment  = '/* ' . static::DEFERJS_URL . ' */';
             $source   = @file_get_contents(static::DEFERJS_URL);
-            $helpers  = @file_get_contents(static::HELPERS_URL);
 
-            static::$deferjs_script = $comment . $source . $helpers;
+            static::$deferjs_script = $comment . $source;
             static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
+            static::$helpers        = @file_get_contents(static::HELPERS_URL);
 
             $this->cleanupLibraryCache();
             @file_put_contents(
@@ -87,6 +89,7 @@ trait DeferOptimizer
                     $cache_template,
                     date('Y-m-d H:i:s'),
                     str_replace(['\\', '"'], ['\\\\', '\"'], static::$deferjs_script),
+                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$helpers),
                     base64_encode(static::$fingerprint)
                 )
             );
@@ -131,21 +134,18 @@ trait DeferOptimizer
             $script_tag->setAttribute(static::ATTR_ID, 'defer-js');
             $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
-
-            $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
-            $script_tag->setAttribute(static::ATTR_SRC, static::HELPERS_URL);
-            $script_tag->setAttribute(static::ATTR_ID, 'defer-helpers');
-            $this->head->insertBefore($script_tag, $the_anchor);
-            $script_tag = null;
         }
 
-        // Append polyfill, extra scripts
         $extra_scripts   = (array) $this->loader_scripts;
+
+        // Append polyfill
         $polyfill        = "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)";
         $extra_scripts[] = $polyfill;
-        $script          = static::$deferjs_script . implode(';', $extra_scripts);
 
-        if (!empty($script)) {
+        // Append helpers
+        $extra_scripts[] = static::$helpers;
+
+        if (!empty($script = static::$deferjs_script . implode(';', array_filter($extra_scripts)))) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim($script));
             $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
             $this->head->insertBefore($script_tag, $the_anchor);
@@ -526,6 +526,40 @@ trait DeferOptimizer
             }
 
             $this->addBackgroundColor($node);
+        }
+    }
+
+    /**
+     * Optimize all tags contain background image
+     *
+     * @since  1.1.0
+     */
+    protected function optimizeBackgroundTags()
+    {
+        if (!$this->enable_defer_background) {
+            return;
+        }
+
+        foreach ($this->bg_cache as $node) {
+            $styles     = $node->getAttribute(static::ATTR_STYLE);
+            $props      = array_filter(explode(';', $styles));
+            $safe_props = [];
+
+            foreach ($props as $prop) {
+                if (!preg_match('/url\s*\([^\)]+\)/i', $prop)) {
+                    $safe_props[] = trim($prop);
+                }
+            }
+
+            $node->setAttribute(static::ATTR_DATA_STYLE, implode(';', $props));
+
+            if (!empty($safe_props)) {
+                $node->setAttribute(static::ATTR_STYLE, implode(';', $safe_props));
+            } else {
+                $node->removeAttribute(static::ATTR_STYLE);
+            }
+
+            $styles = $props = $safe_props = $prop = null;
         }
     }
 

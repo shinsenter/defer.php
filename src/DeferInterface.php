@@ -13,6 +13,10 @@
 
 namespace shinsenter;
 
+if (!defined('DEFER_JS_ROOT')) {
+    define('DEFER_JS_ROOT', dirname(dirname(__FILE__)));
+}
+
 if (!defined('DEFER_JS_VERSION')) {
     define('DEFER_JS_VERSION', 'latest');
 }
@@ -35,20 +39,20 @@ abstract class DeferInterface
     const DEFERJS_EXPIRY = 86400;
     const DEFERJS_CACHE  = __DIR__ . '/../cache/deferjs' . DEFER_JS_CACHE_SUFFIX . '.php';
     const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
-    const HELPERS_URL    = DEFER_JS_CDN . '/dist/helpers.min.js';
+    const HELPERS_URL    = DEFER_JS_ROOT . '/public/helpers.min.js';
 
     // Library's fingerprint
     const FINGERPRINT_CACHE = __DIR__ . '/../cache/fingerprint' . DEFER_JS_CACHE_SUFFIX . '.php';
-    const FINGERPRINT_URL   = 'https://raw.githubusercontent.com/shinsenter/defer.js/master/src/fingerprint';
+    const FINGERPRINT_URL   = 'https://raw.githubusercontent.com/shinsenter/defer.php/footprint/copyright.txt';
 
     // Polyfill
     const POLYFILL_URL   = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
-        '[data-src],[data-srcset]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
-        '[data-lazied]{opacity:.1!important;transition:opacity .15s ease-in-out}' .
-        '[data-lazied].in{background-color:transparent!important;opacity:1!important}';
+        '[data-src],[data-srcset],[data-style]{min-width:1px;min-height:1px;display:inline-block;max-width:100%;visibility:visible}' .
+        '[data-lazied]{opacity:.3!important;transition:opacity .15s ease-in-out}' .
+        '[data-lazied].in,[data-style][data-lazied]{background-color:transparent!important;opacity:inherit!important}';
 
     // Fake defer attribute for inline scripts
     const DEFER_INLINE = 'defer(function(){var e=window.document.head,r=defer_helper.h.querySelectorAll("script[type=deferscript]");[].forEach.call(r,function(r,t){r.parentNode.removeChild(r),r.type="text/javascript",e.appendChild(r)})},3)';
@@ -97,6 +101,7 @@ abstract class DeferInterface
     const ATTR_DATA_IGNORE = 'data-ignore';
     const ATTR_DATA_SRC    = 'data-src';
     const ATTR_DATA_SRCSET = 'data-srcset';
+    const ATTR_DATA_STYLE  = 'data-style';
     const ATTR_DEFER       = 'defer';
     const ATTR_HEIGHT      = 'height';
     const ATTR_HREF        = 'href';
@@ -112,15 +117,17 @@ abstract class DeferInterface
     const ATTR_WIDTH       = 'width';
 
     // Xpath query expressions
-    const COMMENT_XPATH = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
-    const DNSCONN_XPATH = '//link[@rel="dns-prefetch" or @rel="preconnect"]';
-    const PRELOAD_XPATH = '//link[@rel="preload"]';
-    const STYLE_XPATH   = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
-    const SCRIPT_XPATH  = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH     = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(ancestor::header)]';
-    const IFRAME_XPATH  = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
+    const COMMENT_XPATH    = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
+    const DNSCONN_XPATH    = '//link[@rel="dns-prefetch" or @rel="preconnect"]';
+    const PRELOAD_XPATH    = '//link[@rel="preload"]';
+    const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
+    const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
+    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(ancestor::header)]';
+    const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
+    const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and contains(@style,"url")]';
 
     // Variable holders
     public static $deferjs_script = null;
     public static $fingerprint    = null;
+    public static $helpers        = null;
 }

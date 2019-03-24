@@ -53,6 +53,7 @@
     }],
     "scripts":
     {
+        "helper": "uglifyjs --config-file=.uglifyjs -o public/helpers.min.js src/helpers.js",
         "fixer": "php-cs-fixer fix --show-progress=estimating --verbose",
         "test": "php test/test.php"
     },
