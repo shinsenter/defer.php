@@ -182,6 +182,7 @@ class Defer extends DeferInterface
             $this->script_cache,
             $this->img_cache,
             $this->iframe_cache,
+            $this->bg_cache,
             []
         );
 

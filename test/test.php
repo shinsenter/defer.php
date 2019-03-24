@@ -29,18 +29,19 @@ $defer = new shinsenter\Defer();
 $defer->debug_mode            = false;
 $defer->hide_warnings         = true;
 
-$defer->append_defer_js       = false;
-$defer->default_defer_time    = 100;
+$defer->append_defer_js       = true;
+$defer->default_defer_time    = 10;
 
 $defer->enable_preloading     = true;
 $defer->enable_dns_prefetch   = true;
 $defer->fix_render_blocking   = true;
 $defer->minify_output_html    = true;
 
-$defer->enable_defer_css      = true;
-$defer->enable_defer_scripts  = false;
-$defer->enable_defer_images   = true;
-$defer->enable_defer_iframes  = true;
+$defer->enable_defer_css         = true;
+$defer->enable_defer_scripts     = false;
+$defer->enable_defer_images      = true;
+$defer->enable_defer_iframes     = true;
+$defer->enable_defer_background  = true;
 
 $defer->defer_web_fonts       = true;
 $defer->use_color_placeholder = true;

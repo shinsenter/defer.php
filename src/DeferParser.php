@@ -32,6 +32,7 @@ trait DeferParser
     protected $script_cache;
     protected $img_cache;
     protected $iframe_cache;
+    protected $bg_cache;
 
     // Meta tag cache arrays
     protected $dns_map;
@@ -60,6 +61,7 @@ trait DeferParser
         $this->script_cache  = null;
         $this->img_cache     = null;
         $this->iframe_cache  = null;
+        $this->bg_cache      = null;
 
         $this->dns_map        = [];
         $this->preconnect_map = [];
@@ -67,7 +69,6 @@ trait DeferParser
 
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
-            $this->preload_map[static::HELPERS_URL]  = static::PRELOAD_SCRIPT;
         }
 
         return $this;
@@ -140,6 +141,7 @@ trait DeferParser
         $this->script_cache  = $this->parseScriptTags();
         $this->img_cache     = $this->parseImgTags();
         $this->iframe_cache  = $this->parseIframeTags();
+        $this->bg_cache      = $this->parseBackgroundTags();
 
         return $this;
     }
@@ -269,14 +271,16 @@ trait DeferParser
     {
         $output = [];
 
-        foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-            $this->normalizeUrl($node, static::ATTR_SRC);
+        if ($this->enable_defer_images) {
+            foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
+                $this->normalizeUrl($node, static::ATTR_SRC);
 
-            if (!$node->hasAttribute(static::ATTR_ALT)) {
-                $node->setAttribute(static::ATTR_ALT, '');
+                if (!$node->hasAttribute(static::ATTR_ALT)) {
+                    $node->setAttribute(static::ATTR_ALT, '');
+                }
+
+                $output[] = $node;
             }
-
-            $output[] = $node;
         }
 
         return $output;
@@ -292,14 +296,35 @@ trait DeferParser
     {
         $output = [];
 
-        foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-            $this->normalizeUrl($node, static::ATTR_SRC);
+        if ($this->enable_defer_iframes) {
+            foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
+                $this->normalizeUrl($node, static::ATTR_SRC);
 
-            if (!$node->hasAttribute(static::ATTR_TITLE)) {
-                $node->setAttribute(static::ATTR_TITLE, '');
+                if (!$node->hasAttribute(static::ATTR_TITLE)) {
+                    $node->setAttribute(static::ATTR_TITLE, '');
+                }
+
+                $output[] = $node;
             }
+        }
 
-            $output[] = $node;
+        return $output;
+    }
+
+    /**
+     * Parse all tags contain background image in the HTML
+     *
+     * @since  1.1.0
+     * @return array
+     */
+    protected function parseBackgroundTags()
+    {
+        $output = [];
+
+        if ($this->enable_defer_background) {
+            foreach ($this->xpath->query(static::BACKGROUND_XPATH) as $node) {
+                $output[] = $node;
+            }
         }
 
         return $output;
