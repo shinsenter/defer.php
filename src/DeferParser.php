@@ -39,6 +39,10 @@ trait DeferParser
     protected $preconnect_map;
     protected $preload_map;
 
+    // Fix PHP bugs
+    // https://bugs.php.net/bug.php?id=72288
+    protected $bug72288_body;
+
     /**
      * Cleanup internal variables
      *
@@ -87,7 +91,7 @@ trait DeferParser
         $this->cleanup();
 
         // Check if DOMDocument module was loaded
-        if (!class_exists('DOMDocument')) {
+        if (!class_exists(\DOMDocument::class)) {
             throw new DeferException('DOMDocument module is not loaded. Please install php-xml module for PHP.', 1);
         }
 
@@ -97,12 +101,12 @@ trait DeferParser
         }
 
         // Force HTML5 doctype
-        $html = preg_replace('/<!DOCTYPE html[^>]*?>/i', '<!DOCTYPE html>', $html, 1);
+        $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
 
         // Create DOM document
-        $this->dom = new \DOMDocument('1.0', $this->charset);
-        $this->dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
+        $this->dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
@@ -115,7 +119,8 @@ trait DeferParser
 
         // Check if the <body> tag exists
         if ($attempt = $this->xpath->query('//body')) {
-            $this->body = $attempt->item(0);
+            $this->body          = $attempt->item(0);
+            $this->bug72288_body = preg_match('/(<body[^>]*>)/mi', $html, $match) ? $match[1] : '';
         }
 
         // If none of above, throw an error
