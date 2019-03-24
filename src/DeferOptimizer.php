@@ -657,7 +657,7 @@ trait DeferOptimizer
             switch ($node->nodeName) {
                 case static::LINK_TAG:
                     if (in_array($node->getAttribute(static::ATTR_REL), [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
-                        continue;
+                        break;
                     }
                     $as = static::PRELOAD_STYLE;
                     break;
@@ -669,28 +669,22 @@ trait DeferOptimizer
                     break;
                 case static::IMG_TAG:
                     // $as = static::PRELOAD_IMAGE;
-                    continue;
                     break;
                 case static::AUDIO_TAG:
                     // $as = static::PRELOAD_AUDIO;
-                    continue;
                     break;
                 case static::VIDEO_TAG:
                     // $as = static::PRELOAD_VIDEO;
-                    continue;
                     break;
                 case static::EMBED_TAG:
                     // $as = static::PRELOAD_EMBED;
-                    continue;
                     break;
                 case static::FRAME_TAG:
                 case static::IFRAME_TAG:
                     // $as = static::PRELOAD_DOCUMENT;
-                    continue;
                     break;
                 default:
                     // $as = static::PRELOAD_FETCH;
-                    continue;
                     break;
             }
         } elseif (is_string($node)) {
