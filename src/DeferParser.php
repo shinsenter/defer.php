@@ -71,8 +71,12 @@ trait DeferParser
         $this->preconnect_map = [];
         $this->preload_map    = [];
 
+        // Preload polyfill
+        $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
+
+        // Preload defer.js
         if (!$this->append_defer_js) {
-            $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
+            $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
         }
 
         return $this;
@@ -113,12 +117,12 @@ trait DeferParser
         $this->isAmp = $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
 
         // Check if the <head> tag exists
-        if ($attempt = $this->xpath->query('//head')) {
+        if (($attempt = $this->xpath->query('//head')) && $attempt->length > 0) {
             $this->head = $attempt->item(0);
         }
 
         // Check if the <body> tag exists
-        if ($attempt = $this->xpath->query('//body')) {
+        if (($attempt = $this->xpath->query('//body')) && $attempt->length > 0) {
             $this->body          = $attempt->item(0);
             $this->bug72288_body = preg_match('/(<body[^>]*>)/mi', $html, $match) ? $match[1] : '';
         }
@@ -352,6 +356,11 @@ trait DeferParser
             if (preg_match('#^//#', $src)) {
                 $src = 'https:' . $src;
                 $node->setAttribute($attr, $src);
+            }
+
+            // Remove ads
+            if (stripos($src, 'ads') !== false) {
+                return;
             }
 
             $rel = $node->getAttribute(static::ATTR_REL);

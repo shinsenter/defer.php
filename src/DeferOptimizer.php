@@ -30,9 +30,7 @@ trait DeferOptimizer
         $this->addDeferJs();
 
         // Meta optimizations
-        $this->optimizeCommentTags();
-        $this->optimizeDnsTags();
-        $this->optimizePreloadTags();
+        $this->addMissingMeta();
 
         // Page optimiztions
         $this->enablePreloading();
@@ -40,6 +38,9 @@ trait DeferOptimizer
         $this->fixRenderBlocking();
 
         // Elements optimizations
+        $this->optimizeCommentTags();
+        $this->optimizeDnsTags();
+        $this->optimizePreloadTags();
         $this->optimizeStyleTags();
         $this->optimizeScriptTags();
         $this->optimizeImgTags();
@@ -68,15 +69,15 @@ trait DeferOptimizer
         if (file_exists(static::DEFERJS_CACHE) && time() - filemtime(static::DEFERJS_CACHE) < static::DEFERJS_EXPIRY) {
             require_once static::DEFERJS_CACHE;
         } else {
-            $cache_template         = "<?php\n" .
-                        "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
-                        'use \shinsenter\Defer as DeferJs;' .
-                        'DeferJs::$deferjs_script="%s";' .
-                        'DeferJs::$helpers="%s";' .
-                        'DeferJs::$fingerprint=base64_decode("%s");';
+            $cache_template = "<?php\n" .
+                "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
+                'use \shinsenter\Defer as DeferJs;' .
+                'DeferJs::$deferjs_script="%s";' .
+                'DeferJs::$helpers="%s";' .
+                'DeferJs::$fingerprint=base64_decode("%s");';
 
-            $comment  = '/* ' . static::DEFERJS_URL . ' */';
-            $source   = @file_get_contents(static::DEFERJS_URL);
+            $comment = '/* ' . static::DEFERJS_URL . ' */';
+            $source  = @file_get_contents(static::DEFERJS_URL);
 
             static::$deferjs_script = $comment . $source;
             static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
@@ -127,6 +128,13 @@ trait DeferOptimizer
 
         $the_anchor = $this->head->childNodes->item(0);
 
+        // Append polyfill
+        $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
+        $script_tag->setAttribute(static::ATTR_SRC, static::POLYFILL_URL);
+        $script_tag->setAttribute(static::ATTR_ID, 'polyfill-js');
+        $this->head->insertBefore($script_tag, $the_anchor);
+        $script_tag = null;
+
         // Append defer.js library loaded script is empty
         if (empty(static::$deferjs_script)) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
@@ -136,13 +144,8 @@ trait DeferOptimizer
             $script_tag = null;
         }
 
-        $extra_scripts   = (array) $this->loader_scripts;
-
-        // Append polyfill
-        $polyfill        = "deferscript('" . static::POLYFILL_URL . "','polyfill-js',1)";
-        $extra_scripts[] = $polyfill;
-
         // Append helpers
+        $extra_scripts   = (array) $this->loader_scripts;
         $extra_scripts[] = static::$helpers;
 
         if (!empty($script = static::$deferjs_script . implode(';', array_filter($extra_scripts)))) {
@@ -261,7 +264,7 @@ trait DeferOptimizer
                 $link_tag = $this->dom->createElement(static::LINK_TAG);
                 $link_tag->setAttribute(static::ATTR_REL, static::REL_PRECONNECT);
                 $link_tag->setAttribute(static::ATTR_HREF, $domain);
-                $link_tag->setAttribute(static::ATTR_CROSSORIGIN, static::ATTR_CROSSORIGIN);
+                $link_tag->setAttribute(static::ATTR_CROSSORIGIN, 'anonymous');
             }
 
             $this->head->insertBefore($link_tag, $the_anchor);
@@ -339,6 +342,33 @@ trait DeferOptimizer
     }
 
     /**
+     * Add missing must-have meta tags
+     *
+     * @since  1.0.4
+     */
+    protected function addMissingMeta()
+    {
+        if (!$this->add_missing_meta_tags) {
+            return;
+        }
+
+        // Check if the meta viewport tag does not exist
+        if (!($attempt = $this->xpath->query('//meta[@name="viewport"]')) || !$attempt->length) {
+            $this->head->appendChild($this->makeMetaTag([
+                'name'    => 'viewport',
+                'content' => 'width=device-width,initial-scale=1',
+            ]));
+        }
+
+        // Check if the meta viewport tag does not exist
+        if (!($attempt = $this->xpath->query('//meta[@charset]')) || !$attempt->length) {
+            $this->head->appendChild($this->makeMetaTag([
+                'charset' => $this->charset,
+            ]));
+        }
+    }
+
+    /**
      * Minify output HTML
      *
      * @since  1.0.0
@@ -379,41 +409,29 @@ trait DeferOptimizer
             }
 
             if ($node->nodeName == static::LINK_TAG) {
-                if ($this->defer_web_fonts &&
-                    $this->isWebfontUrl($src) &&
-                    empty($node->getAttribute(static::ATTR_ONLOAD))) {
-                    // Make a noscript fallback
-                    $this->makeNoScript($node);
+                $this->deferWebFont($node, $src);
 
-                    // The switch to the right media type when it is loaded
-                    $node->setAttribute(static::ATTR_ONLOAD, sprintf(
-                        'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
-                        addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
-                    ));
-
-                    // Make a fake media type, force browser to load this as the lowest priority
-                    $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width: 1px)');
-                }
-            } else {
-                $code = $node->textContent;
-
-                // Strip comments
-                // See: https://gist.github.com/orangexception/1292778
-                $code = preg_replace('/\/\*(?:(?!\*\/).)*+\*\//', '', $code);
-
-                // Minify the css code
-                // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
-                $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
-                $code = trim(str_replace(';}', '}', $code));
-
-                if (!empty($code)) {
-                    $node->textContent = $code;
-                } elseif ($node->parentNode) {
-                    $node->parentNode->removeChild($node);
-                }
-
-                $code = null;
+                continue;
             }
+
+            $code = $node->textContent;
+
+            // Strip comments
+            // See: https://gist.github.com/orangexception/1292778
+            $code = preg_replace('/\/\*(?:(?!\*\/).)*+\*\//', '', $code);
+
+            // Minify the css code
+            // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
+            $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
+            $code = trim(str_replace(';}', '}', $code));
+
+            if (!empty($code)) {
+                $node->textContent = $code;
+            } elseif ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+
+            $code = null;
         }
     }
 
@@ -532,7 +550,7 @@ trait DeferOptimizer
     /**
      * Optimize all tags contain background image
      *
-     * @since  1.1.0
+     * @since  1.0.4
      */
     protected function optimizeBackgroundTags()
     {
@@ -568,6 +586,24 @@ trait DeferOptimizer
     | Other helper functions
     |--------------------------------------------------------------------------
      */
+
+    /**
+     * Cleanup library cache directory
+     *
+     * @since  1.0.3
+     */
+    protected function cleanupLibraryCache()
+    {
+        @mkdir($dir = dirname(static::DEFERJS_CACHE), 0755, true);
+
+        $files = glob($dir . '/*.php', GLOB_MARK);
+
+        if (!empty($files)) {
+            foreach ($files as $file) {
+                @unlink($file);
+            }
+        }
+    }
 
     /**
      * Get default defer timeout from options
@@ -643,6 +679,31 @@ trait DeferOptimizer
     }
 
     /**
+     * Defer a webfont tag
+     *
+     * @since  1.0.4
+     * @param DOMNode $node
+     */
+    protected function deferWebFont($node)
+    {
+        if ($this->defer_web_fonts &&
+            $this->isWebfontUrl($src = $node->getAttribute(static::ATTR_HREF)) &&
+            empty($node->getAttribute(static::ATTR_ONLOAD))) {
+            // Make a noscript fallback
+            $this->makeNoScript($node);
+
+            // The switch to the right media type when it is loaded
+            $node->setAttribute(static::ATTR_ONLOAD, sprintf(
+                'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
+                addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
+            ));
+
+            // Make a fake media type, force browser to load this as the lowest priority
+            $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width:1px)');
+        }
+    }
+
+    /**
      * Get right content type for <link rel="preload">
      *
      * @since  1.0.0
@@ -697,7 +758,7 @@ trait DeferOptimizer
     /**
      * Add random background color for a node
      *
-     * @since  1.0.6
+     * @since  1.0.3
      * @param DOMNode $node
      * @see    https://github.com/axe312ger/sqip
      */
@@ -713,7 +774,7 @@ trait DeferOptimizer
     /**
      * Set placeholder src for the media
      *
-     * @since  1.0.6
+     * @since  1.0.3
      * @param DOMNode $node
      */
     protected function setPlaceholderSrc($node)
@@ -730,33 +791,19 @@ trait DeferOptimizer
     }
 
     /**
-     * Cleanup library cache directory
-     *
-     * @since  1.0.7
-     */
-    protected function cleanupLibraryCache()
-    {
-        @mkdir($dir = dirname(static::DEFERJS_CACHE), 0755, true);
-
-        $files = glob($dir . '/*.php', GLOB_MARK);
-
-        if (!empty($files)) {
-            foreach ($files as $file) {
-                @unlink($file);
-            }
-        }
-    }
-
-    /**
      * Append a <noscript> tag for content fallback
      *
-     * @since  1.0.7
+     * @since  1.0.3
      * @param DOMNode $node
      */
     protected function makeNoScript($node)
     {
         // Create noscript tag for normal image fallback
         if (!$this->debug_mode && $node->parentNode) {
+            if ($node->parentNode->nodeName === static::HEAD_TAG) {
+                $this->body->appendChild($node);
+            }
+
             $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
             $node->parentNode->insertBefore($noscript, $node->nextSibling);
 
@@ -767,5 +814,23 @@ trait DeferOptimizer
             // Cleanup
             $noscript = $clone = null;
         }
+    }
+
+    /**
+     * Create a meta tag
+     *
+     * @since  1.0.4
+     * @param array  $attributes
+     * @param string $name
+     */
+    protected function makeMetaTag($attributes, $name = null)
+    {
+        $node = $this->dom->createElement($name ?: static::META_TAG);
+
+        foreach ($attributes as $key => $value) {
+            $node->setAttribute($key, $value);
+        }
+
+        return $node;
     }
 }

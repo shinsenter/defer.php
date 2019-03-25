@@ -56,7 +56,7 @@
     var helper = {
         c: 'lazied',
         f: 'in',
-        h: document.children.item(0),
+        h: document.getElementsByTagName('html').item(0),
         t: 10
     };
 
@@ -74,7 +74,12 @@
             log(text, style1, style2);
         }
 
-        log('This page was optimized with defer.js\nhttps://github.com/shinsenter/defer.js/\n\n(c) 2019 Mai Nhut Tan <shin@shin.company>');
+        log([
+            'This page was optimized with defer.js',
+            '(c) 2019 Mai Nhut Tan <shin@shin.company>',
+            'Website: https://wordpress.org/plugins/shins-pageload-magic/',
+            'Github:  https://github.com/shinsenter/defer.js/'
+        ].join('\n'));
     }
 
     /**
@@ -116,7 +121,7 @@
     }
 
     function addClass(element, classname) {
-        element.className = classFilter(element.className, classname) + ' ' + classname;
+        element.className = (classFilter(element.className, classname) + ' ' + classname).trim();
     }
 
     function removeClass(element, classname) {

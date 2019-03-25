@@ -46,7 +46,7 @@ abstract class DeferInterface
     const FINGERPRINT_URL   = 'https://raw.githubusercontent.com/shinsenter/defer.php/footprint/copyright.txt';
 
     // Polyfill
-    const POLYFILL_URL   = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
+    const POLYFILL_URL = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
@@ -64,9 +64,11 @@ abstract class DeferInterface
     const AUDIO_TAG    = 'audio';
     const EMBED_TAG    = 'embed';
     const FRAME_TAG    = 'frame';
+    const HEAD_TAG     = 'head';
     const IFRAME_TAG   = 'iframe';
     const IMG_TAG      = 'img';
     const LINK_TAG     = 'link';
+    const META_TAG     = 'meta';
     const NOSCRIPT_TAG = 'noscript';
     const SCRIPT_TAG   = 'script';
     const STYLE_TAG    = 'style';

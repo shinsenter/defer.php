@@ -17,20 +17,21 @@ trait DeferOptions
 {
     public $options = [
         // Debug optimized tags (instead of optimized HTML)
-        'debug_mode' => false,
+        'debug_mode'              => false,
 
         // Disable libxml errors and warnings
-        'hide_warnings' => true,
+        'hide_warnings'           => true,
 
         // Library injection
-        'append_defer_js'    => false,
-        'default_defer_time' => 10,
+        'append_defer_js'         => false,
+        'default_defer_time'      => 10,
 
         // Page optimizations
-        'enable_preloading'   => true,
-        'enable_dns_prefetch' => true,
-        'fix_render_blocking' => true,
-        'minify_output_html'  => true,
+        'enable_preloading'       => true,
+        'enable_dns_prefetch'     => true,
+        'fix_render_blocking'     => true,
+        'minify_output_html'      => true,
+        'add_missing_meta_tags'   => true,
 
         // Tag optimizations
         'enable_defer_css'        => true,
@@ -40,8 +41,8 @@ trait DeferOptions
         'enable_defer_background' => true,
 
         // Web-font optimizations
-        'defer_web_fonts'    => true,
-        'web_fonts_patterns' => [
+        'defer_web_fonts'         => true,
+        'web_fonts_patterns'      => [
             '_debugbar.*stylesheets',
             'fonts\.google(apis)?\.com',
             '(gadget|popup|modal)[^\/]*\.css',
@@ -49,19 +50,19 @@ trait DeferOptions
         ],
 
         // Custom loader scripts
-        'loader_scripts' => [],
+        'loader_scripts'          => [],
 
         // Blacklist patterns
-        'do_not_optimize' => [
+        'do_not_optimize'         => [
             'document\.write\s*\(',
             'modernizr([-_][\d\.]+)?(\.min)?\.js',
             '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
-        'use_color_placeholder' => true,
-        'empty_gif'             => '',
-        'empty_src'             => 'about:blank',
+        'use_color_placeholder'   => true,
+        'empty_gif'               => '',
+        'empty_src'               => 'about:blank',
     ];
 
     /**
