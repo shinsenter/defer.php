@@ -71,8 +71,12 @@ trait DeferParser
         $this->preconnect_map = [];
         $this->preload_map    = [];
 
+        // Preload polyfill
+        $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
+
+        // Preload defer.js
         if (!$this->append_defer_js) {
-            $this->preload_map[static::DEFERJS_URL]  = static::PRELOAD_SCRIPT;
+            $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
         }
 
         return $this;
