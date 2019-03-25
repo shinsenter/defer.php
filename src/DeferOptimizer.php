@@ -29,9 +29,6 @@ trait DeferOptimizer
         $this->initLoaderJs();
         $this->addDeferJs();
 
-        // Meta optimizations
-        $this->addMissingMeta();
-
         // Page optimiztions
         $this->enablePreloading();
         $this->enableDnsPrefetch();
@@ -46,6 +43,9 @@ trait DeferOptimizer
         $this->optimizeImgTags();
         $this->optimizeIframeTags();
         $this->optimizeBackgroundTags();
+
+        // Meta optimizations
+        $this->addMissingMeta();
 
         // Minify
         $this->minifyOutputHTML();
@@ -309,6 +309,10 @@ trait DeferOptimizer
                 $link_tag->setAttribute(static::ATTR_AS, $as);
                 $link_tag->setAttribute(static::ATTR_HREF, $url);
 
+                if (is_a($node, \DOMElement::class) && $charset = $node->getAttribute(static::ATTR_CHARSET)) {
+                    $link_tag->setAttribute(static::ATTR_CHARSET, $charset);
+                }
+
                 $this->head->insertBefore($link_tag, $the_anchor);
                 $link_tag = null;
             }
@@ -352,20 +356,26 @@ trait DeferOptimizer
             return;
         }
 
-        // Check if the meta viewport tag does not exist
-        if (!($attempt = $this->xpath->query('//meta[@name="viewport"]')) || !$attempt->length) {
-            $this->head->appendChild($this->makeMetaTag([
-                'name'    => 'viewport',
-                'content' => 'width=device-width,initial-scale=1',
-            ]));
-        }
+        $the_anchor = $this->head->childNodes->item(0);
 
         // Check if the meta viewport tag does not exist
         if (!($attempt = $this->xpath->query('//meta[@charset]')) || !$attempt->length) {
-            $this->head->appendChild($this->makeMetaTag([
+            $this->head->insertBefore($this->makeMetaTag([
                 'charset' => $this->charset,
-            ]));
+            ]), $the_anchor);
+        } else {
+            $this->head->insertBefore($attempt->item(0), $the_anchor);
         }
+
+        // Check if the meta viewport tag does not exist
+        if (!($attempt = $this->xpath->query('//meta[@name="viewport"]')) || !$attempt->length) {
+            $this->head->insertBefore($this->makeMetaTag([
+                'name'    => 'viewport',
+                'content' => 'width=device-width,initial-scale=1',
+            ]), $the_anchor);
+        }
+
+        $the_anchor = null;
     }
 
     /**
