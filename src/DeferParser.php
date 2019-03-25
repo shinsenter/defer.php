@@ -358,6 +358,11 @@ trait DeferParser
                 $node->setAttribute($attr, $src);
             }
 
+            // Remove ads
+            if (stripos($src, 'ads') !== false) {
+                return;
+            }
+
             $rel = $node->getAttribute(static::ATTR_REL);
 
             // Add the resouce URL to the preload list

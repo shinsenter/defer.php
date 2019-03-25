@@ -30,9 +30,7 @@ trait DeferOptimizer
         $this->addDeferJs();
 
         // Meta optimizations
-        $this->optimizeCommentTags();
-        $this->optimizeDnsTags();
-        $this->optimizePreloadTags();
+        $this->addMissingMeta();
 
         // Page optimiztions
         $this->enablePreloading();
@@ -40,6 +38,9 @@ trait DeferOptimizer
         $this->fixRenderBlocking();
 
         // Elements optimizations
+        $this->optimizeCommentTags();
+        $this->optimizeDnsTags();
+        $this->optimizePreloadTags();
         $this->optimizeStyleTags();
         $this->optimizeScriptTags();
         $this->optimizeImgTags();
@@ -47,7 +48,6 @@ trait DeferOptimizer
         $this->optimizeBackgroundTags();
 
         // Minify
-        $this->addMissingMeta();
         $this->minifyOutputHTML();
         $this->addFingerprint();
     }

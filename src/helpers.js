@@ -121,7 +121,7 @@
     }
 
     function addClass(element, classname) {
-        element.className = classFilter(element.className, classname) + ' ' + classname;
+        element.className = (classFilter(element.className, classname) + ' ' + classname).trim();
     }
 
     function removeClass(element, classname) {
