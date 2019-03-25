@@ -98,6 +98,7 @@ abstract class DeferInterface
     const ATTR_ALT         = 'alt';
     const ATTR_AS          = 'as';
     const ATTR_ASYNC       = 'async';
+    const ATTR_CHARSET     = 'charset';
     const ATTR_CLASS       = 'class';
     const ATTR_CROSSORIGIN = 'crossorigin';
     const ATTR_DATA_IGNORE = 'data-ignore';
