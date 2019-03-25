@@ -47,6 +47,7 @@ trait DeferOptimizer
         $this->optimizeBackgroundTags();
 
         // Minify
+        $this->addMissingMeta();
         $this->minifyOutputHTML();
         $this->addFingerprint();
     }
@@ -341,6 +342,33 @@ trait DeferOptimizer
     }
 
     /**
+     * Add missing must-have meta tags
+     *
+     * @since  1.0.4
+     */
+    protected function addMissingMeta()
+    {
+        if (!$this->add_missing_meta_tags) {
+            return;
+        }
+
+        // Check if the meta viewport tag does not exist
+        if (!($attempt = $this->xpath->query('//meta[@name="viewport"]')) || !$attempt->length) {
+            $this->head->appendChild($this->makeMetaTag([
+                'name'    => 'viewport',
+                'content' => 'width=device-width,initial-scale=1',
+            ]));
+        }
+
+        // Check if the meta viewport tag does not exist
+        if (!($attempt = $this->xpath->query('//meta[@charset]')) || !$attempt->length) {
+            $this->head->appendChild($this->makeMetaTag([
+                'charset' => $this->charset,
+            ]));
+        }
+    }
+
+    /**
      * Minify output HTML
      *
      * @since  1.0.0
@@ -381,7 +409,7 @@ trait DeferOptimizer
             }
 
             if ($node->nodeName == static::LINK_TAG) {
-                $this->deferWebFont($node);
+                $this->deferWebFont($node, $src);
 
                 continue;
             }
@@ -659,7 +687,7 @@ trait DeferOptimizer
     protected function deferWebFont($node)
     {
         if ($this->defer_web_fonts &&
-            $this->isWebfontUrl($src) &&
+            $this->isWebfontUrl($src = $node->getAttribute(static::ATTR_HREF)) &&
             empty($node->getAttribute(static::ATTR_ONLOAD))) {
             // Make a noscript fallback
             $this->makeNoScript($node);
@@ -786,5 +814,23 @@ trait DeferOptimizer
             // Cleanup
             $noscript = $clone = null;
         }
+    }
+
+    /**
+     * Create a meta tag
+     *
+     * @since  1.0.4
+     * @param array  $attributes
+     * @param string $name
+     */
+    protected function makeMetaTag($attributes, $name = null)
+    {
+        $node = $this->dom->createElement($name ?: static::META_TAG);
+
+        foreach ($attributes as $key => $value) {
+            $node->setAttribute($key, $value);
+        }
+
+        return $node;
     }
 }

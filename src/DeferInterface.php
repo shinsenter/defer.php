@@ -61,13 +61,14 @@ abstract class DeferInterface
     const SVG_PLACEHOLDER = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 %d %d'></svg>";
 
     // Content tags
-    const HEAD_TAG     = 'head';
     const AUDIO_TAG    = 'audio';
     const EMBED_TAG    = 'embed';
     const FRAME_TAG    = 'frame';
+    const HEAD_TAG     = 'head';
     const IFRAME_TAG   = 'iframe';
     const IMG_TAG      = 'img';
     const LINK_TAG     = 'link';
+    const META_TAG     = 'meta';
     const NOSCRIPT_TAG = 'noscript';
     const SCRIPT_TAG   = 'script';
     const STYLE_TAG    = 'style';

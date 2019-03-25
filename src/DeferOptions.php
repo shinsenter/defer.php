@@ -31,6 +31,7 @@ trait DeferOptions
         'enable_dns_prefetch'     => true,
         'fix_render_blocking'     => true,
         'minify_output_html'      => true,
+        'add_missing_meta_tags'   => true,
 
         // Tag optimizations
         'enable_defer_css'        => true,
