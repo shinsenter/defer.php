@@ -263,7 +263,7 @@ trait DeferOptimizer
                 $link_tag = $this->dom->createElement(static::LINK_TAG);
                 $link_tag->setAttribute(static::ATTR_REL, static::REL_PRECONNECT);
                 $link_tag->setAttribute(static::ATTR_HREF, $domain);
-                $link_tag->setAttribute(static::ATTR_CROSSORIGIN, static::ATTR_CROSSORIGIN);
+                $link_tag->setAttribute(static::ATTR_CROSSORIGIN, 'anonymous');
             }
 
             $this->head->insertBefore($link_tag, $the_anchor);
