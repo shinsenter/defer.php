@@ -40,19 +40,11 @@ abstract class DeferInterface
     const DEFERJS_CACHE  = __DIR__ . '/../cache/';
     const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
     const HELPERS_URL    = DEFER_JS_ROOT . '/public/helpers.min.js';
+    const INLINE_CSS_URL = DEFER_JS_ROOT . '/public/styles.min.css';
 
     // Polyfill & library's fingerprint
     const POLYFILL_URL    = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
     const FINGERPRINT_URL = 'https://raw.githubusercontent.com/shinsenter/defer.php/footprint/copyright.txt';
-
-    // Simple fade-in effect
-    const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .
-        '[data-src],[data-srcset],[data-style]{min-width:1px;min-height:1px;max-width:100%;visibility:visible}' .
-        '[data-lazied]{opacity:.3!important;transition:opacity .15s ease-in-out}' .
-        '[data-lazied].in,[data-style][data-lazied]{background-color:transparent!important;opacity:inherit!important}';
-
-    // Fake defer attribute for inline scripts
-    const DEFER_INLINE = 'defer(function(){var e=window.document.head,r=defer_helper.h.querySelectorAll("script[type=deferscript]");[].forEach.call(r,function(r,t){r.parentNode.removeChild(r),r.type="text/javascript",e.appendChild(r)})},3)';
 
     // SVG placeholder
     const SVG_PLACEHOLDER = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 %d %d'></svg>";
@@ -130,4 +122,5 @@ abstract class DeferInterface
     public static $deferjs_script = null;
     public static $fingerprint    = null;
     public static $helpers        = null;
+    public static $inline_styles  = null;
 }

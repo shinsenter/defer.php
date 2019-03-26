@@ -34,6 +34,7 @@
  */
 
 (function(window, document, console, name) {
+
     var NOOP            = Function();
     var GET_ATTRIBUTE   = 'getAttribute';
     var REM_ATTRIBUTE   = 'removeAttribute';
@@ -61,6 +62,7 @@
     };
 
     var log         = (console.log || NOOP).bind(console);
+    var defer       = window.defer || NOOP;
     var deferimg    = window.deferimg || NOOP;
     var deferiframe = window.deferiframe || NOOP;
 
@@ -77,6 +79,7 @@
         log([
             'This page was optimized with defer.js',
             '(c) 2019 Mai Nhut Tan <shin@shin.company>',
+            '',
             'Website: https://wordpress.org/plugins/shins-pageload-magic/',
             'Github:  https://github.com/shinsenter/defer.js/'
         ].join('\n'));
@@ -116,16 +119,17 @@
     function classFilter(haystack, needle) {
         return haystack.split(' ').filter(function(v) {
             return v != '' && v != needle;
-        }).
-            join(' ');
+        });
     }
 
     function addClass(element, classname) {
-        element.className = (classFilter(element.className, classname) + ' ' + classname).trim();
+        var c = classFilter(element.className, classname);
+        c.push(classname);
+        element.className=c.join(' ');
     }
 
     function removeClass(element, classname) {
-        element.className = classFilter(element.className, classname);
+        element.className = classFilter(element.className, classname).join(' ');
     }
 
     /*
@@ -158,18 +162,33 @@
         iframeloader();
     }
 
-    // Call the helpers
-    removeClass(helper.h, 'no-deferjs');
-    addClass(helper.h, 'deferjs');
-    defermedia();
-    copyright();
+    function deferscript() {
+        defer(function() {
+            var head = document.head,
+                scripts = defer_helper.h.querySelectorAll("script[type=deferscript]");
+
+            [].forEach.call(scripts, function(tag) {
+                tag.parentNode.removeChild(tag);
+                tag.type = "text/javascript";
+                head.appendChild(tag);
+            })
+        }, 3);
+    }
 
     // Expose global methods
     helper.copyright    = copyright;
     helper.debounce     = defersmart;
+    helper.deferscript  = deferscript;
     helper.defermedia   = defermedia;
     helper.addClass     = addClass;
     helper.removeClass  = removeClass;
+
+    removeClass(helper.h, 'no-deferjs');
+    addClass(helper.h, 'deferjs');
+
+    defermedia();
+    deferscript();
+    copyright();
 
     window[name] = helper;
 

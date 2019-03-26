@@ -27,12 +27,13 @@ class DeferCache
         $this->setLevel($level);
     }
 
-    public function put($key, $value, $time = 3600, $comment = '')
+    public function put($key, $value, $time = 3600)
     {
-        $path   = $this->hashedPath($key);
-        $tmp    = $path . '.lock';
-        $value  = str_replace('stdClass::__set_state', '(object)', var_export($value, true));
-        $cache  = sprintf(static::FORMAT, $comment, time() + $time, $value);
+        $path    = $this->hashedPath($key);
+        $tmp     = $path . '.lock';
+        $comment = sprintf('Cache "%s" for %d seconds at %s', $key, $time, date('Y-m-d H:i:s'));
+        $value   = str_replace('stdClass::__set_state', '(object)', var_export($value, true));
+        $cache   = sprintf(static::FORMAT, $comment, time() + $time, $value);
 
         @mkdir(dirname($path), 0755, true);
         @file_put_contents($tmp, $cache, LOCK_EX);
@@ -159,7 +160,7 @@ class DeferCache
             $path .= DS . substr($key, -$i, $i);
         }
 
-        return $path . DS . $key . '.php';
+        return $path . DS . substr($key, 0, 10) . '.php';
     }
 
     protected function hashCode($key)
