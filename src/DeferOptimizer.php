@@ -65,39 +65,30 @@ trait DeferOptimizer
      */
     protected function initLoaderJs()
     {
-        // Load and cache the defer.js library
-        if (file_exists(static::DEFERJS_CACHE) && time() - filemtime(static::DEFERJS_CACHE) < static::DEFERJS_EXPIRY) {
-            require_once static::DEFERJS_CACHE;
-        } else {
-            $cache_template = "<?php\n" .
-                "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
-                'use \shinsenter\Defer as DeferJs;' .
-                'DeferJs::$deferjs_script="%s";' .
-                'DeferJs::$helpers="%s";' .
-                'DeferJs::$fingerprint=base64_decode("%s");';
-
-            $comment = '/* ' . static::DEFERJS_URL . ' */';
-            $source  = @file_get_contents(static::DEFERJS_URL);
-
-            static::$deferjs_script = $comment . $source;
-            static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
-            static::$helpers        = @file_get_contents(static::HELPERS_URL);
-
-            $this->cleanupLibraryCache();
-            @file_put_contents(
-                static::DEFERJS_CACHE,
-                sprintf(
-                    $cache_template,
-                    date('Y-m-d H:i:s'),
-                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$deferjs_script),
-                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$helpers),
-                    base64_encode(static::$fingerprint)
-                )
-            );
-        }
+        $cache  = $this->cache_manager;
+        $suffix = DEFER_JS_CACHE_SUFFIX;
+        $time   = static::DEFERJS_EXPIRY;
 
         if (!$this->append_defer_js) {
             static::$deferjs_script = '';
+        } else {
+            if (empty(static::$deferjs_script)
+                && empty(static::$deferjs_script = $cache->get('deferjs_script' . $suffix))) {
+                static::$deferjs_script = @file_get_contents(static::DEFERJS_URL);
+                $cache->put('deferjs_script' . $suffix, static::$deferjs_script, $time, static::DEFERJS_URL);
+            }
+        }
+
+        if (empty(static::$fingerprint)
+            && empty(static::$fingerprint = base64_decode($cache->get('fingerprint' . $suffix)))) {
+            static::$fingerprint = @file_get_contents(static::FINGERPRINT_URL);
+            $cache->put('fingerprint' . $suffix, base64_encode(static::$fingerprint), $time);
+        }
+
+        if (empty(static::$helpers)
+            && empty(static::$helpers = $cache->get('helpers' . $suffix))) {
+            static::$helpers = @file_get_contents(static::HELPERS_URL);
+            $cache->put('helpers' . $suffix, static::$helpers, $time);
         }
 
         // Append simple effect for deferred contents

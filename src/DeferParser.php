@@ -79,6 +79,8 @@ trait DeferParser
             $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
         }
 
+        @gc_collect_cycles();
+
         return $this;
     }
 

@@ -37,16 +37,13 @@ abstract class DeferInterface
 {
     // For defer.js library
     const DEFERJS_EXPIRY = 86400;
-    const DEFERJS_CACHE  = __DIR__ . '/../cache/deferjs' . DEFER_JS_CACHE_SUFFIX . '.php';
+    const DEFERJS_CACHE  = __DIR__ . '/../cache/';
     const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
     const HELPERS_URL    = DEFER_JS_ROOT . '/public/helpers.min.js';
 
-    // Library's fingerprint
-    const FINGERPRINT_CACHE = __DIR__ . '/../cache/fingerprint' . DEFER_JS_CACHE_SUFFIX . '.php';
-    const FINGERPRINT_URL   = 'https://raw.githubusercontent.com/shinsenter/defer.php/footprint/copyright.txt';
-
-    // Polyfill
-    const POLYFILL_URL = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
+    // Polyfill & library's fingerprint
+    const POLYFILL_URL    = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
+    const FINGERPRINT_URL = 'https://raw.githubusercontent.com/shinsenter/defer.php/footprint/copyright.txt';
 
     // Simple fade-in effect
     const FADEIN_EFFECT = 'html.no-deferjs img[data-src],html.no-deferjs iframe[data-src]{display:none!important}' .

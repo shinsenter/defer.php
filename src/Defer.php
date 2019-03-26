@@ -26,6 +26,7 @@ class Defer extends DeferInterface
      * @var bool
      */
     protected $use_errors;
+    protected $cache_manager;
 
     /**
      * Main class constructor
@@ -38,6 +39,8 @@ class Defer extends DeferInterface
      */
     public function __construct($html = null, $options = [], $charset = null)
     {
+        $this->cache_manager = new DeferCache(static::DEFERJS_CACHE, 1);
+
         // Set library options
         if (!empty($options)) {
             $this->__set($options);
