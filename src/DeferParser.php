@@ -113,6 +113,7 @@ trait DeferParser
         $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
         $this->dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $html = null;
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);

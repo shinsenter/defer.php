@@ -25,6 +25,9 @@ trait DeferOptimizer
      */
     protected function optimize()
     {
+        // Remove all comments
+        $this->removeComments();
+
         // Add defer.js library
         $this->initLoaderJs();
         $this->addDeferJs();
@@ -35,7 +38,6 @@ trait DeferOptimizer
         $this->fixRenderBlocking();
 
         // Elements optimizations
-        $this->optimizeCommentTags();
         $this->optimizeDnsTags();
         $this->optimizePreloadTags();
         $this->optimizeStyleTags();
@@ -183,7 +185,7 @@ trait DeferOptimizer
      *
      * @since  1.0.0
      */
-    protected function optimizeCommentTags()
+    protected function removeComments()
     {
         foreach ($this->comment_cache as $node) {
             $node->parentNode->removeChild($node);
