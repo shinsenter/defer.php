@@ -29,7 +29,7 @@ $defer = new shinsenter\Defer();
 $defer->debug_mode    = false;
 $defer->hide_warnings = true;
 
-$defer->append_defer_js    = true;
+$defer->append_defer_js    = false;
 $defer->default_defer_time = 10;
 
 $defer->enable_preloading   = true;

@@ -114,7 +114,7 @@ abstract class DeferInterface
     const PRELOAD_XPATH    = '//link[@rel="preload"]';
     const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(ancestor::header)]';
+    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(contains(@src,"data:image")) and not(ancestor::header)]';
     const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
     const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and contains(@style,"url")]';
 

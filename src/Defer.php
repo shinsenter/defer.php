@@ -76,11 +76,11 @@ class Defer extends DeferInterface
     public function fromHtml($html, $charset = null)
     {
         if (empty($charset)) {
-            $charset = mb_detect_encoding($html) ?: 'UTF-8';
+            $charset = \mb_detect_encoding($html) ?: 'UTF-8';
         }
 
         // Disable libxml errors and warnings
-        $this->use_errors = libxml_use_internal_errors($this->hide_warnings);
+        $this->use_errors = \libxml_use_internal_errors($this->hide_warnings);
 
         // Load charset
         $this->charset = $charset;
@@ -97,8 +97,8 @@ class Defer extends DeferInterface
         $this->optimize();
 
         // Restore the previous value of use_errors
-        libxml_clear_errors();
-        libxml_use_internal_errors($this->use_errors);
+        \libxml_clear_errors();
+        \libxml_use_internal_errors($this->use_errors);
 
         return $this;
     }
@@ -120,14 +120,14 @@ class Defer extends DeferInterface
             $output = $this->dom->saveHtml();
         }
 
-        $encoding = mb_detect_encoding($output);
+        $encoding = \mb_detect_encoding($output);
 
         if ($encoding == 'ASCII') {
             $encoding = 'HTML-ENTITIES';
         }
 
         if ($this->charset != $encoding) {
-            $output = mb_convert_encoding($output, $this->charset, $encoding);
+            $output = \mb_convert_encoding($output, $this->charset, $encoding);
         }
 
         if (!empty($this->bug72288_body)) {

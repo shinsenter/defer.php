@@ -136,16 +136,31 @@
      * Lazy-load img and iframe elements
      */
     function mediafilter(media) {
+        var timer,
+            match,
+            src = media[GET_ATTRIBUTE]('data-src'),
+            pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
         function onload() {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+
             addClass(media, helper.f);
             media[REM_ATTRIBUTE]('data-src');
             media[REM_ATTRIBUTE]('data-srcset');
         }
 
-        if (media.src == media[GET_ATTRIBUTE]('data-src') || media[GET_ATTRIBUTE]('data-style')) {
+        if ((match = pattern.exec(src)) !== null) {
+            media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
+        }
+
+        if (media.src == src || media[GET_ATTRIBUTE]('data-style')) {
             onload();
         } else {
             media.addEventListener('load', onload);
+            timer = setTimeout(onload, 5000);
         }
     }
 
