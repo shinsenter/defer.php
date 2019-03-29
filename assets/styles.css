@@ -2,6 +2,11 @@ html.no-deferjs [data-src] {
     display: none !important;
 }
 
+[data-src],
+[data-srcset] {
+    transition: opacity .15s linear;
+}
+
 [data-src]:not([data-lazied]),
 [data-srcset]:not([data-lazied]),
 [data-style]:not([data-lazied]) {
@@ -11,11 +16,10 @@ html.no-deferjs [data-src] {
 }
 
 [data-lazied]:not([data-style]) {
-    opacity: .3 !important;
-    transition: opacity .15s linear;
+    opacity: .3;
 }
 
 [data-lazied]:not([data-style]).in {
     background-color: transparent !important;
-    opacity: inherit !important;
+    opacity: 1;
 }

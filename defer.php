@@ -25,6 +25,7 @@ if (!class_exists('shinsenter\Defer')) {
         require_once $baseDir . '/src/Helpers/JsMin.php';
         require_once $baseDir . '/src/DeferException.php';
         require_once $baseDir . '/src/DeferCache.php';
+        require_once $baseDir . '/src/DeferHttpRequest.php';
         require_once $baseDir . '/src/DeferInterface.php';
         require_once $baseDir . '/src/DeferOptions.php';
         require_once $baseDir . '/src/DeferParser.php';
