@@ -25,6 +25,9 @@ trait DeferOptimizer
      */
     protected function optimize()
     {
+        // Remove all comments
+        $this->removeComments();
+
         // Add defer.js library
         $this->initLoaderJs();
         $this->addDeferJs();
@@ -35,7 +38,6 @@ trait DeferOptimizer
         $this->fixRenderBlocking();
 
         // Elements optimizations
-        $this->optimizeCommentTags();
         $this->optimizeDnsTags();
         $this->optimizePreloadTags();
         $this->optimizeStyleTags();
@@ -65,43 +67,49 @@ trait DeferOptimizer
      */
     protected function initLoaderJs()
     {
-        // Load and cache the defer.js library
-        if (file_exists(static::DEFERJS_CACHE) && time() - filemtime(static::DEFERJS_CACHE) < static::DEFERJS_EXPIRY) {
-            require_once static::DEFERJS_CACHE;
-        } else {
-            $cache_template = "<?php\n" .
-                "/* https://github.com/shinsenter/defer.js cached on %s */\n" .
-                'use \shinsenter\Defer as DeferJs;' .
-                'DeferJs::$deferjs_script="%s";' .
-                'DeferJs::$helpers="%s";' .
-                'DeferJs::$fingerprint=base64_decode("%s");';
+        $cleanup = '//script[@id="defer-js" or @id="defer-helpers" or @id="defer-script"]|//link[@id="polyfill-js"]';
 
-            $comment = '/* ' . static::DEFERJS_URL . ' */';
-            $source  = @file_get_contents(static::DEFERJS_URL);
-
-            static::$deferjs_script = $comment . $source;
-            static::$fingerprint    = @file_get_contents(static::FINGERPRINT_URL);
-            static::$helpers        = @file_get_contents(static::HELPERS_URL);
-
-            $this->cleanupLibraryCache();
-            @file_put_contents(
-                static::DEFERJS_CACHE,
-                sprintf(
-                    $cache_template,
-                    date('Y-m-d H:i:s'),
-                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$deferjs_script),
-                    str_replace(['\\', '"'], ['\\\\', '\"'], static::$helpers),
-                    base64_encode(static::$fingerprint)
-                )
-            );
+        foreach ($this->xpath->query($cleanup) as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+                $node = null;
+            }
         }
+
+        $cache  = $this->cache_manager;
+        $suffix = DEFER_JS_CACHE_SUFFIX;
+        $time   = static::DEFERJS_EXPIRY;
 
         if (!$this->append_defer_js) {
             static::$deferjs_script = '';
+        } else {
+            if (empty(static::$deferjs_script)
+                && empty(static::$deferjs_script = $cache->get('deferjs_script' . $suffix))) {
+                static::$deferjs_script = '/* ' . static::DEFERJS_URL . ' */' . @file_get_contents(static::DEFERJS_URL);
+                $cache->put('deferjs_script' . $suffix, static::$deferjs_script, $time, static::DEFERJS_URL);
+            }
+        }
+
+        if (empty(static::$fingerprint)
+            && empty(static::$fingerprint = base64_decode($cache->get('fingerprint' . $suffix)))) {
+            static::$fingerprint = @file_get_contents(static::FINGERPRINT_URL);
+            $cache->put('fingerprint' . $suffix, base64_encode(static::$fingerprint), $time);
+        }
+
+        if (empty(static::$helpers)
+            && empty(static::$helpers = $cache->get('helpers' . $suffix))) {
+            static::$helpers = @file_get_contents(static::HELPERS_URL);
+            $cache->put('helpers' . $suffix, static::$helpers, $time);
         }
 
         // Append simple effect for deferred contents
-        $style_tag = $this->dom->createElement(static::STYLE_TAG, static::FADEIN_EFFECT);
+        if (empty(static::$inline_styles)
+            && empty(static::$inline_styles = $cache->get('inline_styles' . $suffix))) {
+            static::$inline_styles = @file_get_contents(static::INLINE_CSS_URL);
+            $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
+        }
+
+        $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
         $this->head->appendChild($style_tag);
         $style_tag = null;
     }
@@ -117,15 +125,6 @@ trait DeferOptimizer
             return;
         }
 
-        $cleanup = '//script[@id="defer-js" or @id="defer-helpers" or @id="defer-script"]|//link[@id="polyfill-js"]';
-
-        foreach ($this->xpath->query($cleanup) as $node) {
-            if ($node->parentNode) {
-                $node->parentNode->removeChild($node);
-                $node = null;
-            }
-        }
-
         $the_anchor = $this->head->childNodes->item(0);
 
         // Append polyfill
@@ -136,7 +135,7 @@ trait DeferOptimizer
         $script_tag = null;
 
         // Append defer.js library loaded script is empty
-        if (empty(static::$deferjs_script)) {
+        if (!$this->append_defer_js || empty(static::$deferjs_script)) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
             $script_tag->setAttribute(static::ATTR_SRC, static::DEFERJS_URL);
             $script_tag->setAttribute(static::ATTR_ID, 'defer-js');
@@ -166,12 +165,6 @@ trait DeferOptimizer
      */
     protected function addFingerprint()
     {
-        if ($this->enable_defer_scripts) {
-            $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim(static::DEFER_INLINE));
-            $this->head->appendChild($script_tag);
-            $script_tag = null;
-        }
-
         if (empty(static::$fingerprint)) {
             return;
         }
@@ -192,7 +185,7 @@ trait DeferOptimizer
      *
      * @since  1.0.0
      */
-    protected function optimizeCommentTags()
+    protected function removeComments()
     {
         foreach ($this->comment_cache as $node) {
             $node->parentNode->removeChild($node);
@@ -359,7 +352,7 @@ trait DeferOptimizer
         $the_anchor = $this->head->childNodes->item(0);
 
         // Check if the meta viewport tag does not exist
-        if (!($attempt = $this->xpath->query('//meta[@charset]')) || !$attempt->length) {
+        if (!($attempt = $this->xpath->query('//meta[@charset or contains(@http-equiv,"Content-Type")]')) || !$attempt->length) {
             $this->head->insertBefore($this->makeMetaTag([
                 'charset' => $this->charset,
             ]), $the_anchor);
@@ -368,11 +361,13 @@ trait DeferOptimizer
         }
 
         // Check if the meta viewport tag does not exist
-        if (!($attempt = $this->xpath->query('//meta[@name="viewport"]')) || !$attempt->length) {
+        if (!($attempt = $this->xpath->query('//meta[@name="viewport" and contains(@content,"initial-scale")]')) || !$attempt->length) {
             $this->head->insertBefore($this->makeMetaTag([
                 'name'    => 'viewport',
                 'content' => 'width=device-width,initial-scale=1',
             ]), $the_anchor);
+        } else {
+            $this->head->insertBefore($attempt->item(0), $the_anchor);
         }
 
         $the_anchor = null;
@@ -426,14 +421,14 @@ trait DeferOptimizer
 
             $code = $node->textContent;
 
-            // Strip comments
-            // See: https://gist.github.com/orangexception/1292778
-            $code = preg_replace('/\/\*(?:(?!\*\/).)*+\*\//', '', $code);
-
             // Minify the css code
             // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
             $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
-            $code = trim(str_replace(';}', '}', $code));
+            $code = trim(str_replace([';}', "\r", "\n"], ['}', '', ''], $code));
+
+            // Strip comments
+            // See: https://gist.github.com/orangexception/1292778
+            $code = preg_replace('/\/\*(?:(?!\*\/).)*\*\//', '', $code);
 
             if (!empty($code)) {
                 $node->textContent = $code;
@@ -637,10 +632,6 @@ trait DeferOptimizer
      */
     protected function isBlacklistedNode($node, $src = '')
     {
-        if ($node->parentNode && $node->parentNode->nodeName == static::NOSCRIPT_TAG) {
-            return false;
-        }
-
         $blacklist = $this->do_not_optimize;
 
         if (is_array($blacklist)) {

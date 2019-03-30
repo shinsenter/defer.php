@@ -53,7 +53,9 @@
     }],
     "scripts":
     {
-        "helper": "uglifyjs --config-file=.uglifyjs -o public/helpers.min.js src/helpers.js",
+        "css": "cleancss -o public/styles.min.css assets/styles.css",
+        "js": "uglifyjs --config-file=.uglifyjs -o public/helpers.min.js assets/helpers.js",
+        "helper": ["@css","@js"],
         "fixer": "php-cs-fixer fix --show-progress=estimating --verbose",
         "test": "php test/test.php"
     },
@@ -71,7 +73,13 @@
     },
     "require":
     {
-        "php": "^5.6"
+        "php": "^5.6",
+        "symfony/http-foundation": "^3.4",
+        "symfony/polyfill-mbstring": "^1.11",
+        "symfony/polyfill-php54": "^1.11",
+        "symfony/polyfill-php55": "^1.11",
+        "symfony/polyfill-php56": "^1.11",
+        "symfony/polyfill-util": "^1.11"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

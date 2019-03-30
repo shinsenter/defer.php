@@ -79,6 +79,8 @@ trait DeferParser
             $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
         }
 
+        @gc_collect_cycles();
+
         return $this;
     }
 
@@ -110,7 +112,8 @@ trait DeferParser
         // Create DOM document
         $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
-        $this->dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $this->dom->loadHTML(\mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $html = null;
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
@@ -358,8 +361,13 @@ trait DeferParser
                 $node->setAttribute($attr, $src);
             }
 
+            // Remove urls without HTTP protocol
+            if (stripos($src, 'http') !== 0) {
+                return;
+            }
+
             // Remove ads
-            if (stripos($src, 'ads') !== false) {
+            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
                 return;
             }
 
