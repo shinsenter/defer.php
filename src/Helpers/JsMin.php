@@ -14,10 +14,10 @@
 namespace shinsenter\Helpers;
 
 /*
- * JSMin.php - modified PHP implementation of Douglas Crockford's JSMin.
+ * JsMin.php - modified PHP implementation of Douglas Crockford's JsMin.
  *
  * <code>
- * $minifiedJs = JSMin::minify($js);
+ * $minifiedJs = JsMin::minify($js);
  * </code>
  *
  * This is a modified port of jsmin.c. Improvements:
@@ -69,11 +69,11 @@ namespace shinsenter\Helpers;
 
 use Exception;
 
-class JSMinException extends Exception
+class JsMinException extends Exception
 {
 }
 
-class JSMin
+class JsMin
 {
     const ORD_LF            = 10;
     const ORD_SPACE         = 32;
@@ -112,7 +112,7 @@ class JSMin
      */
     public static function minify($js)
     {
-        $jsmin = new JSMin($js);
+        $jsmin = new JsMin($js);
 
         return $jsmin->min();
     }
@@ -131,7 +131,7 @@ class JSMin
      *                                 ACTION_KEEP_A      Output A. Copy B to A. Get the next B.
      *                                 ACTION_DELETE_A    Copy B to A. Get the next B. (Delete A).
      *                                 ACTION_DELETE_A_B  Get the next B. (Delete B).
-     * @throws JSMinException If parser errors are found:
+     * @throws JsMinException If parser errors are found:
      *                                - Unterminated string literal
      *                                - Unterminated regular expression set in regex literal
      *                                - Unterminated regular expression literal
@@ -155,7 +155,7 @@ class JSMin
                         }
 
                         if (ord($this->a) <= self::ORD_LF) {
-                            throw new JSMinException('Unterminated string literal.');
+                            throw new JsMinException('Unterminated string literal.');
                         }
 
                         if ($this->a === '\\') {
@@ -197,7 +197,7 @@ class JSMin
                                     $this->output .= $this->a;
                                     $this->a = $this->get();
                                 } elseif (ord($this->a) <= self::ORD_LF) {
-                                    throw new JSMinException('Unterminated regular expression set in regex literal.');
+                                    throw new JsMinException('Unterminated regular expression set in regex literal.');
                                 }
                             }
                         } elseif ($this->a === '/') {
@@ -206,7 +206,7 @@ class JSMin
                             $this->output .= $this->a;
                             $this->a = $this->get();
                         } elseif (ord($this->a) <= self::ORD_LF) {
-                            throw new JSMinException('Unterminated regular expression literal.');
+                            throw new JsMinException('Unterminated regular expression literal.');
                         }
                         $this->output .= $this->a;
                     }
@@ -349,7 +349,7 @@ class JSMin
      *
      * @uses get()
      * @uses peek()
-     * @throws JSMinException on unterminated comment
+     * @throws JsMinException on unterminated comment
      * @return string
      */
     protected function next()
@@ -380,7 +380,7 @@ class JSMin
                                 }
                                 break;
                             case null:
-                                throw new JSMinException('Unterminated comment.');
+                                throw new JsMinException('Unterminated comment.');
                         }
                     }
                 // no break
