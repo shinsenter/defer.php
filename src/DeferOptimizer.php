@@ -794,6 +794,11 @@ trait DeferOptimizer
                 $this->body->appendChild($node);
             }
 
+            // If there is an existing noscript, then do nothing
+            if($node->nextSibling && $node->nextSibling->nodeName == static::NOSCRIPT_TAG) {
+                return;
+            }
+
             $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
             $node->parentNode->insertBefore($noscript, $node->nextSibling);
 
