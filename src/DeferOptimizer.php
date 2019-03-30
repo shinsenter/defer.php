@@ -78,7 +78,7 @@ trait DeferOptimizer
 
         $cache  = $this->cache_manager;
         $suffix = DEFER_JS_CACHE_SUFFIX;
-        $time   = static::DEFERJS_EXPIRY;
+        $time   = $this->deferjs_expiry;
 
         if (!$this->append_defer_js) {
             static::$deferjs_script = '';
@@ -109,9 +109,11 @@ trait DeferOptimizer
             $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
         }
 
-        $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
-        $this->head->appendChild($style_tag);
-        $style_tag = null;
+        if ($this->use_css_fadein_effects) {
+            $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
+            $this->head->appendChild($style_tag);
+            $style_tag = null;
+        }
     }
 
     /**
@@ -494,24 +496,16 @@ trait DeferOptimizer
                 continue;
             }
 
-            if ($src) {
-                // Make a noscript fallback
-                $this->makeNoScript($node);
+            $replaced = $this->makeLazySrcset($node);
+            $replaced = $this->makeLazySrc($node) || $replaced;
 
-                // Set alternative src data
-                $node->setAttribute(static::ATTR_DATA_SRC, $src);
-                $node->removeAttribute(static::ATTR_SRC);
-            }
+            if ($replaced) {
+                if ($this->empty_gif) {
+                    $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
+                } else {
+                    $this->setPlaceholderSrc($node);
+                }
 
-            if ($src = $node->getAttribute(static::ATTR_SRCSET)) {
-                $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
-                $node->removeAttribute(static::ATTR_SRCSET);
-            }
-
-            if ($this->empty_gif) {
-                $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-            } else {
-                $this->setPlaceholderSrc($node);
                 $this->addBackgroundColor($node);
             }
         }
@@ -535,20 +529,15 @@ trait DeferOptimizer
                 continue;
             }
 
-            if ($src) {
-                // Make a noscript fallback
-                $this->makeNoScript($node);
+            $replaced = $this->makeLazySrc($node);
 
-                // Set alternative src data
-                $node->setAttribute(static::ATTR_DATA_SRC, $src);
-                $node->removeAttribute(static::ATTR_SRC);
+            if ($replaced) {
+                if ($this->empty_src) {
+                    $node->setAttribute(static::ATTR_SRC, $this->empty_src);
+                }
+
+                $this->addBackgroundColor($node);
             }
-
-            if ($this->empty_src) {
-                $node->setAttribute(static::ATTR_SRC, $this->empty_src);
-            }
-
-            $this->addBackgroundColor($node);
         }
     }
 
@@ -815,6 +804,80 @@ trait DeferOptimizer
             // Cleanup
             $noscript = $clone = null;
         }
+    }
+
+    /**
+     * Normalize an attribute by given attribute list
+     *
+     * @since  1.0.6
+     * @param DOMNode $node
+     * @param string  $attribute
+     * @param array   $try_attributes
+     */
+    protected function normalizeAttribute($node, $attribute, $try_attributes = [])
+    {
+        $value    = null;
+
+        foreach ($try_attributes as $attr) {
+            if ($node->hasAttribute($attr)) {
+                $value = $node->getAttribute($attr);
+                $node->removeAttribute($attr);
+            }
+        }
+
+        if (!is_null($value)) {
+            $node->setAttribute($attribute, $value);
+        }
+
+        return $node->getAttribute($attribute);
+    }
+
+    /**
+     * Add data-src attribute to the node
+     *
+     * @since  1.0.6
+     * @param  DOMNode $node
+     * @return bool
+     */
+    protected function makeLazySrc($node)
+    {
+        $src = $this->normalizeAttribute($node, static::ATTR_SRC, static::UNIFY_OTHER_LAZY_SRC);
+
+        if (!empty($src)) {
+            // Make a noscript fallback
+            $this->makeNoScript($node);
+
+            // Assign new attribute
+            $node->removeAttribute(static::ATTR_SRC);
+            $node->setAttribute(static::ATTR_DATA_SRC, $src);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Add data-srcset attribute to the node
+     *
+     * @since  1.0.6
+     * @param  DOMNode $node
+     * @return bool
+     */
+    protected function makeLazySrcset($node)
+    {
+        $this->normalizeAttribute($node, static::ATTR_SIZES, static::UNIFY_OTHER_LAZY_SIZES);
+        $src = $this->normalizeAttribute($node, static::ATTR_SRCSET, static::UNIFY_OTHER_LAZY_SRCSET);
+
+        if (!empty($src)) {
+            // Assign new attribute
+            $node->removeAttribute(static::ATTR_SRCSET);
+            $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

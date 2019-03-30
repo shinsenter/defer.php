@@ -27,6 +27,7 @@ class Defer extends DeferInterface
      */
     protected $use_errors;
     protected $cache_manager;
+    protected $deferjs_expiry = 3600; // 1 hours
 
     /**
      * Main class constructor
@@ -165,6 +166,11 @@ class Defer extends DeferInterface
     public function deferHtml()
     {
         return $this->toHtml();
+    }
+
+    public function clearCache()
+    {
+        $this->cache_manager->clear();
     }
 
     /*

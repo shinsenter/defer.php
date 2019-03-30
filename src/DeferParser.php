@@ -113,7 +113,6 @@ trait DeferParser
         $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
         $this->dom->loadHTML(\mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
-        $html = null;
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
@@ -142,7 +141,6 @@ trait DeferParser
             $current_class[] = 'no-deferjs';
             $current_class   = array_filter(array_unique($current_class));
             $html->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
-            $html = null;
         }
 
         // Parse the tags
@@ -154,6 +152,8 @@ trait DeferParser
         $this->img_cache     = $this->parseImgTags();
         $this->iframe_cache  = $this->parseIframeTags();
         $this->bg_cache      = $this->parseBackgroundTags();
+
+        @gc_collect_cycles();
 
         return $this;
     }

@@ -31,12 +31,13 @@ if (!defined('DEFER_JS_CDN')) {
 
 if (!defined('DEFER_JS_IGNORE')) {
     define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::*[@data-ignore]) and not(ancestor::noscript)');
+    define('DEFER_IMG_IGNORE', 'not(@data-src) and not(@data-srcset) and not(contains(@src,"data:image")) and not(ancestor::header)');
+    define('DEFER_IFRAME_IGNORE', 'not(@data-src)');
 }
 
 abstract class DeferInterface
 {
     // For defer.js library
-    const DEFERJS_EXPIRY = 86400;
     const DEFERJS_CACHE  = __DIR__ . '/../cache/';
     const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
     const HELPERS_URL    = DEFER_JS_ROOT . '/public/helpers.min.js';
@@ -103,10 +104,29 @@ abstract class DeferInterface
     const ATTR_REL         = 'rel';
     const ATTR_SRC         = 'src';
     const ATTR_SRCSET      = 'srcset';
+    const ATTR_SIZES       = 'sizes';
     const ATTR_STYLE       = 'style';
     const ATTR_TITLE       = 'title';
     const ATTR_TYPE        = 'type';
     const ATTR_WIDTH       = 'width';
+
+    const UNIFY_OTHER_LAZY_SRC = [
+        'data-src',
+        'data-lazy',
+        'data-lazy-src',
+        'data-original',
+    ];
+
+    const UNIFY_OTHER_LAZY_SRCSET = [
+        'data-srcset',
+        'data-src-retina',
+        'data-lazy-srcset',
+    ];
+
+    const UNIFY_OTHER_LAZY_SIZES = [
+        'data-sizes',
+        'data-lazy-sizes',
+    ];
 
     // Xpath query expressions
     const COMMENT_XPATH    = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
@@ -114,8 +134,8 @@ abstract class DeferInterface
     const PRELOAD_XPATH    = '//link[@rel="preload"]';
     const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and not(@data-src) and not(contains(@src,"data:image")) and not(ancestor::header)]';
-    const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and not(@data-src)]';
+    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and ' . DEFER_IMG_IGNORE . ']';
+    const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and ' . DEFER_IFRAME_IGNORE . ']';
     const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and contains(@style,"url")]';
 
     // Variable holders

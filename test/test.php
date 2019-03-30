@@ -38,13 +38,16 @@ $defer->fix_render_blocking = true;
 $defer->minify_output_html  = true;
 
 $defer->enable_defer_css        = true;
-$defer->enable_defer_scripts    = true;
+$defer->enable_defer_scripts    = false;
 $defer->enable_defer_images     = true;
 $defer->enable_defer_iframes    = true;
 $defer->enable_defer_background = true;
 
-$defer->defer_web_fonts       = true;
-$defer->use_color_placeholder = true;
+$defer->defer_web_fonts        = true;
+$defer->use_css_fadein_effects = true;
+$defer->use_color_placeholder  = true;
+
+$defer->clearCache();
 
 // Scan test files
 $list = glob(INPUT . '*.html');
