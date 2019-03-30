@@ -74,9 +74,7 @@
     "require":
     {
         "php": "^5.6",
-        "symfony/http-foundation": "^3.4",
-        "symfony/polyfill-mbstring": "^1.11",
-        "symfony/polyfill-util": "^1.11"
+        "symfony/http-foundation": "~3.3.1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
