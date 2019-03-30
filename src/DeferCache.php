@@ -92,7 +92,7 @@ class DeferCache
 
     public function setPath($path)
     {
-        $path = str_replace(['/', '\\'], DS, $path);
+        $path = str_replace(['/', '\\'], static::DS, $path);
 
         if (!static::fast_file_exists($path)) {
             @mkdir($path, 0777, true);
@@ -100,7 +100,7 @@ class DeferCache
             throw new DeferException('Cannot write to cache path.', 1);
         }
 
-        $this->storage_path = rtrim(dirname($path . DS . 'test.txt'), DS);
+        $this->storage_path = rtrim(dirname($path . static::DS . 'test.txt'), static::DS);
     }
 
     public function setLevel($level)
@@ -135,7 +135,7 @@ class DeferCache
         if ($handle = @opendir($path)) {
             while (false !== ($item = readdir($handle))) {
                 if ($item != '.' && $item !== '..') {
-                    $list[] = $path . DS . $item;
+                    $list[] = $path . static::DS . $item;
                 }
             }
 
@@ -157,10 +157,10 @@ class DeferCache
         $path = $this->storage_path;
 
         for ($i = 1; $i <= $this->storage_level; $i++) {
-            $path .= DS . substr($key, -$i, $i);
+            $path .= static::DS . substr($key, -$i, $i);
         }
 
-        return $path . DS . substr($key, 0, 10) . '.php';
+        return $path . static::DS . substr($key, 0, 10) . '.php';
     }
 
     protected function hashCode($key)
