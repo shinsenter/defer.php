@@ -55,8 +55,9 @@
     ].join(',');
 
     var helper = {
-        c: 'lazied',
-        f: 'in',
+        c: 'defer-lazied',
+        l: 'defer-loading',
+        d: 'defer-loaded',
         h: document.getElementsByTagName('html').item(0),
         t: 10
     };
@@ -141,13 +142,17 @@
             src = media[GET_ATTRIBUTE]('data-src'),
             pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
+            addClass(media, helper.l);
+
+
         function onload() {
             if (timer) {
                 clearTimeout(timer);
                 timer = null;
             }
 
-            addClass(media, helper.f);
+            removeClass(media, helper.l);
+            addClass(media, helper.d);
             media[REM_ATTRIBUTE]('data-src');
             media[REM_ATTRIBUTE]('data-srcset');
         }

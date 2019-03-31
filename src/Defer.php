@@ -28,6 +28,7 @@ class Defer extends DeferInterface
     protected $use_errors;
     protected $cache_manager;
     protected $deferjs_expiry = 3600; // 1 hours
+    protected $http;
 
     /**
      * Main class constructor
@@ -51,6 +52,8 @@ class Defer extends DeferInterface
         if (!empty($html)) {
             $this->fromHtml($html, $charset);
         }
+
+        $this->http = new DeferHttpRequest();
 
         return $this;
     }
@@ -76,6 +79,12 @@ class Defer extends DeferInterface
      */
     public function fromHtml($html, $charset = null)
     {
+        if ($this->nodefer()) {
+            $this->nodefer_html = $html;
+
+            return $this;
+        }
+
         if (empty($charset)) {
             $charset = \mb_detect_encoding($html) ?: 'UTF-8';
         }
@@ -113,6 +122,10 @@ class Defer extends DeferInterface
      */
     public function toHtml()
     {
+        if ($this->nodefer()) {
+            return $this->nodefer_html;
+        }
+
         $output = '';
 
         if ($this->debug_mode) {
@@ -178,6 +191,11 @@ class Defer extends DeferInterface
     | Other functions
     |--------------------------------------------------------------------------
      */
+
+    protected function nodefer()
+    {
+        return (bool) $this->http->request()->get($this->no_defer_parameter);
+    }
 
     /**
      * Returns only optimized tags with debug_mode = true

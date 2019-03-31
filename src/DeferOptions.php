@@ -18,6 +18,7 @@ trait DeferOptions
     public $options = [
         // Debug optimized tags (instead of optimized HTML)
         'debug_mode'              => false,
+        'no_defer_parameter'      => 'nodefer',
 
         // Disable libxml errors and warnings
         'hide_warnings'           => true,

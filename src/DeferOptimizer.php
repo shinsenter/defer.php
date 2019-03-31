@@ -67,7 +67,7 @@ trait DeferOptimizer
      */
     protected function initLoaderJs()
     {
-        $cleanup = '//script[@id="defer-js" or @id="defer-helpers" or @id="defer-script"]|//link[@id="polyfill-js"]';
+        $cleanup = '//script[@id="defer-js" or @id="defer-script" or @id="polyfill-js"]|//style[@id="defer-css"]';
 
         foreach ($this->xpath->query($cleanup) as $node) {
             if ($node->parentNode) {
@@ -108,12 +108,6 @@ trait DeferOptimizer
             static::$inline_styles = @file_get_contents(static::INLINE_CSS_URL);
             $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
         }
-
-        if ($this->use_css_fadein_effects) {
-            $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
-            $this->head->appendChild($style_tag);
-            $style_tag = null;
-        }
     }
 
     /**
@@ -129,13 +123,6 @@ trait DeferOptimizer
 
         $the_anchor = $this->head->childNodes->item(0);
 
-        // Append polyfill
-        $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
-        $script_tag->setAttribute(static::ATTR_SRC, static::POLYFILL_URL);
-        $script_tag->setAttribute(static::ATTR_ID, 'polyfill-js');
-        $this->head->insertBefore($script_tag, $the_anchor);
-        $script_tag = null;
-
         // Append defer.js library loaded script is empty
         if (!$this->append_defer_js || empty(static::$deferjs_script)) {
             $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
@@ -147,6 +134,7 @@ trait DeferOptimizer
 
         // Append helpers
         $extra_scripts   = (array) $this->loader_scripts;
+        $extra_scripts[] = 'deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         $extra_scripts[] = static::$helpers;
 
         if (!empty($script = static::$deferjs_script . implode(';', array_filter($extra_scripts)))) {
@@ -154,6 +142,14 @@ trait DeferOptimizer
             $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
             $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
+        }
+
+        // Append CSS block
+        if ($this->use_css_fadein_effects) {
+            $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
+            $style_tag->setAttribute(static::ATTR_ID, 'defer-css');
+            $this->head->insertBefore($style_tag, $the_anchor);
+            $style_tag = null;
         }
 
         // Free memory
@@ -172,7 +168,7 @@ trait DeferOptimizer
         }
 
         $fingerprint = $this->dom->createComment(static::$fingerprint);
-        $this->body->appendChild($fingerprint);
+        $this->body->parentNode->appendChild($fingerprint);
         $fingerprint = null;
     }
 
@@ -327,17 +323,15 @@ trait DeferOptimizer
             return;
         }
 
-        $the_anchor = $this->body->childNodes->item(0);
-
         foreach ($this->style_cache as $node) {
-            $this->body->insertBefore($node, $the_anchor);
+            if ($node->parentNode && $node->parentNode->nodeName !== static::HEAD_TAG) {
+                $this->head->appendChild($node);
+            }
         }
 
         foreach ($this->script_cache as $node) {
             $this->body->appendChild($node);
         }
-
-        $the_anchor = null;
     }
 
     /**
@@ -795,7 +789,7 @@ trait DeferOptimizer
             }
 
             // If there is an existing noscript, then do nothing
-            if($node->nextSibling && $node->nextSibling->nodeName == static::NOSCRIPT_TAG) {
+            if ($node->nextSibling && $node->nextSibling->nodeName == static::NOSCRIPT_TAG) {
                 return;
             }
 

@@ -15,6 +15,10 @@ namespace shinsenter;
 
 trait DeferParser
 {
+    // For nodefer HTML
+    protected $nodefer_html;
+
+    // Document properties
     protected $charset;
     protected $isAmp;
 
@@ -51,6 +55,8 @@ trait DeferParser
      */
     public function cleanup()
     {
+        $this->nodefer_html = null;
+
         $this->dom   = null;
         $this->xpath = null;
         $this->head  = null;
