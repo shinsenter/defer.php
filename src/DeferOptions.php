@@ -61,7 +61,7 @@ trait DeferOptions
         ],
 
         // Content placeholders
-        'use_css_fadein_effects'  => false,
+        'use_css_fadein_effects'  => true,
         'use_color_placeholder'   => false,
         'empty_gif'               => '',
         'empty_src'               => 'about:blank',
