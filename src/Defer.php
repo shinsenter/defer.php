@@ -140,7 +140,7 @@ class Defer extends DeferInterface
             $encoding = 'HTML-ENTITIES';
         }
 
-        if ($this->charset != $encoding) {
+        if ($this->charset !== $encoding) {
             $output = \mb_convert_encoding($output, $this->charset, $encoding);
         }
 

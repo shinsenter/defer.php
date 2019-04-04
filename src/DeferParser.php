@@ -384,7 +384,7 @@ trait DeferParser
                 $this->preload_map[$src] = $node;
             }
 
-            $domain = preg_replace('/^(https?:\/\/[^\/\?]+)([\/\?]?.*)?$/', '$1', $src);
+            $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
 
             // Add the domain to the dns list
             if (!empty($domain)) {
