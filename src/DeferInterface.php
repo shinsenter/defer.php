@@ -50,9 +50,7 @@ if (!defined('DEFER_JS_IGNORE')) {
     define('DEFER_MINIFY_HTML_IGNORE', implode(' and ', [
         'not(ancestor::textarea)',
         'not(ancestor::pre)',
-        'not(ancestor::noscript)',
-        'not(ancestor::style)',
-        'not(ancestor::script)',
+        'not(ancestor::code)',
     ]));
 }
 
@@ -119,6 +117,7 @@ abstract class DeferInterface
     const ATTR_DEFER       = 'defer';
     const ATTR_HEIGHT      = 'height';
     const ATTR_HREF        = 'href';
+    const ATTR_LANGUAGE    = 'language';
     const ATTR_ID          = 'id';
     const ATTR_MEDIA       = 'media';
     const ATTR_ONLOAD      = 'onload';

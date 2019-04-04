@@ -165,7 +165,7 @@
             onload();
         } else {
             media.addEventListener('load', onload);
-            timer = setTimeout(onload, 5000);
+            timer = setTimeout(onload, 3000);
         }
     }
 

@@ -57,7 +57,7 @@ trait DeferParser
     {
         $this->nodefer_html = null;
 
-        $this->dom   = null;
+        $this->dom   = new \DOMDocument();
         $this->xpath = null;
         $this->head  = null;
         $this->body  = null;
@@ -116,13 +116,12 @@ trait DeferParser
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
 
         // Create DOM document
-        $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
-        $this->dom->loadHTML(\mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $this->dom->loadHTML($this->charset2entity($html, $this->charset));
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
-        $this->isAmp = $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+        $this->isAmp = $this->isAmpHtml($html);
 
         // Check if the <head> tag exists
         if (($attempt = $this->xpath->query('//head')) && $attempt->length > 0) {
@@ -142,11 +141,12 @@ trait DeferParser
 
         // Add fallback class name into body class
         if ($this->enable_defer_images) {
-            $html            = $this->xpath->query('/html')->item(0);
-            $current_class   = explode(' ', (string) $html->getAttribute('class'));
+            $document        = $this->xpath->query('/html')->item(0);
+            $current_class   = explode(' ', (string) $document->getAttribute('class'));
             $current_class[] = 'no-deferjs';
             $current_class   = array_filter(array_unique($current_class));
-            $html->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            $document->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            unset($document);
         }
 
         // Parse the tags
@@ -273,6 +273,10 @@ trait DeferParser
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
+            if (stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false) {
+                $node->removeAttribute(static::ATTR_LANGUAGE);
+            }
+
             $output[] = $node;
         }
 
@@ -328,7 +332,7 @@ trait DeferParser
     /**
      * Parse all tags contain background image in the HTML
      *
-     * @since  1.1.0
+     * @since  1.0.1
      * @return array
      */
     protected function parseBackgroundTags()
@@ -393,5 +397,53 @@ trait DeferParser
         }
 
         return $src;
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.6
+     * @param  string $html
+     * @return bool
+     */
+    protected function isAmpHtml($html)
+    {
+        return $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.6
+     * @param  string $html
+     * @param  string $charset
+     * @return string
+     */
+    protected function charset2entity($html, $charset)
+    {
+        return \mb_convert_encoding($html, 'HTML-ENTITIES', $charset);
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.6
+     * @param  string $html
+     * @param  string $charset
+     * @return string
+     */
+    protected function entity2charset($html, $charset)
+    {
+        $encoding = \mb_detect_encoding($html);
+
+        if (empty($encoding) || $encoding == 'ASCII') {
+            $encoding = 'HTML-ENTITIES';
+        }
+
+        if ($this->charset !== $encoding) {
+            $html = \mb_convert_encoding($html, $charset, $encoding);
+        }
+
+        return $html;
     }
 }

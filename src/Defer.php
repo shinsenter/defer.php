@@ -19,12 +19,6 @@ class Defer extends DeferInterface
     use DeferParser;
     use DeferOptimizer;
 
-    /**
-     * To store previous state of $use_errors
-     *
-     * @since  1.0.0
-     * @var bool
-     */
     protected $use_errors;
     protected $cache_manager;
     protected $deferjs_expiry = 3600; // 1 hours
@@ -136,18 +130,10 @@ class Defer extends DeferInterface
             $output = $this->dom->saveHtml();
         }
 
-        $encoding = \mb_detect_encoding($output);
-
-        if ($encoding == 'ASCII') {
-            $encoding = 'HTML-ENTITIES';
-        }
-
-        if ($this->charset !== $encoding) {
-            $output = \mb_convert_encoding($output, $this->charset, $encoding);
-        }
+        $output = $this->entity2charset($output, $this->charset);
 
         if (!empty($this->bug72288_body)) {
-            $output = str_replace('<body>', $this->bug72288_body, $output);
+            $output = preg_replace('/(<body[^>]*>)/mi', $this->bug72288_body, $output, 1);
         }
 
         return $output;
@@ -183,9 +169,17 @@ class Defer extends DeferInterface
         return $this->toHtml();
     }
 
+    /**
+     * Clear cache
+     *
+     * @since  1.0.0
+     * @return self
+     */
     public function clearCache()
     {
         $this->cache_manager->clear();
+
+        return $this;
     }
 
     /*
@@ -194,6 +188,12 @@ class Defer extends DeferInterface
     |--------------------------------------------------------------------------
      */
 
+    /**
+     * Returns TRUE if nodefer parameter presents
+     *
+     * @since  1.0.6
+     * @return bool
+     */
     protected function nodefer()
     {
         return (bool) $this->http->request()->get($this->no_defer_parameter);
