@@ -32,11 +32,6 @@ trait DeferOptimizer
         $this->initLoaderJs();
         $this->addDeferJs();
 
-        // Page optimiztions
-        $this->enablePreloading();
-        $this->enableDnsPrefetch();
-        $this->fixRenderBlocking();
-
         // Elements optimizations
         $this->optimizeDnsTags();
         $this->optimizePreloadTags();
@@ -46,12 +41,17 @@ trait DeferOptimizer
         $this->optimizeIframeTags();
         $this->optimizeBackgroundTags();
 
+        // Page optimiztions
+        $this->enablePreloading();
+        $this->enableDnsPrefetch();
+        $this->fixRenderBlocking();
+
         // Meta optimizations
         $this->addMissingMeta();
+        $this->addFingerprint();
 
         // Minify
         $this->minifyOutputHTML();
-        $this->addFingerprint();
     }
 
     /*
@@ -380,8 +380,14 @@ trait DeferOptimizer
             return;
         }
 
-        foreach ($this->xpath->query('//text()[not(normalize-space())]') as $node) {
-            $node->nodeValue = ' ';
+        foreach ($this->xpath->query(static::NORMALIZE_XPATH) as $node) {
+            $trimmed = preg_replace(['/\s+/', '/(^\040|\040$)/'], [' ', ''], $node->nodeValue);
+
+            if (empty($trimmed) && $node->previousSibling && $node->nextSibling) {
+                $trimmed = ' ';
+            }
+
+            $node->nodeValue = $trimmed;
         }
     }
 
@@ -415,7 +421,7 @@ trait DeferOptimizer
                 continue;
             }
 
-            $code = $node->textContent;
+            $code = $node->nodeValue;
 
             // Minify the css code
             // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
@@ -427,7 +433,7 @@ trait DeferOptimizer
             $code = preg_replace('/\/\*(?:(?!\*\/).)*\*\//', '', $code);
 
             if (!empty($code)) {
-                $node->textContent = $code;
+                $node->nodeValue = $code;
             } elseif ($node->parentNode) {
                 $node->parentNode->removeChild($node);
             }
@@ -455,7 +461,7 @@ trait DeferOptimizer
             }
 
             $rewrite = false;
-            $code    = $node->textContent;
+            $code    = $node->nodeValue;
 
             if (!empty($code)) {
                 try {
@@ -467,7 +473,7 @@ trait DeferOptimizer
             }
 
             if ($rewrite) {
-                $node->textContent = $code;
+                $node->nodeValue = $code;
             }
         }
     }
@@ -493,7 +499,7 @@ trait DeferOptimizer
             $replaced = $this->makeLazySrcset($node);
             $replaced = $this->makeLazySrc($node) || $replaced;
 
-            if ($replaced) {
+            if ($replaced && !$node->hasAttribute(static::ATTR_SRC)) {
                 if ($this->empty_gif) {
                     $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
                 } else {
@@ -525,7 +531,7 @@ trait DeferOptimizer
 
             $replaced = $this->makeLazySrc($node);
 
-            if ($replaced) {
+            if ($replaced && !$node->hasAttribute(static::ATTR_SRC)) {
                 if ($this->empty_src) {
                     $node->setAttribute(static::ATTR_SRC, $this->empty_src);
                 }
@@ -622,7 +628,7 @@ trait DeferOptimizer
                 $regex = '#' . str_replace('#', '\#', $pattern) . '#';
 
                 try {
-                    if (preg_match($regex, $src . $node->textContent)) {
+                    if (preg_match($regex, $src . $node->nodeValue)) {
                         return true;
                     }
                 } catch (Exception $e) {
@@ -815,7 +821,7 @@ trait DeferOptimizer
      */
     protected function normalizeAttribute($node, $attribute, $try_attributes = [])
     {
-        $value    = null;
+        $value = null;
 
         foreach ($try_attributes as $attr) {
             if ($node->hasAttribute($attr)) {
@@ -840,15 +846,27 @@ trait DeferOptimizer
      */
     protected function makeLazySrc($node)
     {
+        // Backup old placeholder image
+        $org = $this->normalizeAttribute($node, static::ATTR_SRC);
+
+        // Normalize the src attribute
         $src = $this->normalizeAttribute($node, static::ATTR_SRC, static::UNIFY_OTHER_LAZY_SRC);
 
         if (!empty($src)) {
             // Make a noscript fallback
             $this->makeNoScript($node);
-
             // Assign new attribute
-            $node->removeAttribute(static::ATTR_SRC);
             $node->setAttribute(static::ATTR_DATA_SRC, $src);
+            $this->normalizeUrl($node, static::ATTR_DATA_SRC, false);
+
+            // Remove src attribute if it is not placeholder
+            if ($org != $src) {
+                $node->setAttribute(static::ATTR_SRC, $org);
+                $this->normalizeUrl($node, static::ATTR_SRC, false);
+            } else {
+                $node->removeAttribute(static::ATTR_SRC);
+            }
+
 
             return true;
         }
@@ -865,13 +883,17 @@ trait DeferOptimizer
      */
     protected function makeLazySrcset($node)
     {
+        // Normalize the sizes attribute
         $this->normalizeAttribute($node, static::ATTR_SIZES, static::UNIFY_OTHER_LAZY_SIZES);
+
+        // Normalize the srcset attribute
         $src = $this->normalizeAttribute($node, static::ATTR_SRCSET, static::UNIFY_OTHER_LAZY_SRCSET);
 
         if (!empty($src)) {
             // Assign new attribute
             $node->removeAttribute(static::ATTR_SRCSET);
             $node->setAttribute(static::ATTR_DATA_SRCSET, $src);
+            $this->normalizeUrl($node, static::ATTR_DATA_SRCSET, false);
 
             return true;
         }

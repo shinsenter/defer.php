@@ -291,8 +291,6 @@ trait DeferParser
 
         if ($this->enable_defer_images) {
             foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-                $this->normalizeUrl($node, static::ATTR_SRC);
-
                 if (!$node->hasAttribute(static::ATTR_ALT)) {
                     $node->setAttribute(static::ATTR_ALT, '');
                 }
@@ -316,8 +314,6 @@ trait DeferParser
 
         if ($this->enable_defer_iframes) {
             foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-                $this->normalizeUrl($node, static::ATTR_SRC);
-
                 if (!$node->hasAttribute(static::ATTR_TITLE)) {
                     $node->setAttribute(static::ATTR_TITLE, '');
                 }
@@ -356,40 +352,43 @@ trait DeferParser
      * @param  DOMNode $node
      * @param  string  $name
      * @param  mixed   $attr
+     * @param  bool    $preload_flag
      * @return string
      */
-    protected function normalizeUrl($node, $attr = 'src')
+    protected function normalizeUrl($node, $attr = 'src', $preload_flag = true)
     {
         if (!empty($src = $node->getAttribute($attr))) {
             // Normalize the URL protocol
-            if (preg_match('#^//#', $src)) {
+            if (preg_match('#^\/\/#', $src)) {
                 $src = 'https:' . $src;
                 $node->setAttribute($attr, $src);
             }
 
             // Remove urls without HTTP protocol
-            if (stripos($src, 'http') !== 0) {
-                return;
+            if ($preload_flag && stripos($src, 'http') !== 0) {
+                $preload_flag = false;
             }
 
             // Remove ads
-            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
-                return;
+            if ($preload_flag && preg_match('/ads|click|googletags|publisher/i', $src)) {
+                $preload_flag = false;
             }
 
-            $rel = $node->getAttribute(static::ATTR_REL);
+            if ($preload_flag) {
+                $rel = $node->getAttribute(static::ATTR_REL);
 
-            // Add the resouce URL to the preload list
-            if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
-                $this->preload_map[$src] = $node;
-            }
+                // Add the resouce URL to the preload list
+                if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
+                    $this->preload_map[$src] = $node;
+                }
 
-            $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
+                $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
 
-            // Add the domain to the dns list
-            if (!empty($domain)) {
-                $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
-                $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+                // Add the domain to the dns list
+                if (!empty($domain)) {
+                    $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
+                    $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+                }
             }
         }
 

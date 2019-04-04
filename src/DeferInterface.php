@@ -30,9 +30,30 @@ if (!defined('DEFER_JS_CDN')) {
 }
 
 if (!defined('DEFER_JS_IGNORE')) {
-    define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::*[@data-ignore]) and not(ancestor::noscript)');
-    define('DEFER_IMG_IGNORE', 'not(@data-src) and not(@data-srcset) and not(contains(@src,"data:image")) and not(ancestor::header)');
-    define('DEFER_IFRAME_IGNORE', 'not(@data-src)');
+    define('DEFER_JS_IGNORE', implode(' and ', [
+        'not(@data-ignore)',
+        'not(ancestor::*[@data-ignore])',
+        'not(ancestor::noscript)',
+    ]));
+
+    define('DEFER_IMG_IGNORE', implode(' and ', [
+        DEFER_JS_IGNORE,
+        'not(contains(@src,"data:image"))',
+        'not(ancestor::header)',
+    ]));
+
+    define('DEFER_IFRAME_IGNORE', implode(' and ', [
+        DEFER_JS_IGNORE,
+        'not(@data-src)',
+    ]));
+
+    define('DEFER_MINIFY_HTML_IGNORE', implode(' and ', [
+        'not(ancestor::textarea)',
+        'not(ancestor::pre)',
+        'not(ancestor::noscript)',
+        'not(ancestor::style)',
+        'not(ancestor::script)',
+    ]));
 }
 
 abstract class DeferInterface
@@ -134,9 +155,10 @@ abstract class DeferInterface
     const PRELOAD_XPATH    = '//link[@rel="preload"]';
     const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_JS_IGNORE . ' and ' . DEFER_IMG_IGNORE . ']';
-    const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_JS_IGNORE . ' and ' . DEFER_IFRAME_IGNORE . ']';
+    const IMG_XPATH        = '//*[(local-name()="img" or local-name()="video" or local-name()="source") and ' . DEFER_IMG_IGNORE . ']';
+    const IFRAME_XPATH     = '//*[(local-name()="iframe" or local-name()="frame" or local-name()="embed") and ' . DEFER_IFRAME_IGNORE . ']';
     const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and contains(@style,"url")]';
+    const NORMALIZE_XPATH  = '//text()[' . DEFER_MINIFY_HTML_IGNORE . ']';
 
     // Variable holders
     public static $deferjs_script = null;

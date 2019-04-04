@@ -67,6 +67,8 @@ trait DeferOptions
         'empty_src'               => 'about:blank',
     ];
 
+    protected $backup_options;
+
     /**
      * @since  1.0.0
      * @param $key
@@ -163,5 +165,26 @@ trait DeferOptions
     protected function getOptionKey($property)
     {
         return trim(strtolower(preg_replace('/([^A-Z])([A-Z])/', '$1_$2', $property)));
+    }
+
+    /**
+     * @since  1.0.6
+     * @param $property
+     */
+    protected function backupOptions()
+    {
+        $this->backup_options = $this->options;
+    }
+
+    /**
+     * @since  1.0.6
+     * @param $property
+     */
+    protected function restoreOptions()
+    {
+        if (!empty($this->backup_options)) {
+            $this->options        = $this->backup_options;
+            $this->backup_options = null;
+        }
     }
 }

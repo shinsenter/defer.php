@@ -100,11 +100,13 @@ class Defer extends DeferInterface
 
         // Set special options for AMP page
         if ($this->isAmp) {
+            $this->backupOptions();
             $this->setAmpOptions();
         }
 
         // Do the optimization
         $this->optimize();
+        $this->restoreOptions();
 
         // Restore the previous value of use_errors
         \libxml_clear_errors();
