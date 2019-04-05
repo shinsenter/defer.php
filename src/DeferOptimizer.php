@@ -32,6 +32,11 @@ trait DeferOptimizer
         $this->initLoaderJs();
         $this->addDeferJs();
 
+        // Page optimiztions
+        $this->enablePreloading();
+        $this->enableDnsPrefetch();
+        $this->fixRenderBlocking();
+
         // Elements optimizations
         $this->optimizeDnsTags();
         $this->optimizePreloadTags();
@@ -40,11 +45,6 @@ trait DeferOptimizer
         $this->optimizeImgTags();
         $this->optimizeIframeTags();
         $this->optimizeBackgroundTags();
-
-        // Page optimiztions
-        $this->enablePreloading();
-        $this->enableDnsPrefetch();
-        $this->fixRenderBlocking();
 
         // Meta optimizations
         $this->addMissingMeta();
@@ -467,18 +467,21 @@ trait DeferOptimizer
             }
 
             if (!empty($code = trim($node->nodeValue))) {
-                $rewrite = false;
+                if (strstr($code, '<!--') !== false) {
+                    $code = preg_replace('/(^<!--\s*|\s*\/\/\s*-->$)/', '', $code);
+                }
 
                 try {
-                    $code    = JsMin::minify($code);
-                    $rewrite = true;
-                } catch (Exception $e) {
-                    unset($e);
+                    $minify = JsMin::minify($code);
+                } catch (Exception $error) {
+                    $minify = null;
                 }
 
-                if ($rewrite) {
-                    $node->nodeValue = $code;
+                if ($minify) {
+                    $code = $minify;
                 }
+
+                $node->nodeValue = $code;
             }
         }
     }
@@ -636,8 +639,8 @@ trait DeferOptimizer
                     if (preg_match($regex, $src . $node->nodeValue)) {
                         return true;
                     }
-                } catch (Exception $e) {
-                    unset($e);
+                } catch (Exception $error) {
+                    $error = null;
                 }
             }
         }
@@ -664,8 +667,8 @@ trait DeferOptimizer
                     if (preg_match($regex, $src)) {
                         return true;
                     }
-                } catch (Exception $e) {
-                    unset($e);
+                } catch (Exception $error) {
+                    $error = null;
                 }
             }
         }

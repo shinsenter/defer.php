@@ -112,6 +112,11 @@ trait DeferParser
             throw new DeferException('Invalid HTML content.', 1);
         }
 
+        // Detect charset charset
+        if (empty($this->charset)) {
+            $this->charset = mb_detect_encoding($html) ?: 'UTF-8';
+        }
+
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
 
@@ -146,7 +151,7 @@ trait DeferParser
             $current_class[] = 'no-deferjs';
             $current_class   = array_filter(array_unique($current_class));
             $document->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
-            unset($document);
+            $document = null;
         }
 
         // Parse the tags
@@ -421,7 +426,7 @@ trait DeferParser
      */
     protected function charset2entity($html, $charset)
     {
-        return \mb_convert_encoding($html, 'HTML-ENTITIES', $charset);
+        return mb_convert_encoding($html, 'HTML-ENTITIES', $charset);
     }
 
     /**
@@ -434,14 +439,14 @@ trait DeferParser
      */
     protected function entity2charset($html, $charset)
     {
-        $encoding = \mb_detect_encoding($html);
+        $encoding = mb_detect_encoding($html);
 
         if (empty($encoding) || $encoding == 'ASCII') {
             $encoding = 'HTML-ENTITIES';
         }
 
         if ($this->charset !== $encoding) {
-            $html = \mb_convert_encoding($html, $charset, $encoding);
+            $html = mb_convert_encoding($html, $charset, $encoding);
         }
 
         return $html;

@@ -51,6 +51,7 @@ if (!defined('DEFER_JS_IGNORE')) {
         'not(ancestor::textarea)',
         'not(ancestor::pre)',
         'not(ancestor::code)',
+        'not(ancestor::script)',
     ]));
 }
 

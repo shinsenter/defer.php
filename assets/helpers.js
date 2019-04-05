@@ -153,15 +153,13 @@
 
             removeClass(media, helper.l);
             addClass(media, helper.d);
-            media[REM_ATTRIBUTE]('data-src');
-            media[REM_ATTRIBUTE]('data-srcset');
         }
 
         if ((match = pattern.exec(src)) !== null) {
             media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
         }
 
-        if (media.src == src || media[GET_ATTRIBUTE]('data-style')) {
+        if ((src && media.src == src) || (!src && media[GET_ATTRIBUTE]('data-style'))) {
             onload();
         } else {
             media.addEventListener('load', onload);

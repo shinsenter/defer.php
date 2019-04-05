@@ -10,14 +10,14 @@ html.no-deferjs [data-src] {
     visibility: visible;
 }
 
-.defer-lazied:not([data-style]) {
+.defer-lazied {
     transition: opacity .1s linear;
-}
-
-.defer-lazied.defer-loading {
-    opacity: .3!important;
 }
 
 .defer-lazied.defer-loaded {
     background-color: transparent !important;
+}
+
+.defer-lazied.defer-loading:not([data-style]) {
+    opacity: .3!important;
 }

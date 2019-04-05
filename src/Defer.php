@@ -19,6 +19,7 @@ class Defer extends DeferInterface
     use DeferParser;
     use DeferOptimizer;
 
+    protected $native_libxml;
     protected $use_errors;
     protected $cache_manager;
     protected $deferjs_expiry = 3600; // 1 hours
@@ -35,6 +36,7 @@ class Defer extends DeferInterface
      */
     public function __construct($html = null, $options = [], $charset = null)
     {
+        $this->native_libxml = class_exists('DOMDocument');
         $this->cache_manager = new DeferCache(static::DEFERJS_CACHE, 1);
 
         // Set library options
@@ -79,14 +81,15 @@ class Defer extends DeferInterface
             return $this;
         }
 
-        if (empty($charset)) {
-            $charset = \mb_detect_encoding($html) ?: 'UTF-8';
+        // Turn on gc_enable
+        if (!($gc_enabled = @gc_enabled())) {
+            @gc_enable();
         }
 
         // Disable libxml errors and warnings
-        $this->use_errors = \libxml_use_internal_errors($this->hide_warnings);
+        $this->use_errors = @libxml_use_internal_errors($this->hide_warnings);
 
-        // Load charset
+        // Set the charset
         $this->charset = $charset;
 
         // Parse the HTML
@@ -103,8 +106,13 @@ class Defer extends DeferInterface
         $this->restoreOptions();
 
         // Restore the previous value of use_errors
-        \libxml_clear_errors();
-        \libxml_use_internal_errors($this->use_errors);
+        @libxml_clear_errors();
+        @libxml_use_internal_errors($this->use_errors);
+
+        // Restore original gc_enable setting
+        if (!$gc_enabled) {
+            @gc_disable();
+        }
 
         return $this;
     }
@@ -196,7 +204,10 @@ class Defer extends DeferInterface
      */
     protected function nodefer()
     {
-        return (bool) $this->http->request()->get($this->no_defer_parameter);
+        $no_libxml   = !$this->native_libxml;
+        $has_nodefer = (bool) $this->http->request()->get($this->no_defer_parameter);
+
+        return $has_nodefer || $no_libxml;
     }
 
     /**
