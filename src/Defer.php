@@ -76,7 +76,7 @@ class Defer extends DeferInterface
     public function fromHtml($html, $charset = null)
     {
         if ($this->nodefer()) {
-            $this->nodefer_html = $html;
+            $this->nodefer_html = trim($html);
 
             return $this;
         }

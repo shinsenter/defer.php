@@ -1,7 +1,7 @@
 /**
  *
- * Package shinsenter/defer.js
- * https://github.com/shinsenter/defer.js
+ * Package shinsenter/defer.php
+ * https://github.com/shinsenter/defer.php
  *
  * Minified by UglifyJS3
  * http://lisperator.net/uglifyjs/
@@ -81,8 +81,9 @@
             'This page was optimized with defer.js',
             '(c) 2019 Mai Nhut Tan <shin@shin.company>',
             '',
-            'Website: https://wordpress.org/plugins/shins-pageload-magic/',
-            'Github:  https://github.com/shinsenter/defer.js/'
+            'Github:    https://github.com/shinsenter/defer.js/',
+            'PHP lib:   https://github.com/shinsenter/defer.php/',
+            'WordPress: https://wordpress.org/plugins/shins-pageload-magic/'
         ].join('\n'));
     }
 
@@ -181,16 +182,33 @@
     }
 
     function deferscript() {
-        defer(function() {
-            var head = document.head,
-                scripts = defer_helper.h.querySelectorAll("script[type=deferscript]");
+        var head = document.head;
 
-            [].forEach.call(scripts, function(tag) {
+        function loadscript() {
+            var scripts = [].slice.call(document.querySelectorAll("script[type=deferscript]"));
+
+            function appendtag() {
+                if(scripts.length < 1) return;
+
+                var tag = scripts.shift();
                 tag.parentNode.removeChild(tag);
                 tag.type = "text/javascript";
+
+                if(tag.src != '' && !tag.hasAttribute('async')) {
+                    tag.onload = appendtag
+                    tag.onerror = appendtag
+                    head.appendChild(tag);
+                    return;
+                }
+
                 head.appendChild(tag);
-            })
-        }, 3);
+                appendtag();
+            }
+
+            appendtag();
+        }
+
+        defer(loadscript, 3);
     }
 
     // Expose global methods

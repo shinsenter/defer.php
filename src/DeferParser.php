@@ -119,6 +119,7 @@ trait DeferParser
 
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
+        $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
 
         // Create DOM document
         $this->dom->preserveWhiteSpace = false;
@@ -239,14 +240,17 @@ trait DeferParser
                 $this->normalizeUrl($node, static::ATTR_HREF);
             }
 
-            if (stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false) {
+            if ($node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false) {
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
-            $media = $node->getAttribute(static::ATTR_MEDIA) ?: 'all';
+            if ($node->hasAttribute(static::ATTR_MEDIA)) {
+                $media = $node->getAttribute(static::ATTR_MEDIA) ?: 'all';
 
-            if ($media == 'all') {
-                $node->removeAttribute(static::ATTR_MEDIA);
+                if ($media == 'all') {
+                    $node->removeAttribute(static::ATTR_MEDIA);
+                }
             }
 
             $output[] = $node;
@@ -274,11 +278,13 @@ trait DeferParser
                 $node->removeAttribute(static::ATTR_ASYNC);
             }
 
-            if (stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false) {
+            if ($node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false) {
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
-            if (stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false) {
+            if ($node->hasAttribute(static::ATTR_LANGUAGE) &&
+                stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false) {
                 $node->removeAttribute(static::ATTR_LANGUAGE);
             }
 
@@ -407,7 +413,7 @@ trait DeferParser
     /**
      * Return TRUE if it is an AMP page
      *
-     * @since  1.0.6
+     * @since  1.0.7
      * @param  string $html
      * @return bool
      */
@@ -419,7 +425,7 @@ trait DeferParser
     /**
      * Return TRUE if it is an AMP page
      *
-     * @since  1.0.6
+     * @since  1.0.7
      * @param  string $html
      * @param  string $charset
      * @return string
@@ -432,7 +438,7 @@ trait DeferParser
     /**
      * Return TRUE if it is an AMP page
      *
-     * @since  1.0.6
+     * @since  1.0.7
      * @param  string $html
      * @param  string $charset
      * @return string
@@ -450,5 +456,49 @@ trait DeferParser
         }
 
         return $html;
+    }
+
+    /**
+     * Create a new DOMNode
+     *
+     * @since  1.0.7
+     * @param  string  $tag
+     * @param  string  $content
+     * @param  array   $attributes
+     * @return DOMNode
+     */
+    protected function createNode($tag, $content = null, $attributes = [])
+    {
+        if (is_array($content)) {
+            $attributes = $content;
+            $content    = null;
+        }
+
+        $node = $this->dom->createElement($tag, $content);
+
+        if (count($attributes)) {
+            foreach ($attributes as $key => $value) {
+                $node->setAttribute($key, $value);
+            }
+        }
+
+        return $node;
+    }
+
+    /**
+     * Remove a node from DOM tree
+     *
+     * @since  1.0.7
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function removeNode(&$node)
+    {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+            $node = null;
+        }
+
+        return $this;
     }
 }

@@ -47,20 +47,25 @@ $defer->enable_defer_background = true;
 
 $defer->defer_web_fonts        = true;
 $defer->use_css_fadein_effects = true;
-$defer->use_color_placeholder  = true;
+$defer->use_color_placeholder  = false;
 
-$defer->clearCache();
+// $defer->clearCache();
 
 // Scan test files
 $list = glob(INPUT . '*.html');
 
 // Ready
-mem_info();
+// mem_info();
 
 foreach ($list as $file) {
-    $results = $defer->fromHtml(file_get_contents($file))->toHtml();
+    $html = file_get_contents($file);
+
+    debug();
+    $results = $defer->fromHtml($html)->toHtml();
+    $html    = null;
+    $defer->cleanup();
+    mem_info('After: ' . preg_replace('/^.*\//', '', $file));
+
     @file_put_contents(OUTPUT . preg_replace('/^.+\//', '', $file), $results);
     $results = null;
-    $defer->cleanup();
-    mem_info(preg_replace('/^.*\//', '', $file));
 }

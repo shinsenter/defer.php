@@ -70,10 +70,7 @@ trait DeferOptimizer
         $cleanup = '//script[@id="defer-js" or @id="defer-script" or @id="polyfill-js"]|//style[@id="defer-css"]';
 
         foreach ($this->xpath->query($cleanup) as $node) {
-            if ($node->parentNode) {
-                $node->parentNode->removeChild($node);
-                $node = null;
-            }
+            $this->removeNode($node);
         }
 
         $cache  = $this->cache_manager;
@@ -125,9 +122,11 @@ trait DeferOptimizer
 
         // Append defer.js library loaded script is empty
         if (!$this->append_defer_js || empty(static::$deferjs_script)) {
-            $script_tag = $this->dom->createElement(static::SCRIPT_TAG);
-            $script_tag->setAttribute(static::ATTR_SRC, static::DEFERJS_URL);
-            $script_tag->setAttribute(static::ATTR_ID, 'defer-js');
+            $script_tag = $this->createNode(static::SCRIPT_TAG, [
+                static::ATTR_SRC => static::DEFERJS_URL,
+                static::ATTR_ID  => 'defer-js',
+            ]);
+
             $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
         }
@@ -138,16 +137,16 @@ trait DeferOptimizer
         $extra_scripts[] = static::$helpers;
 
         if (!empty($script = static::$deferjs_script . implode(';', array_filter($extra_scripts)))) {
-            $script_tag = $this->dom->createElement(static::SCRIPT_TAG, trim($script));
-            $script_tag->setAttribute(static::ATTR_ID, 'defer-script');
+            $script_tag = $this->createNode(static::SCRIPT_TAG, trim($script), [static::ATTR_ID => 'defer-script']);
+
             $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
         }
 
         // Append CSS block
         if ($this->use_css_fadein_effects) {
-            $style_tag = $this->dom->createElement(static::STYLE_TAG, static::$inline_styles);
-            $style_tag->setAttribute(static::ATTR_ID, 'defer-css');
+            $style_tag = $this->createNode(static::STYLE_TAG, static::$inline_styles, [static::ATTR_ID => 'defer-css']);
+
             $this->head->insertBefore($style_tag, $the_anchor);
             $style_tag = null;
         }
@@ -186,7 +185,7 @@ trait DeferOptimizer
     protected function removeComments()
     {
         foreach ($this->comment_cache as $node) {
-            $node->parentNode->removeChild($node);
+            $this->removeNode($node);
         }
     }
 
@@ -226,10 +225,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->dns_cache as $node) {
-            if ($node->parentNode) {
-                $node->parentNode->removeChild($node);
-                $node = null;
-            }
+            $this->removeNode($node);
         }
 
         $new_cache  = [];
@@ -239,9 +235,10 @@ trait DeferOptimizer
             if (is_a($node, \DOMElement::class) && $node->nodeName == static::LINK_TAG) {
                 $link_tag = $node;
             } else {
-                $link_tag = $this->dom->createElement(static::LINK_TAG);
-                $link_tag->setAttribute(static::ATTR_REL, static::REL_DNSPREFETCH);
-                $link_tag->setAttribute(static::ATTR_HREF, $domain);
+                $link_tag = $this->createNode(static::LINK_TAG, [
+                    static::ATTR_REL  => static::REL_DNSPREFETCH,
+                    static::ATTR_HREF => $domain,
+                ]);
             }
 
             $this->head->insertBefore($link_tag, $the_anchor);
@@ -252,10 +249,11 @@ trait DeferOptimizer
             if (is_a($node, \DOMElement::class) && $node->nodeName == static::LINK_TAG) {
                 $link_tag = $node;
             } else {
-                $link_tag = $this->dom->createElement(static::LINK_TAG);
-                $link_tag->setAttribute(static::ATTR_REL, static::REL_PRECONNECT);
-                $link_tag->setAttribute(static::ATTR_HREF, $domain);
-                $link_tag->setAttribute(static::ATTR_CROSSORIGIN, 'anonymous');
+                $link_tag = $this->createNode(static::LINK_TAG, [
+                    static::ATTR_REL         => static::REL_PRECONNECT,
+                    static::ATTR_HREF        => $domain,
+                    static::ATTR_CROSSORIGIN => 'anonymous',
+                ]);
             }
 
             $this->head->insertBefore($link_tag, $the_anchor);
@@ -280,10 +278,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->preload_cache as $node) {
-            if ($node->parentNode) {
-                $node->parentNode->removeChild($node);
-                $node = null;
-            }
+            $this->removeNode($node);
         }
 
         if (!empty($this->preload_map)) {
@@ -291,18 +286,19 @@ trait DeferOptimizer
 
             foreach ($this->preload_map as $url => $node) {
                 if (empty($url)
-                    || $this->isWebfontUrl($url)
+                    // || $this->isWebfontUrl($url)
                     || empty($as = $this->getPreloadType($node))) {
                     continue;
                 }
 
-                $link_tag = $this->dom->createElement(static::LINK_TAG);
-                $link_tag->setAttribute(static::ATTR_REL, static::REL_PRELOAD);
-                $link_tag->setAttribute(static::ATTR_AS, $as);
-                $link_tag->setAttribute(static::ATTR_HREF, $url);
+                $link_tag = $this->createNode(static::LINK_TAG, [
+                    static::ATTR_REL  => static::REL_PRELOAD,
+                    static::ATTR_AS   => $as,
+                    static::ATTR_HREF => $url,
+                ]);
 
-                if (is_a($node, \DOMElement::class) && $charset = $node->getAttribute(static::ATTR_CHARSET)) {
-                    $link_tag->setAttribute(static::ATTR_CHARSET, $charset);
+                if (is_a($node, \DOMElement::class) && $node->hasAttribute(static::ATTR_CHARSET)) {
+                    $link_tag->setAttribute(static::ATTR_CHARSET, $node->getAttribute(static::ATTR_CHARSET));
                 }
 
                 $this->head->insertBefore($link_tag, $the_anchor);
@@ -352,8 +348,8 @@ trait DeferOptimizer
 
         // Check if the meta viewport tag does not exist
         if (!($attempt = $this->xpath->query('//meta[@charset or contains(@http-equiv,"Content-Type")]')) || !$attempt->length) {
-            $this->head->insertBefore($this->makeMetaTag([
-                'charset' => $this->charset,
+            $this->head->insertBefore($this->createNode(static::META_TAG, [
+                static::ATTR_CHARSET => $this->charset,
             ]), $the_anchor);
         } else {
             $this->head->insertBefore($attempt->item(0), $the_anchor);
@@ -361,9 +357,9 @@ trait DeferOptimizer
 
         // Check if the meta viewport tag does not exist
         if (!($attempt = $this->xpath->query('//meta[@name="viewport" and contains(@content,"initial-scale")]')) || !$attempt->length) {
-            $this->head->insertBefore($this->makeMetaTag([
-                'name'    => 'viewport',
-                'content' => 'width=device-width,initial-scale=1',
+            $this->head->insertBefore($this->createNode(static::META_TAG, [
+                static::ATTR_NAME    => 'viewport',
+                static::ATTR_CONTENT => 'width=device-width,initial-scale=1',
             ]), $the_anchor);
         } else {
             $this->head->insertBefore($attempt->item(0), $the_anchor);
@@ -383,8 +379,10 @@ trait DeferOptimizer
             return;
         }
 
-        foreach ($this->xpath->query(static::NORMALIZE_XPATH) as $node) {
-            $trimmed = preg_replace(['/\s+/', '/(^\040|\040$)/'], [' ', ''], $node->nodeValue);
+        $nodes = $this->xpath->query(static::NORMALIZE_XPATH);
+
+        foreach ($nodes as $node) {
+            $trimmed = trim(preg_replace('/\s+/', ' ', $node->nodeValue));
 
             if (empty($trimmed) && ($node->previousSibling || $node->nextSibling)) {
                 $trimmed = ' ';
@@ -394,7 +392,9 @@ trait DeferOptimizer
                 $trimmed = $trimmed . ' ';
             }
 
-            $node->nodeValue = $trimmed;
+            if ($trimmed != $node->nodeValue) {
+                $node->nodeValue = $trimmed;
+            }
         }
     }
 
@@ -416,14 +416,12 @@ trait DeferOptimizer
         }
 
         foreach ($this->style_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_HREF);
-
-            if ($this->isBlacklistedNode($node, $src)) {
+            if ($this->isBlacklistedNode($node, static::ATTR_HREF)) {
                 continue;
             }
 
             if ($node->nodeName == static::LINK_TAG) {
-                $this->deferWebFont($node, $src);
+                $this->deferWebFont($node);
 
                 continue;
             }
@@ -444,7 +442,9 @@ trait DeferOptimizer
             $code = preg_replace('/\/\*(?:(?!\*\/).)*\*\//', '', $code);
 
             // Update the node content
-            $node->nodeValue = $code;
+            if ($node->nodeValue != $code) {
+                $node->nodeValue = $code;
+            }
         }
     }
 
@@ -456,19 +456,18 @@ trait DeferOptimizer
     protected function optimizeScriptTags()
     {
         foreach ($this->script_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
+            if ($this->isBlacklistedNode($node, static::ATTR_SRC)) {
                 continue;
             }
 
             if ($this->enable_defer_scripts) {
                 $node->setAttribute(static::ATTR_TYPE, 'deferscript');
+                $node->removeAttribute(static::ATTR_DEFER);
             }
 
             if (!empty($code = trim($node->nodeValue))) {
                 if (strstr($code, '<!--') !== false) {
-                    $code = preg_replace('/(^<!--\s*|\s*\/\/\s*-->$)/', '', $code);
+                    $code = preg_replace('/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/', '', $code);
                 }
 
                 try {
@@ -478,10 +477,12 @@ trait DeferOptimizer
                 }
 
                 if ($minify) {
-                    $code = $minify;
+                    $code = trim($minify);
                 }
 
-                $node->nodeValue = $code;
+                if ($node->nodeValue != $code) {
+                    $node->nodeValue = $code;
+                }
             }
         }
     }
@@ -498,9 +499,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->img_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
+            if ($this->isBlacklistedNode($node, static::ATTR_SRC)) {
                 continue;
             }
 
@@ -531,9 +530,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->iframe_cache as $node) {
-            $src = $node->getAttribute(static::ATTR_SRC);
-
-            if ($this->isBlacklistedNode($node, $src)) {
+            if ($this->isBlacklistedNode($node, static::ATTR_SRC)) {
                 continue;
             }
 
@@ -624,14 +621,14 @@ trait DeferOptimizer
      *
      * @since  1.0.0
      * @param  DOMNode $node
-     * @param  string  $src
+     * @param  string  $src_attr
      * @return bool
      */
-    protected function isBlacklistedNode($node, $src = '')
+    protected function isBlacklistedNode($node, $src_attr = 'src')
     {
-        $blacklist = $this->do_not_optimize;
+        $src = $node->getAttribute($src_attr);
 
-        if (is_array($blacklist)) {
+        if (is_array($blacklist = $this->do_not_optimize)) {
             foreach ($blacklist as $pattern) {
                 $regex = '#' . str_replace('#', '\#', $pattern) . '#';
 
@@ -798,7 +795,8 @@ trait DeferOptimizer
     {
         // Create noscript tag for normal image fallback
         if (!$this->debug_mode && $node->parentNode) {
-            if ($node->parentNode->nodeName === static::HEAD_TAG) {
+            if ($node->nodeName !== static::LINK_TAG
+                && $node->parentNode->nodeName === static::HEAD_TAG) {
                 $this->body->appendChild($node);
             }
 
@@ -807,12 +805,12 @@ trait DeferOptimizer
                 return;
             }
 
-            $noscript = $this->dom->createElement(static::NOSCRIPT_TAG);
-            $node->parentNode->insertBefore($noscript, $node->nextSibling);
-
             // Append normal image into the <noscript> tag
-            $clone = $node->cloneNode();
+            $clone    = $node->cloneNode();
+            $noscript = $this->createNode(static::NOSCRIPT_TAG);
             $noscript->appendChild($clone);
+
+            $node->parentNode->insertBefore($noscript, $node->nextSibling);
 
             // Cleanup
             $noscript = $clone = null;
@@ -909,23 +907,5 @@ trait DeferOptimizer
         }
 
         return false;
-    }
-
-    /**
-     * Create a meta tag
-     *
-     * @since  1.0.4
-     * @param array  $attributes
-     * @param string $name
-     */
-    protected function makeMetaTag($attributes, $name = null)
-    {
-        $node = $this->dom->createElement($name ?: static::META_TAG);
-
-        foreach ($attributes as $key => $value) {
-            $node->setAttribute($key, $value);
-        }
-
-        return $node;
     }
 }

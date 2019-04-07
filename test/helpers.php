@@ -11,15 +11,30 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
+if (!function_exists('micro')) {
+    /**
+     * Get micro time
+     * @param mixed $time
+     */
+    function micro($time)
+    {
+        return (float) ($time->getTimestamp() . $time->format('.u'));
+    }
+}
+
 if (!function_exists('debug')) {
     /**
      * Debug
      */
     function debug()
     {
+        static $last_time;
+
         $args = func_get_args();
-        $time = (new DateTime())->format('Y-m-d H:i:s.u');
-        $text = "{$time} " . (count($args) > 1 ? "\n" : '');
+        $now  = new DateTime();
+        $time = $now->format('Y-m-d H:i:s.u');
+        $diff = !$last_time ? 0 : number_format(micro($now) - micro($last_time), 3);
+        $text = "{$time} {$diff} " . (count($args) > 1 ? "\n" : '');
         $msgs = [];
 
         foreach ($args as $msg) {
@@ -30,7 +45,11 @@ if (!function_exists('debug')) {
             }
         }
 
-        echo($text . implode("\n", $msgs)) . "\n";
+        if (!empty($msgs)) {
+            echo($text . implode("\n", $msgs)) . "\n";
+        }
+
+        $last_time = new DateTime();
     }
 }
 

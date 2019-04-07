@@ -36,7 +36,7 @@ trait DeferOptions
 
         // Tag optimizations
         'enable_defer_css'        => true,
-        'enable_defer_scripts'    => false,
+        'enable_defer_scripts'    => true,
         'enable_defer_images'     => true,
         'enable_defer_iframes'    => true,
         'enable_defer_background' => true,
@@ -56,8 +56,6 @@ trait DeferOptions
         // Blacklist patterns
         'do_not_optimize'         => [
             'document\.write\s*\(',
-            'modernizr([-_][\d\.]+)?(\.min)?\.js',
-            '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
