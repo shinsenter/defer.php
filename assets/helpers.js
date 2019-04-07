@@ -1,7 +1,7 @@
 /**
  *
- * Package shinsenter/defer.js
- * https://github.com/shinsenter/defer.js
+ * Package shinsenter/defer.php
+ * https://github.com/shinsenter/defer.php
  *
  * Minified by UglifyJS3
  * http://lisperator.net/uglifyjs/
@@ -55,8 +55,9 @@
     ].join(',');
 
     var helper = {
-        c: 'lazied',
-        f: 'in',
+        c: 'defer-lazied',
+        l: 'defer-loading',
+        d: 'defer-loaded',
         h: document.getElementsByTagName('html').item(0),
         t: 10
     };
@@ -80,8 +81,9 @@
             'This page was optimized with defer.js',
             '(c) 2019 Mai Nhut Tan <shin@shin.company>',
             '',
-            'Website: https://wordpress.org/plugins/shins-pageload-magic/',
-            'Github:  https://github.com/shinsenter/defer.js/'
+            'Github:    https://github.com/shinsenter/defer.js/',
+            'PHP lib:   https://github.com/shinsenter/defer.php/',
+            'WordPress: https://wordpress.org/plugins/shins-pageload-magic/'
         ].join('\n'));
     }
 
@@ -95,7 +97,7 @@
      * @param   {integer}   ticker      Placeholder for holding timer
      * @returns {function}              Return a new function
      */
-    function defersmart(func, delay, throttle, ticker) {
+    function debounce(func, delay, throttle, ticker) {
         return function() {
             var context = this;
             var args    = arguments;
@@ -141,26 +143,28 @@
             src = media[GET_ATTRIBUTE]('data-src'),
             pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
+            addClass(media, helper.l);
+
+
         function onload() {
             if (timer) {
                 clearTimeout(timer);
                 timer = null;
             }
 
-            addClass(media, helper.f);
-            media[REM_ATTRIBUTE]('data-src');
-            media[REM_ATTRIBUTE]('data-srcset');
+            removeClass(media, helper.l);
+            addClass(media, helper.d);
         }
 
         if ((match = pattern.exec(src)) !== null) {
             media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
         }
 
-        if (media.src == src || media[GET_ATTRIBUTE]('data-style')) {
+        if ((src && media.src == src) || (!src && media[GET_ATTRIBUTE]('data-style'))) {
             onload();
         } else {
             media.addEventListener('load', onload);
-            timer = setTimeout(onload, 5000);
+            timer = setTimeout(onload, 3000);
         }
     }
 
@@ -178,21 +182,14 @@
     }
 
     function deferscript() {
-        defer(function() {
-            var head = document.head,
-                scripts = defer_helper.h.querySelectorAll("script[type=deferscript]");
-
-            [].forEach.call(scripts, function(tag) {
-                tag.parentNode.removeChild(tag);
-                tag.type = "text/javascript";
-                head.appendChild(tag);
-            })
-        }, 3);
+        if('all' in defer) {
+            defer.all();
+        }
     }
 
     // Expose global methods
     helper.copyright    = copyright;
-    helper.debounce     = defersmart;
+    helper.debounce     = debounce;
     helper.deferscript  = deferscript;
     helper.defermedia   = defermedia;
     helper.addClass     = addClass;
@@ -202,7 +199,6 @@
     addClass(helper.h, 'deferjs');
 
     defermedia();
-    deferscript();
     copyright();
 
     window[name] = helper;

@@ -18,6 +18,7 @@ trait DeferOptions
     public $options = [
         // Debug optimized tags (instead of optimized HTML)
         'debug_mode'              => false,
+        'no_defer_parameter'      => 'nodefer',
 
         // Disable libxml errors and warnings
         'hide_warnings'           => true,
@@ -35,7 +36,7 @@ trait DeferOptions
 
         // Tag optimizations
         'enable_defer_css'        => true,
-        'enable_defer_scripts'    => false,
+        'enable_defer_scripts'    => true,
         'enable_defer_images'     => true,
         'enable_defer_iframes'    => true,
         'enable_defer_background' => true,
@@ -55,16 +56,16 @@ trait DeferOptions
         // Blacklist patterns
         'do_not_optimize'         => [
             'document\.write\s*\(',
-            'modernizr([-_][\d\.]+)?(\.min)?\.js',
-            '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
-        'use_css_fadein_effects'  => false,
+        'use_css_fadein_effects'  => true,
         'use_color_placeholder'   => false,
         'empty_gif'               => '',
         'empty_src'               => 'about:blank',
     ];
+
+    protected $backup_options;
 
     /**
      * @since  1.0.0
@@ -162,5 +163,26 @@ trait DeferOptions
     protected function getOptionKey($property)
     {
         return trim(strtolower(preg_replace('/([^A-Z])([A-Z])/', '$1_$2', $property)));
+    }
+
+    /**
+     * @since  1.0.6
+     * @param $property
+     */
+    protected function backupOptions()
+    {
+        $this->backup_options = $this->options;
+    }
+
+    /**
+     * @since  1.0.6
+     * @param $property
+     */
+    protected function restoreOptions()
+    {
+        if (!empty($this->backup_options)) {
+            $this->options        = $this->backup_options;
+            $this->backup_options = null;
+        }
     }
 }

@@ -1,37 +1,32 @@
 {
     "name": "shinsenter/defer.php",
-    "description": "defer.php is a PHP helper class to integrate shinsenter/defer.js library into your websites.",
+    "description": "🚀 A PHP library that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.",
     "keywords": [
-        "defer.php",
-        "defer.js",
         "defer",
-        "lazy",
         "lazyload",
-        "lazy-loading",
-        "lazy-loader",
-        "lazy-js",
-        "lazy-css",
-        "lazy-image",
-        "lazy-iframe",
-        "lazy-video",
-        "lazy-ads",
-        "lazy-javascript",
-        "lazy-style",
-        "lazy-img",
-        "dom-optimize",
-        "dom-optimization",
-        "composer-package",
-        "php-library",
-        "frontend-library",
-        "tiny-library",
-        "efficient",
-        "performant",
-        "pagespeed",
-        "website-performance",
-        "avoid-render-blocking",
-        "browser-compatibility",
-        "intersection-observer",
-        "browser-perf"
+        "lazyload image",
+        "lazyload video",
+        "lazyload font",
+        "lazyload js",
+        "lazyload css",
+        "lazyload wordpress",
+        "lazyload facebook",
+        "lazyload youtube",
+        "lazyload laravel",
+        "lazyload php",
+        "performance",
+        "website speed optimization",
+        "page speed optimization",
+        "pagespeed insight",
+        "gtmetrix",
+        "defer.js",
+        "defer php",
+        "lazy loading",
+        "lazy loader",
+        "lazy load",
+        "avoid render blocking",
+        "dom optimization",
+        "php library"
     ],
     "support":
     {
@@ -39,18 +34,19 @@
         "source": "https://github.com/shinsenter/defer.php"
     },
     "autoload": {
-        "files": [
-
-        ],
+        "files": [],
         "psr-4": {
             "shinsenter\\": "src/"
         }
     },
     "authors": [
-    {
-        "name": "Mai Nhut Tan",
-        "email": "shin@shin.company"
-    }],
+        {
+            "name": "Mai Nhut Tan",
+            "email": "shin@shin.company",
+            "homepage": "https://code.shin.company",
+            "role": "Developer"
+        }
+    ],
     "scripts":
     {
         "css": "cleancss -o public/styles.min.css assets/styles.css",
@@ -61,20 +57,14 @@
     },
     "config":
     {
-        "sort-packages": true,
-        "apcu-autoloader": false,
-        "optimize-autoloader": true,
-        "prepend-autoloader": false,
         "preferred-install": "dist",
-        "platform":
-        {
-            "php": "5.6"
-        }
+        "optimize-autoloader": true,
+        "sort-packages": true
     },
     "require":
     {
-        "php": "^5.6",
-        "symfony/http-foundation": "~3.3.1"
+        "php": ">=5.6",
+        "symfony/http-foundation": ">2.6"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

@@ -15,6 +15,10 @@ namespace shinsenter;
 
 trait DeferParser
 {
+    // For nodefer HTML
+    protected $nodefer_html;
+
+    // Document properties
     protected $charset;
     protected $isAmp;
 
@@ -51,7 +55,9 @@ trait DeferParser
      */
     public function cleanup()
     {
-        $this->dom   = null;
+        $this->nodefer_html = null;
+
+        $this->dom   = new \DOMDocument();
         $this->xpath = null;
         $this->head  = null;
         $this->body  = null;
@@ -106,17 +112,22 @@ trait DeferParser
             throw new DeferException('Invalid HTML content.', 1);
         }
 
+        // Detect charset charset
+        if (empty($this->charset)) {
+            $this->charset = mb_detect_encoding($html) ?: 'UTF-8';
+        }
+
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
+        $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
 
         // Create DOM document
-        $this->dom                     = new \DOMDocument();
         $this->dom->preserveWhiteSpace = false;
-        $this->dom->loadHTML(\mb_convert_encoding($html, 'HTML-ENTITIES', $this->charset));
+        $this->dom->loadHTML($this->charset2entity($html, $this->charset));
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
-        $this->isAmp = $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+        $this->isAmp = $this->isAmpHtml($html);
 
         // Check if the <head> tag exists
         if (($attempt = $this->xpath->query('//head')) && $attempt->length > 0) {
@@ -136,11 +147,12 @@ trait DeferParser
 
         // Add fallback class name into body class
         if ($this->enable_defer_images) {
-            $html            = $this->xpath->query('/html')->item(0);
-            $current_class   = explode(' ', (string) $html->getAttribute('class'));
+            $document        = $this->xpath->query('/html')->item(0);
+            $current_class   = explode(' ', (string) $document->getAttribute('class'));
             $current_class[] = 'no-deferjs';
             $current_class   = array_filter(array_unique($current_class));
-            $html->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            $document->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            $document = null;
         }
 
         // Parse the tags
@@ -228,14 +240,17 @@ trait DeferParser
                 $this->normalizeUrl($node, static::ATTR_HREF);
             }
 
-            if (stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false) {
+            if ($node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false) {
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
-            $media = $node->getAttribute(static::ATTR_MEDIA) ?: 'all';
+            if ($node->hasAttribute(static::ATTR_MEDIA)) {
+                $media = $node->getAttribute(static::ATTR_MEDIA) ?: 'all';
 
-            if ($media == 'all') {
-                $node->removeAttribute(static::ATTR_MEDIA);
+                if ($media == 'all') {
+                    $node->removeAttribute(static::ATTR_MEDIA);
+                }
             }
 
             $output[] = $node;
@@ -263,8 +278,14 @@ trait DeferParser
                 $node->removeAttribute(static::ATTR_ASYNC);
             }
 
-            if (stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false) {
+            if ($node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false) {
                 $node->removeAttribute(static::ATTR_TYPE);
+            }
+
+            if ($node->hasAttribute(static::ATTR_LANGUAGE) &&
+                stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false) {
+                $node->removeAttribute(static::ATTR_LANGUAGE);
             }
 
             $output[] = $node;
@@ -285,8 +306,6 @@ trait DeferParser
 
         if ($this->enable_defer_images) {
             foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-                $this->normalizeUrl($node, static::ATTR_SRC);
-
                 if (!$node->hasAttribute(static::ATTR_ALT)) {
                     $node->setAttribute(static::ATTR_ALT, '');
                 }
@@ -310,8 +329,6 @@ trait DeferParser
 
         if ($this->enable_defer_iframes) {
             foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-                $this->normalizeUrl($node, static::ATTR_SRC);
-
                 if (!$node->hasAttribute(static::ATTR_TITLE)) {
                     $node->setAttribute(static::ATTR_TITLE, '');
                 }
@@ -326,7 +343,7 @@ trait DeferParser
     /**
      * Parse all tags contain background image in the HTML
      *
-     * @since  1.1.0
+     * @since  1.0.1
      * @return array
      */
     protected function parseBackgroundTags()
@@ -350,43 +367,138 @@ trait DeferParser
      * @param  DOMNode $node
      * @param  string  $name
      * @param  mixed   $attr
+     * @param  bool    $preload_flag
      * @return string
      */
-    protected function normalizeUrl($node, $attr = 'src')
+    protected function normalizeUrl($node, $attr = 'src', $preload_flag = true)
     {
         if (!empty($src = $node->getAttribute($attr))) {
             // Normalize the URL protocol
-            if (preg_match('#^//#', $src)) {
+            if (preg_match('#^\/\/#', $src)) {
                 $src = 'https:' . $src;
                 $node->setAttribute($attr, $src);
             }
 
             // Remove urls without HTTP protocol
-            if (stripos($src, 'http') !== 0) {
-                return;
+            if ($preload_flag && stripos($src, 'http') !== 0) {
+                $preload_flag = false;
             }
 
             // Remove ads
-            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
-                return;
+            if ($preload_flag && preg_match('/ads|click|googletags|publisher/i', $src)) {
+                $preload_flag = false;
             }
 
-            $rel = $node->getAttribute(static::ATTR_REL);
+            if ($preload_flag) {
+                $rel = $node->getAttribute(static::ATTR_REL);
 
-            // Add the resouce URL to the preload list
-            if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
-                $this->preload_map[$src] = $node;
-            }
+                // Add the resouce URL to the preload list
+                if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
+                    $this->preload_map[$src] = $node;
+                }
 
-            $domain = preg_replace('/^(https?:\/\/[^\/\?]+)([\/\?]?.*)?$/', '$1', $src);
+                $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
 
-            // Add the domain to the dns list
-            if (!empty($domain)) {
-                $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
-                $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+                // Add the domain to the dns list
+                if (!empty($domain)) {
+                    $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
+                    $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+                }
             }
         }
 
         return $src;
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.7
+     * @param  string $html
+     * @return bool
+     */
+    protected function isAmpHtml($html)
+    {
+        return $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.7
+     * @param  string $html
+     * @param  string $charset
+     * @return string
+     */
+    protected function charset2entity($html, $charset)
+    {
+        return mb_convert_encoding($html, 'HTML-ENTITIES', $charset);
+    }
+
+    /**
+     * Return TRUE if it is an AMP page
+     *
+     * @since  1.0.7
+     * @param  string $html
+     * @param  string $charset
+     * @return string
+     */
+    protected function entity2charset($html, $charset)
+    {
+        $encoding = mb_detect_encoding($html);
+
+        if (empty($encoding) || $encoding == 'ASCII') {
+            $encoding = 'HTML-ENTITIES';
+        }
+
+        if ($this->charset !== $encoding) {
+            $html = mb_convert_encoding($html, $charset, $encoding);
+        }
+
+        return $html;
+    }
+
+    /**
+     * Create a new DOMNode
+     *
+     * @since  1.0.7
+     * @param  string  $tag
+     * @param  string  $content
+     * @param  array   $attributes
+     * @return DOMNode
+     */
+    protected function createNode($tag, $content = null, $attributes = [])
+    {
+        if (is_array($content)) {
+            $attributes = $content;
+            $content    = null;
+        }
+
+        $node = $this->dom->createElement($tag, $content);
+
+        if (count($attributes)) {
+            foreach ($attributes as $key => $value) {
+                $node->setAttribute($key, $value);
+            }
+        }
+
+        return $node;
+    }
+
+    /**
+     * Remove a node from DOM tree
+     *
+     * @since  1.0.7
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function removeNode(&$node)
+    {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+            $node = null;
+        }
+
+        return $this;
     }
 }

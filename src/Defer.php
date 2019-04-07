@@ -19,15 +19,11 @@ class Defer extends DeferInterface
     use DeferParser;
     use DeferOptimizer;
 
-    /**
-     * To store previous state of $use_errors
-     *
-     * @since  1.0.0
-     * @var bool
-     */
+    protected $native_libxml;
     protected $use_errors;
     protected $cache_manager;
     protected $deferjs_expiry = 3600; // 1 hours
+    protected $http;
 
     /**
      * Main class constructor
@@ -40,6 +36,7 @@ class Defer extends DeferInterface
      */
     public function __construct($html = null, $options = [], $charset = null)
     {
+        $this->native_libxml = class_exists('DOMDocument');
         $this->cache_manager = new DeferCache(static::DEFERJS_CACHE, 1);
 
         // Set library options
@@ -51,6 +48,8 @@ class Defer extends DeferInterface
         if (!empty($html)) {
             $this->fromHtml($html, $charset);
         }
+
+        $this->http = new DeferHttpRequest();
 
         return $this;
     }
@@ -76,14 +75,21 @@ class Defer extends DeferInterface
      */
     public function fromHtml($html, $charset = null)
     {
-        if (empty($charset)) {
-            $charset = \mb_detect_encoding($html) ?: 'UTF-8';
+        if ($this->nodefer()) {
+            $this->nodefer_html = trim($html);
+
+            return $this;
+        }
+
+        // Turn on gc_enable
+        if (!($gc_enabled = @gc_enabled())) {
+            @gc_enable();
         }
 
         // Disable libxml errors and warnings
-        $this->use_errors = \libxml_use_internal_errors($this->hide_warnings);
+        $this->use_errors = @libxml_use_internal_errors($this->hide_warnings);
 
-        // Load charset
+        // Set the charset
         $this->charset = $charset;
 
         // Parse the HTML
@@ -91,15 +97,22 @@ class Defer extends DeferInterface
 
         // Set special options for AMP page
         if ($this->isAmp) {
+            $this->backupOptions();
             $this->setAmpOptions();
         }
 
         // Do the optimization
         $this->optimize();
+        $this->restoreOptions();
 
         // Restore the previous value of use_errors
-        \libxml_clear_errors();
-        \libxml_use_internal_errors($this->use_errors);
+        @libxml_clear_errors();
+        @libxml_use_internal_errors($this->use_errors);
+
+        // Restore original gc_enable setting
+        if (!$gc_enabled) {
+            @gc_disable();
+        }
 
         return $this;
     }
@@ -113,6 +126,10 @@ class Defer extends DeferInterface
      */
     public function toHtml()
     {
+        if ($this->nodefer()) {
+            return $this->nodefer_html;
+        }
+
         $output = '';
 
         if ($this->debug_mode) {
@@ -121,18 +138,10 @@ class Defer extends DeferInterface
             $output = $this->dom->saveHtml();
         }
 
-        $encoding = \mb_detect_encoding($output);
-
-        if ($encoding == 'ASCII') {
-            $encoding = 'HTML-ENTITIES';
-        }
-
-        if ($this->charset != $encoding) {
-            $output = \mb_convert_encoding($output, $this->charset, $encoding);
-        }
+        $output = $this->entity2charset($output, $this->charset);
 
         if (!empty($this->bug72288_body)) {
-            $output = str_replace('<body>', $this->bug72288_body, $output);
+            $output = preg_replace('/(<body[^>]*>)/mi', $this->bug72288_body, $output, 1);
         }
 
         return $output;
@@ -168,9 +177,17 @@ class Defer extends DeferInterface
         return $this->toHtml();
     }
 
+    /**
+     * Clear cache
+     *
+     * @since  1.0.0
+     * @return self
+     */
     public function clearCache()
     {
         $this->cache_manager->clear();
+
+        return $this;
     }
 
     /*
@@ -178,6 +195,20 @@ class Defer extends DeferInterface
     | Other functions
     |--------------------------------------------------------------------------
      */
+
+    /**
+     * Returns TRUE if nodefer parameter presents
+     *
+     * @since  1.0.6
+     * @return bool
+     */
+    protected function nodefer()
+    {
+        $no_libxml   = !$this->native_libxml;
+        $has_nodefer = (bool) $this->http->request()->get($this->no_defer_parameter);
+
+        return $has_nodefer || $no_libxml;
+    }
 
     /**
      * Returns only optimized tags with debug_mode = true

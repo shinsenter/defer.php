@@ -80,14 +80,15 @@ class JsMin
     const ACTION_KEEP_A     = 1;
     const ACTION_DELETE_A   = 2;
     const ACTION_DELETE_A_B = 3;
+
     protected $a            = '';
     protected $b            = '';
     protected $input        = '';
     protected $inputIndex   = 0;
     protected $inputLength  = 0;
     protected $lookAhead;
+
     protected $output = '';
-    // -- Public Instance Methods ------------------------------------------------
 
     /**
      * Constructor
