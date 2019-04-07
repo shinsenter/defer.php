@@ -1,8 +1,8 @@
 # defer.php
 
-🔌 defer.php is a PHP helper class helping you to integrate my beloved [defer.js](https://github.com/shinsenter/defer.js) library into your websites.
+🚀 A PHP library that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.
 
-defer.js is a super tiny, native performant library for lazy-loading JS, CSS, images, iframes...
+🔌 [defer.js](https://github.com/shinsenter/defer.js) is a super tiny, native performant library for lazy-loading JS, CSS, images, iframes...
 
 Easily speed up your website! Hope you guys like it.
 
