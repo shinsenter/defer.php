@@ -461,7 +461,7 @@ trait DeferOptimizer
             }
 
             if ($this->enable_defer_scripts) {
-                $node->setAttribute(static::ATTR_TYPE, 'deferscript');
+                $node->setAttribute(static::ATTR_TYPE, 'deferjs');
                 $node->removeAttribute(static::ATTR_DEFER);
             }
 

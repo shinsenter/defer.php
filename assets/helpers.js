@@ -97,7 +97,7 @@
      * @param   {integer}   ticker      Placeholder for holding timer
      * @returns {function}              Return a new function
      */
-    function defersmart(func, delay, throttle, ticker) {
+    function debounce(func, delay, throttle, ticker) {
         return function() {
             var context = this;
             var args    = arguments;
@@ -182,38 +182,14 @@
     }
 
     function deferscript() {
-        var head = document.head;
-
-        function loadscript() {
-            var scripts = [].slice.call(document.querySelectorAll("script[type=deferscript]"));
-
-            function appendtag() {
-                if(scripts.length < 1) return;
-
-                var tag = scripts.shift();
-                tag.parentNode.removeChild(tag);
-                tag.type = "text/javascript";
-
-                if(tag.src != '' && !tag.hasAttribute('async')) {
-                    tag.onload = appendtag
-                    tag.onerror = appendtag
-                    head.appendChild(tag);
-                    return;
-                }
-
-                head.appendChild(tag);
-                appendtag();
-            }
-
-            appendtag();
+        if('all' in defer) {
+            defer.all();
         }
-
-        defer(loadscript, 3);
     }
 
     // Expose global methods
     helper.copyright    = copyright;
-    helper.debounce     = defersmart;
+    helper.debounce     = debounce;
     helper.deferscript  = deferscript;
     helper.defermedia   = defermedia;
     helper.addClass     = addClass;
@@ -223,7 +199,6 @@
     addClass(helper.h, 'deferjs');
 
     defermedia();
-    deferscript();
     copyright();
 
     window[name] = helper;

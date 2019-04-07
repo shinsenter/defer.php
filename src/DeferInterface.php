@@ -30,7 +30,7 @@ if (!defined('DEFER_JS_CDN')) {
 }
 
 if (!defined('DEFER_JS_IGNORE')) {
-    define('DEFER_JS_IGNORE', 'not(ancestor-or-self::*[self::noscript or @data-ignore])');
+    define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::noscript)');
 
     define('DEFER_IMG_IGNORE', implode(' and ', [
         DEFER_JS_IGNORE,
@@ -42,10 +42,9 @@ if (!defined('DEFER_JS_IGNORE')) {
     define('DEFER_IFRAME_IGNORE', implode(' and ', [
         DEFER_JS_IGNORE,
         'not(@src=\'\')',
-        'not(@data-src)',
     ]));
 
-    define('DEFER_MINIFY_HTML_IGNORE', 'not(ancestor::*[self::textarea or self::code or self::pre or self::script])');
+    define('DEFER_MINIFY_HTML_IGNORE', 'not(parent::*[self::textarea or self::code or self::pre or self::script])');
 }
 
 abstract class DeferInterface
@@ -152,7 +151,7 @@ abstract class DeferInterface
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
     const IMG_XPATH        = '//*[(self::img or self::video or self::source) and ' . DEFER_IMG_IGNORE . ']';
     const IFRAME_XPATH     = '//*[(self::iframe or self::frame or self::embed) and ' . DEFER_IFRAME_IGNORE . ']';
-    const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and contains(@style,"url")]';
+    const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and @style and contains(@style,"url")]';
     const NORMALIZE_XPATH  = '//text()[' . DEFER_MINIFY_HTML_IGNORE . ' and not(.=normalize-space(.))]';
 
     // Variable holders
