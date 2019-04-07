@@ -83,13 +83,14 @@ require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 // Create a Defer object
 $defer = new \shinsenter\Defer();
 
+
 // Turn off warning and debug
 $defer->debug_mode            = false;
 $defer->hide_warnings         = true;
 
 // Library injection
-$defer->append_defer_js       = true;
-$defer->default_defer_time    = 100;
+$defer->append_defer_js       = false;
+$defer->default_defer_time    = 10;
 
 // Page optimizations
 $defer->enable_preloading     = true;
@@ -108,9 +109,10 @@ $defer->enable_defer_background  = true;
 $defer->defer_web_fonts       = true;
 
 // Image and iframe placeholders
-$defer->empty_gif             = '';
-$defer->empty_src             = '';
-$defer->use_color_placeholder = true;
+$defer->empty_gif               = '';
+$defer->empty_src               = '';
+$defer->use_color_placeholder   = true;
+$defer->use_css_fadein_effects  = true;
 
 // Blacklist
 $defer->do_not_optimize = [];
