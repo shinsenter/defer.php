@@ -143,8 +143,7 @@
             src = media[GET_ATTRIBUTE]('data-src'),
             pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
-            addClass(media, helper.l);
-
+        addClass(media, helper.l);
 
         function onload() {
             if (timer) {
@@ -160,7 +159,7 @@
             media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
         }
 
-        if ((src && media.src == src) || (!src && media[GET_ATTRIBUTE]('data-style'))) {
+        if (media.hasAttribute('data-ignore') || (src && media.src == src) || (!src && media[GET_ATTRIBUTE]('data-style'))) {
             onload();
         } else {
             media.addEventListener('load', onload);
