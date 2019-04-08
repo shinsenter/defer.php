@@ -443,7 +443,7 @@ trait DeferOptimizer
 
             // Update the node content
             if ($node->nodeValue != $code) {
-                $node->nodeValue = $code;
+                $node->nodeValue = htmlentities($code);
             }
         }
     }
@@ -481,7 +481,7 @@ trait DeferOptimizer
                 }
 
                 if ($node->nodeValue != $code) {
-                    $node->nodeValue = $code;
+                    $node->nodeValue = htmlentities($code);
                 }
             }
         }

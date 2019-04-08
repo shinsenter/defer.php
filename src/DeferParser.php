@@ -472,6 +472,8 @@ trait DeferParser
         if (is_array($content)) {
             $attributes = $content;
             $content    = null;
+        } elseif (is_string($content)) {
+            $content = htmlentities($content);
         }
 
         $node = $this->dom->createElement($tag, $content);
