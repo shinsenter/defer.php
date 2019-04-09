@@ -1,9 +1,7 @@
 img[data-src]:not(.defer-lazied),
 img[data-srcset]:not(.defer-lazied),
-source[data-src]:not(.defer-lazied),
 iframe[data-src]:not(.defer-lazied),
 frame[data-src]:not(.defer-lazied),
-video[data-src]:not(.defer-lazied),
 *[data-style]:not(.defer-lazied) {
     min-width: 1px;
     min-height: 1px;
