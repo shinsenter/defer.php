@@ -55,6 +55,7 @@
 
     var IMG_SELECTOR = [
         'img' + COMMON_SELECTOR,
+        'source' + COMMON_SELECTOR,
         '[data-style]' + COMMON_EXCEPTIONS
     ].join(',');
 

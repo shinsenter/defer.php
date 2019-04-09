@@ -1,10 +1,10 @@
-html.no-deferjs [data-src] {
-    display: none !important;
-}
-
-[data-src]:not(.defer-lazied),
-[data-srcset]:not(.defer-lazied),
-[data-style]:not(.defer-lazied) {
+img[data-src]:not(.defer-lazied),
+img[data-srcset]:not(.defer-lazied),
+source[data-src]:not(.defer-lazied),
+iframe[data-src]:not(.defer-lazied),
+frame[data-src]:not(.defer-lazied),
+video[data-src]:not(.defer-lazied),
+*[data-style]:not(.defer-lazied) {
     min-width: 1px;
     min-height: 1px;
     visibility: visible;
@@ -19,5 +19,14 @@ html.no-deferjs [data-src] {
 }
 
 .defer-lazied.defer-loading:not([data-style]) {
-    opacity: .3!important;
+    opacity: .5 !important;
+    background-color: rgba(240, 240, 240, 0.2);
+}
+
+.no-deferjs img,
+.no-deferjs source,
+.no-deferjs iframe,
+.no-deferjs frame,
+.no-deferjs video {
+    display: none !important;
 }

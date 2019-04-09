@@ -130,14 +130,20 @@ trait DeferParser
         $this->isAmp = $this->isAmpHtml($html);
 
         // Check if the <head> tag exists
-        if (($attempt = $this->xpath->query('//head')) && $attempt->length > 0) {
+        $attempt = $this->xpath->query('//head');
+
+        if ($attempt && $attempt->length > 0) {
             $this->head = $attempt->item(0);
+            $attempt    = null;
         }
 
         // Check if the <body> tag exists
-        if (($attempt = $this->xpath->query('//body')) && $attempt->length > 0) {
+        $attempt = $this->xpath->query('//body');
+
+        if ($attempt && $attempt->length > 0) {
             $this->body          = $attempt->item(0);
             $this->bug72288_body = preg_match('/(<body[^>]*>)/mi', $html, $match) ? $match[1] : '';
+            $attempt             = null;
         }
 
         // If none of above, throw an error
@@ -372,7 +378,9 @@ trait DeferParser
      */
     protected function normalizeUrl($node, $attr = 'src', $preload_flag = true)
     {
-        if (!empty($src = $node->getAttribute($attr))) {
+        $src = $node->getAttribute($attr);
+
+        if (!empty($src)) {
             // Normalize the URL protocol
             if (preg_match('#^\/\/#', $src)) {
                 $src = 'https:' . $src;
