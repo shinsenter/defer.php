@@ -34,6 +34,7 @@
  */
 
 (function(window, document, console, name) {
+    var JQUERY          = 'jQuery';
 
     var NOOP            = Function();
     var GET_ATTRIBUTE   = 'getAttribute';
@@ -49,10 +50,8 @@
     var CLASS_SUFFIX = 'deferjs';
     var DATA_PREFIX  = 'data-';
 
-
     var ADD_EVENT_LISTENER = 'addEventListener';
     var LOAD_EVENT         = 'load';
-    var DOM_LOADED_EVENT   = 'DOMContentLoaded';
 
     var IMG_SELECTOR = [
         'img' + COMMON_SELECTOR,
@@ -77,6 +76,7 @@
     var defer       = window.defer || NOOP;
     var deferimg    = window.deferimg || NOOP;
     var deferiframe = window.deferiframe || NOOP;
+    var old_ready;
 
     function copyright () {
         var text    = '%c shinsenter %c'+PROJECT_NAME+' ';
@@ -194,15 +194,22 @@
     }
 
     function deferscript() {
-        if('all' in defer) {
-            defer.all();
+        if(!old_ready && JQUERY in window && 'fn' in window[JQUERY]) {
+            old_ready   = window[JQUERY].fn.ready;
+
+            window[JQUERY].fn.ready = function (fn) {
+                defer(function() {
+                    old_ready(fn)
+                });
+
+                return this;
+            }
         }
     }
 
     // Expose global methods
     helper.copyright    = copyright;
     helper.debounce     = debounce;
-    helper.deferscript  = deferscript;
     helper.defermedia   = defermedia;
     helper.addClass     = addClass;
     helper.removeClass  = removeClass;
@@ -214,6 +221,6 @@
     copyright();
 
     window[name] = helper;
-    window[ADD_EVENT_LISTENER](DOM_LOADED_EVENT, deferscript)
+    window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript)
 
 })(this, document, console, 'defer_helper');

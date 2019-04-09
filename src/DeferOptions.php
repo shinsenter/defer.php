@@ -56,6 +56,7 @@ trait DeferOptions
         // Blacklist patterns
         'do_not_optimize'         => [
             'document\.write\s*\(',
+            '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
