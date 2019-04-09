@@ -13,6 +13,10 @@
 
 error_reporting(E_ALL);
 
+if (!defined('DEFER_JS_VERSION')) {
+    define('DEFER_JS_VERSION', '1.1.6');
+}
+
 define('TEST_DS', DIRECTORY_SEPARATOR);
 define('BASE', dirname(__FILE__));
 define('ROOT', dirname(BASE));
