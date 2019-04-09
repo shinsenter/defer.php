@@ -43,6 +43,17 @@
     var COMMON_EXCEPTIONS   = ':not([data-lazied])';
     var COMMON_SELECTOR     = '[data-src]' + COMMON_EXCEPTIONS;
 
+    var PROJECT_URL  = 'https://github.com/shinsenter/';
+    var PROJECT_NAME = 'defer.js';
+    var CLASS_PREFIX = 'defer-';
+    var CLASS_SUFFIX = 'deferjs';
+    var DATA_PREFIX  = 'data-';
+
+
+    var ADD_EVENT_LISTENER = 'addEventListener';
+    var LOAD_EVENT         = 'load';
+    var DOM_LOADED_EVENT   = 'DOMContentLoaded';
+
     var IMG_SELECTOR = [
         'img' + COMMON_SELECTOR,
         '[data-style]' + COMMON_EXCEPTIONS
@@ -50,14 +61,14 @@
 
     var IFRAME_SELECTOR = [
         'iframe' + COMMON_SELECTOR,
-        'frame' + COMMON_SELECTOR,
-        'video' + COMMON_SELECTOR
+        'frame'  + COMMON_SELECTOR,
+        'video'  + COMMON_SELECTOR
     ].join(',');
 
     var helper = {
-        c: 'defer-lazied',
-        l: 'defer-loading',
-        d: 'defer-loaded',
+        c: CLASS_PREFIX + 'lazied',
+        l: CLASS_PREFIX + 'loading',
+        d: CLASS_PREFIX + 'loaded',
         h: document.getElementsByTagName('html').item(0),
         t: 10
     };
@@ -68,7 +79,7 @@
     var deferiframe = window.deferiframe || NOOP;
 
     function copyright () {
-        var text    = '%c shinsenter %c defer.js ';
+        var text    = '%c shinsenter %c'+PROJECT_NAME+' ';
         var common  = 'font-size:16px;color:#fff;padding:2px;border-radius:';
         var style1  = common + '4px 0 0 4px;background:#2a313c';
         var style2  = common + '0 4px 4px 0;background:#e61e25';
@@ -78,11 +89,11 @@
         }
 
         log([
-            'This page was optimized with defer.js',
+            'This page was optimized with ' + PROJECT_NAME,
             '(c) 2019 Mai Nhut Tan <shin@shin.company>',
             '',
-            'Github:    https://github.com/shinsenter/defer.js/',
-            'PHP lib:   https://github.com/shinsenter/defer.php/',
+            'Github:    ' + PROJECT_URL + PROJECT_NAME,
+            'PHP lib:   ' + PROJECT_URL + 'defer.php',
             'WordPress: https://wordpress.org/plugins/shins-pageload-magic/'
         ].join('\n'));
     }
@@ -140,7 +151,7 @@
     function mediafilter(media) {
         var timer,
             match,
-            src = media[GET_ATTRIBUTE]('data-src'),
+            src = media[GET_ATTRIBUTE](DATA_PREFIX + 'src'),
             pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
         addClass(media, helper.l);
@@ -159,10 +170,12 @@
             media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
         }
 
-        if (media.hasAttribute('data-ignore') || (src && media.src == src) || (!src && media[GET_ATTRIBUTE]('data-style'))) {
+        if (media.hasAttribute(DATA_PREFIX + 'ignore') ||
+            (src && media.src == src) ||
+            (!src && media[GET_ATTRIBUTE](DATA_PREFIX + 'style'))) {
             onload();
         } else {
-            media.addEventListener('load', onload);
+            media[ADD_EVENT_LISTENER](LOAD_EVENT, onload);
             timer = setTimeout(onload, 3000);
         }
     }
@@ -194,12 +207,13 @@
     helper.addClass     = addClass;
     helper.removeClass  = removeClass;
 
-    removeClass(helper.h, 'no-deferjs');
-    addClass(helper.h, 'deferjs');
+    removeClass(helper.h, 'no-' + CLASS_SUFFIX);
+    addClass(helper.h, CLASS_SUFFIX);
 
     defermedia();
     copyright();
 
     window[name] = helper;
+    window[ADD_EVENT_LISTENER](DOM_LOADED_EVENT, deferscript)
 
 })(this, document, console, 'defer_helper');
