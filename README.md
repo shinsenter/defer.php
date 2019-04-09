@@ -58,7 +58,7 @@ function deferjs_optimization($html) {
     $defer = new \shinsenter\Defer();
 
     // Then get the optimized output
-    return $defer->fromHtml($html_source)->toHtml($html);
+    return $defer->fromHtml($html)->toHtml();
 }
 
 // Turn output buffering on with ob_start

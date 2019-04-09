@@ -36,7 +36,6 @@ if (!defined('DEFER_JS_IGNORE')) {
         DEFER_JS_IGNORE,
         'not(@src=\'\')',
         'not(starts-with(@src,"data:image"))',
-        'not(ancestor::header)',
     ]));
 
     define('DEFER_IFRAME_IGNORE', implode(' and ', [

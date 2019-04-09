@@ -79,31 +79,41 @@ trait DeferOptimizer
 
         if (!$this->append_defer_js) {
             static::$deferjs_script = '';
-        } else {
-            if (empty(static::$deferjs_script)
-                && empty(static::$deferjs_script = $cache->get('deferjs_script' . $suffix))) {
+        } elseif (empty(static::$deferjs_script)) {
+            static::$deferjs_script = $cache->get('deferjs_script' . $suffix);
+
+            if (empty(static::$deferjs_script)) {
                 static::$deferjs_script = '/* ' . static::DEFERJS_URL . ' */' . @file_get_contents(static::DEFERJS_URL);
                 $cache->put('deferjs_script' . $suffix, static::$deferjs_script, $time, static::DEFERJS_URL);
             }
         }
 
-        if (empty(static::$fingerprint)
-            && empty(static::$fingerprint = base64_decode($cache->get('fingerprint' . $suffix)))) {
-            static::$fingerprint = @file_get_contents(static::FINGERPRINT_URL);
-            $cache->put('fingerprint' . $suffix, base64_encode(static::$fingerprint), $time);
+        if (empty(static::$fingerprint)) {
+            static::$fingerprint = base64_decode($cache->get('fingerprint' . $suffix));
+
+            if (empty(static::$fingerprint)) {
+                static::$fingerprint = @file_get_contents(static::FINGERPRINT_URL);
+                $cache->put('fingerprint' . $suffix, base64_encode(static::$fingerprint), $time);
+            }
         }
 
-        if (empty(static::$helpers)
-            && empty(static::$helpers = $cache->get('helpers' . $suffix))) {
-            static::$helpers = @file_get_contents(static::HELPERS_URL);
-            $cache->put('helpers' . $suffix, static::$helpers, $time);
+        if (empty(static::$helpers)) {
+            static::$helpers = $cache->get('helpers' . $suffix);
+
+            if (empty(static::$helpers)) {
+                static::$helpers = @file_get_contents(static::HELPERS_URL);
+                $cache->put('helpers' . $suffix, static::$helpers, $time);
+            }
         }
 
         // Append simple effect for deferred contents
-        if (empty(static::$inline_styles)
-            && empty(static::$inline_styles = $cache->get('inline_styles' . $suffix))) {
-            static::$inline_styles = @file_get_contents(static::INLINE_CSS_URL);
-            $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
+        if (empty(static::$inline_styles)) {
+            static::$inline_styles = $cache->get('inline_styles' . $suffix);
+
+            if (empty(static::$inline_styles)) {
+                static::$inline_styles = @file_get_contents(static::INLINE_CSS_URL);
+                $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
+            }
         }
     }
 
@@ -136,7 +146,9 @@ trait DeferOptimizer
         $extra_scripts[] = 'deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         $extra_scripts[] = static::$helpers;
 
-        if (!empty($script = static::$deferjs_script . implode(';', array_filter($extra_scripts)))) {
+        $script = static::$deferjs_script . implode(';', array_filter($extra_scripts));
+
+        if (!empty($script)) {
             $script_tag = $this->createNode(static::SCRIPT_TAG, trim($script), [static::ATTR_ID => 'defer-script']);
 
             $this->head->insertBefore($script_tag, $the_anchor);
@@ -285,9 +297,13 @@ trait DeferOptimizer
             $the_anchor = $this->head->childNodes->item(0);
 
             foreach ($this->preload_map as $url => $node) {
-                if (empty($url)
-                    // || $this->isWebfontUrl($url)
-                    || empty($as = $this->getPreloadType($node))) {
+                if (empty($url)) {
+                    continue;
+                }
+
+                $as = $this->getPreloadType($node);
+
+                if (empty($as)) {
                     continue;
                 }
 
@@ -347,7 +363,9 @@ trait DeferOptimizer
         $the_anchor = $this->head->childNodes->item(0);
 
         // Check if the meta viewport tag does not exist
-        if (!($attempt = $this->xpath->query('//meta[@charset or contains(@http-equiv,"Content-Type")]')) || !$attempt->length) {
+        $attempt = $this->xpath->query('//meta[@charset or contains(@http-equiv,"Content-Type")]');
+
+        if (!$attempt || $attempt->length < 1) {
             $this->head->insertBefore($this->createNode(static::META_TAG, [
                 static::ATTR_CHARSET => $this->charset,
             ]), $the_anchor);
@@ -356,7 +374,9 @@ trait DeferOptimizer
         }
 
         // Check if the meta viewport tag does not exist
-        if (!($attempt = $this->xpath->query('//meta[@name="viewport" and contains(@content,"initial-scale")]')) || !$attempt->length) {
+        $attempt = $this->xpath->query('//meta[@name="viewport" and contains(@content,"initial-scale")]');
+
+        if (!$attempt || $attempt->length < 1) {
             $this->head->insertBefore($this->createNode(static::META_TAG, [
                 static::ATTR_NAME    => 'viewport',
                 static::ATTR_CONTENT => 'width=device-width,initial-scale=1',
@@ -426,7 +446,9 @@ trait DeferOptimizer
                 continue;
             }
 
-            if (empty($code = trim($node->nodeValue)) && $node->parentNode) {
+            $code = trim($node->nodeValue);
+
+            if (empty($code) && $node->parentNode) {
                 $node->parentNode->removeChild($node);
 
                 continue;
@@ -465,7 +487,9 @@ trait DeferOptimizer
                 $node->removeAttribute(static::ATTR_DEFER);
             }
 
-            if (!empty($code = trim($node->nodeValue))) {
+            $code = trim($node->nodeValue);
+
+            if (!empty($code)) {
                 if (strstr($code, '<!--') !== false) {
                     $code = preg_replace('/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/', '', $code);
                 }
@@ -626,9 +650,10 @@ trait DeferOptimizer
      */
     protected function isBlacklistedNode($node, $src_attr = 'src')
     {
-        $src = $node->getAttribute($src_attr);
+        $src       = $node->getAttribute($src_attr);
+        $blacklist = $this->do_not_optimize;
 
-        if (is_array($blacklist = $this->do_not_optimize)) {
+        if (is_array($blacklist)) {
             foreach ($blacklist as $pattern) {
                 $regex = '#' . str_replace('#', '\#', $pattern) . '#';
 
@@ -681,9 +706,13 @@ trait DeferOptimizer
      */
     protected function deferWebFont($node)
     {
-        if ($this->defer_web_fonts &&
-            $this->isWebfontUrl($src = $node->getAttribute(static::ATTR_HREF)) &&
-            empty($node->getAttribute(static::ATTR_ONLOAD))) {
+        if (!$this->defer_web_fonts || $node->hasAttribute(static::ATTR_ONLOAD)) {
+            return;
+        }
+
+        $src = $node->getAttribute(static::ATTR_HREF);
+
+        if ($this->isWebfontUrl($src)) {
             // Make a noscript fallback
             $this->makeNoScript($node);
 
