@@ -480,7 +480,7 @@ trait DeferOptimizer
 
                 // The switch to the right media type when it is loaded
                 $node->setAttribute(static::ATTR_ONLOAD, sprintf(
-                    'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
+                    'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},1)',
                     addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
                 ));
 
@@ -523,7 +523,7 @@ trait DeferOptimizer
                 }
 
                 if ($minify) {
-                    $code = $minify;
+                    $code = trim($minify);
                 }
 
                 if ($node->nodeValue != $code) {
