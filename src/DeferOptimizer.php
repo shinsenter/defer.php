@@ -15,6 +15,7 @@ namespace shinsenter;
 
 use Exception;
 use shinsenter\Helpers\JsMin;
+use DOMText;
 
 trait DeferOptimizer
 {
@@ -143,7 +144,7 @@ trait DeferOptimizer
 
         // Append helpers
         $extra_scripts   = (array) $this->loader_scripts;
-        $extra_scripts[] = 'deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
+        $extra_scripts[] = '"IntersectionObserver"in window||deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         $extra_scripts[] = static::$helpers;
 
         $script = static::$deferjs_script . implode(';', array_filter($extra_scripts));
@@ -399,6 +400,7 @@ trait DeferOptimizer
             return;
         }
 
+        $this->dom->normalizeDocument();
         $nodes = $this->xpath->query(static::NORMALIZE_XPATH);
 
         foreach ($nodes as $node) {
@@ -470,6 +472,20 @@ trait DeferOptimizer
             // Update the node content
             if ($node->nodeValue != $code) {
                 $node->nodeValue = htmlspecialchars($code);
+            }
+
+            if(preg_match('/url\s*\(/', $code)) {
+                // Make a noscript fallback
+                $this->makeNoScript($node);
+
+                // The switch to the right media type when it is loaded
+                $node->setAttribute(static::ATTR_ONLOAD, sprintf(
+                    'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
+                    addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
+                ));
+
+                // Make a fake media type, force browser to load this as the lowest priority
+                $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width:1px)');
             }
         }
     }
@@ -831,6 +847,7 @@ trait DeferOptimizer
         // Create noscript tag for normal image fallback
         if (!$this->debug_mode && $node->parentNode) {
             if ($node->nodeName !== static::LINK_TAG
+                && $node->nodeName !== static::STYLE_TAG
                 && $node->parentNode->nodeName === static::HEAD_TAG) {
                 $this->body->appendChild($node);
             }
@@ -841,7 +858,7 @@ trait DeferOptimizer
             }
 
             // Append normal image into the <noscript> tag
-            $clone    = $node->cloneNode();
+            $clone    = $node->cloneNode(true);
             $noscript = $this->createNode(static::NOSCRIPT_TAG);
             $noscript->appendChild($clone);
 

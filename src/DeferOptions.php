@@ -46,8 +46,8 @@ trait DeferOptions
         'web_fonts_patterns'      => [
             '_debugbar.*stylesheets',
             'fonts\.google(apis)?\.com',
-            '(gadget|popup|modal)[^\/]*\.css',
-            '(font-awesome|typicons|devicons|iconset)([-_][\d\.]+)?(\.min)?\.css',
+            '(gadget|popup|modal|icons)[^\/]*\.css',
+            '(font-awesome)([-_][\d\.]+)?(\.min)?\.css',
         ],
 
         // Custom loader scripts
@@ -111,7 +111,7 @@ trait DeferOptions
             if (isset($this->options[$key])) {
                 switch (true) {
                     case is_array($this->options[$key]):
-                        $this->options[$key] = (array) $flag;
+                        $this->options[$key] = (array) $this->escapeRegex($flag);
                         break;
                     case is_numeric($this->options[$key]):
                         $this->options[$key] = (int) $flag;
@@ -168,7 +168,6 @@ trait DeferOptions
 
     /**
      * @since  1.0.6
-     * @param $property
      */
     protected function backupOptions()
     {
@@ -177,7 +176,6 @@ trait DeferOptions
 
     /**
      * @since  1.0.6
-     * @param $property
      */
     protected function restoreOptions()
     {
@@ -185,5 +183,32 @@ trait DeferOptions
             $this->options        = $this->backup_options;
             $this->backup_options = null;
         }
+    }
+
+    /**
+     * @since  1.0.7
+     * @param  string $str
+     * @return bool
+     */
+    protected function isRegex($str)
+    {
+        return @preg_match('~' . $str . '~', null) !== false;
+    }
+
+    /**
+     * @since  1.0.7
+     * @param  string $str
+     * @param  mixed  $arr
+     * @return bool
+     */
+    protected function escapeRegex($arr)
+    {
+        return array_map(function ($str) {
+            if (!$this->isRegex($str)) {
+                return preg_quote($str);
+            }
+
+            return $str;
+        }, (array) $arr);
     }
 }

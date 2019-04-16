@@ -79,7 +79,7 @@
     var old_ready;
 
     function copyright () {
-        var text    = '%c shinsenter %c'+PROJECT_NAME+' ';
+        var text    = '%c shinsenter %c '+PROJECT_NAME+' ';
         var common  = 'font-size:16px;color:#fff;padding:2px;border-radius:';
         var style1  = common + '4px 0 0 4px;background:#2a313c';
         var style2  = common + '0 4px 4px 0;background:#e61e25';

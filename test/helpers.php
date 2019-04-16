@@ -41,7 +41,7 @@ if (!function_exists('debug')) {
             if (is_string($msg)) {
                 $msgs[] = $msg;
             } else {
-                $msgs[] = var_export($msg, true);
+                $msgs[] = print_r($msg, true);
             }
         }
 

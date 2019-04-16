@@ -2,9 +2,19 @@
 
 🚀 A PHP library that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.
 
-🔌 [defer.js](https://github.com/shinsenter/defer.js) is a super tiny, native performant library for lazy-loading JS, CSS, images, iframes...
+![GitHub](https://img.shields.io/github/license/shinsenter/defer.php.svg)
+![GitHub Release Date](https://img.shields.io/github/release-date/shinsenter/defer.php.svg)
 
-Easily speed up your website! Hope you guys like it.
+[![CodeFactor](https://www.codefactor.io/repository/github/shinsenter/defer.php/badge)](https://www.codefactor.io/repository/github/shinsenter/defer.php)
+![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/shinsenter/defer.php.svg)
+[![Post an issue](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/shinsenter/defer.php/issues)
+![GitHub issues](https://img.shields.io/github/issues-raw/shinsenter/defer.php.svg)
+
+
+
+🔌 [defer.js](https://github.com/shinsenter/defer.js) is super tiny, native performant library for lazy-loading JS, CSS, images, iframes...
+
+Defer almost anything, easily speed up your website. Easily speed up your website! Hope you guys like it.
 
 
 
@@ -15,7 +25,7 @@ Easily speed up your website! Hope you guys like it.
 ### Install with composer
 
 ```bash
-composer require shinsenter/defer.php:dev-master
+composer require shinsenter/defer.php
 ```
 
 
@@ -83,11 +93,6 @@ require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 // Create a Defer object
 $defer = new \shinsenter\Defer();
 
-
-// Turn off warning and debug
-$defer->debug_mode            = false;
-$defer->hide_warnings         = true;
-
 // Library injection
 $defer->append_defer_js       = false;
 $defer->default_defer_time    = 10;
@@ -115,7 +120,10 @@ $defer->use_color_placeholder   = true;
 $defer->use_css_fadein_effects  = true;
 
 // Blacklist
-$defer->do_not_optimize = [];
+$defer->do_not_optimize = [
+    'document\.write\s*\(',
+    '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
+];
 
 // Then get the optimized output
 $result = $defer->fromHtml(file_get_contents('mypage.html'))->toHtml();
