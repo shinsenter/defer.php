@@ -117,16 +117,21 @@ trait DeferParser
             $this->charset = mb_detect_encoding($html) ?: 'UTF-8';
         }
 
+        // Convert HTML into HTML entities
+        $html = $this->charset2entity($html, $this->charset);
+
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
         $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
 
         // Create DOM document
         $this->dom->preserveWhiteSpace = false;
-        $this->dom->loadHTML($this->charset2entity($html, $this->charset));
+        $this->dom->loadHTML($html);
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
+
+        // Check if this is an AMP page
         $this->isAmp = $this->isAmpHtml($html);
 
         // Check if the <head> tag exists
@@ -427,7 +432,10 @@ trait DeferParser
      */
     protected function isAmpHtml($html)
     {
-        return $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+        return
+            $this->xpath->query('//html[@amp]')->length > 0 ||
+            strpos($html, '&#x26A1;') !== false ||
+            strpos($html, '⚡') !== false;
     }
 
     /**

@@ -404,12 +404,16 @@ trait DeferOptimizer
         foreach ($nodes as $node) {
             $trimmed = trim(preg_replace('/\s+/', ' ', $node->nodeValue));
 
-            if (empty($trimmed) && ($node->previousSibling || $node->nextSibling)) {
-                $trimmed = ' ';
-            } elseif ($node->previousSibling) {
-                $trimmed = ' ' . $trimmed;
-            } elseif ($node->nextSibling) {
-                $trimmed = $trimmed . ' ';
+            if (empty($trimmed)) {
+                if ($node->previousSibling && $node->nextSibling) {
+                    $trimmed = ' ';
+                }
+            } else {
+                if ($node->previousSibling) {
+                    $trimmed = ' ' . $trimmed;
+                } elseif ($node->nextSibling) {
+                    $trimmed = $trimmed . ' ';
+                }
             }
 
             if ($trimmed != $node->nodeValue) {
@@ -465,7 +469,7 @@ trait DeferOptimizer
 
             // Update the node content
             if ($node->nodeValue != $code) {
-                $node->nodeValue = htmlentities($code);
+                $node->nodeValue = htmlspecialchars($code);
             }
         }
     }
@@ -494,6 +498,8 @@ trait DeferOptimizer
                     $code = preg_replace('/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/', '', $code);
                 }
 
+                $minify = null;
+
                 try {
                     $minify = JsMin::minify($code);
                 } catch (Exception $error) {
@@ -501,11 +507,11 @@ trait DeferOptimizer
                 }
 
                 if ($minify) {
-                    $code = trim($minify);
+                    $code = $minify;
                 }
 
                 if ($node->nodeValue != $code) {
-                    $node->nodeValue = htmlentities($code);
+                    $node->nodeValue = htmlspecialchars($code);
                 }
             }
         }
