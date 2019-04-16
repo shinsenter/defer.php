@@ -15,7 +15,6 @@ namespace shinsenter;
 
 use Exception;
 use shinsenter\Helpers\JsMin;
-use DOMText;
 
 trait DeferOptimizer
 {
@@ -179,7 +178,7 @@ trait DeferOptimizer
             return;
         }
 
-        $fingerprint = $this->dom->createComment(static::$fingerprint);
+        $fingerprint = $this->dom->createComment("\n" . static::$fingerprint);
         $this->body->parentNode->appendChild($fingerprint);
         $fingerprint = null;
     }
@@ -474,7 +473,7 @@ trait DeferOptimizer
                 $node->nodeValue = htmlspecialchars($code);
             }
 
-            if(preg_match('/url\s*\(/', $code)) {
+            if (preg_match('/url\s*\(/', $code)) {
                 // Make a noscript fallback
                 $this->makeNoScript($node);
 
