@@ -94,24 +94,25 @@ require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 $defer = new \shinsenter\Defer();
 
 // Library injection
-$defer->append_defer_js       = false;
-$defer->default_defer_time    = 10;
+$defer->append_defer_js     = false;
+$defer->default_defer_time  = 10;
 
 // Page optimizations
-$defer->enable_preloading     = true;
-$defer->enable_dns_prefetch   = true;
-$defer->fix_render_blocking   = true;
-$defer->minify_output_html    = true;
+$defer->enable_preloading   = true;
+$defer->enable_dns_prefetch = true;
+$defer->fix_render_blocking = true;
+$defer->minify_output_html  = true;
 
 // Tag optimizations
-$defer->enable_defer_css         = true;
-$defer->enable_defer_scripts     = true;
-$defer->enable_defer_images      = true;
-$defer->enable_defer_iframes     = true;
-$defer->enable_defer_background  = true;
+$defer->enable_defer_css        = true;
+$defer->enable_defer_scripts    = true;
+$defer->enable_defer_images     = true;
+$defer->enable_defer_iframes    = true;
+$defer->enable_defer_background = true;
+$defer->enable_defer_fallback   = true;
 
 // Web-font optimizations
-$defer->defer_web_fonts       = true;
+$defer->defer_web_fonts = true;
 
 // Image and iframe placeholders
 $defer->empty_gif               = '';

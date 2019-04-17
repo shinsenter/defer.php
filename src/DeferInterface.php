@@ -77,6 +77,7 @@ abstract class DeferInterface
 
     // Content tags
     const AUDIO_TAG    = 'audio';
+    const BR_TAG       = 'br';
     const BODY_TAG     = 'body';
     const EMBED_TAG    = 'embed';
     const FRAME_TAG    = 'frame';
@@ -113,33 +114,33 @@ abstract class DeferInterface
     const PRELOAD_WORKER   = 'worker';
 
     // Tag attributes
-    const ATTR_ALT           = 'alt';
-    const ATTR_AS            = 'as';
-    const ATTR_ASYNC         = 'async';
-    const ATTR_CHARSET       = 'charset';
-    const ATTR_CLASS         = 'class';
-    const ATTR_CONTENT       = 'content';
-    const ATTR_CROSSORIGIN   = 'crossorigin';
-    const ATTR_DATA_IGNORE   = 'data-ignore';
-    const ATTR_DATA_SRC      = 'data-src';
-    const ATTR_DATA_SRCSET   = 'data-srcset';
-    const ATTR_DATA_STYLE    = 'data-style';
-    const ATTR_DEFER         = 'defer';
-    const ATTR_HEIGHT        = 'height';
-    const ATTR_HREF          = 'href';
-    const ATTR_LANGUAGE      = 'language';
-    const ATTR_ID            = 'id';
-    const ATTR_MEDIA         = 'media';
-    const ATTR_NAME          = 'name';
-    const ATTR_ONLOAD        = 'onload';
-    const ATTR_REL           = 'rel';
-    const ATTR_SRC           = 'src';
-    const ATTR_SRCSET        = 'srcset';
-    const ATTR_SIZES         = 'sizes';
-    const ATTR_STYLE         = 'style';
-    const ATTR_TITLE         = 'title';
-    const ATTR_TYPE          = 'type';
-    const ATTR_WIDTH         = 'width';
+    const ATTR_ALT         = 'alt';
+    const ATTR_AS          = 'as';
+    const ATTR_ASYNC       = 'async';
+    const ATTR_CHARSET     = 'charset';
+    const ATTR_CLASS       = 'class';
+    const ATTR_CONTENT     = 'content';
+    const ATTR_CROSSORIGIN = 'crossorigin';
+    const ATTR_DATA_IGNORE = 'data-ignore';
+    const ATTR_DATA_SRC    = 'data-src';
+    const ATTR_DATA_SRCSET = 'data-srcset';
+    const ATTR_DATA_STYLE  = 'data-style';
+    const ATTR_DEFER       = 'defer';
+    const ATTR_HEIGHT      = 'height';
+    const ATTR_HREF        = 'href';
+    const ATTR_LANGUAGE    = 'language';
+    const ATTR_ID          = 'id';
+    const ATTR_MEDIA       = 'media';
+    const ATTR_NAME        = 'name';
+    const ATTR_ONLOAD      = 'onload';
+    const ATTR_REL         = 'rel';
+    const ATTR_SRC         = 'src';
+    const ATTR_SRCSET      = 'srcset';
+    const ATTR_SIZES       = 'sizes';
+    const ATTR_STYLE       = 'style';
+    const ATTR_TITLE       = 'title';
+    const ATTR_TYPE        = 'type';
+    const ATTR_WIDTH       = 'width';
 
     const UNIFY_OTHER_LAZY_SRC = [
         'data-src',

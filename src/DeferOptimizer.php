@@ -411,9 +411,11 @@ trait DeferOptimizer
                     $trimmed = ' ';
                 }
             } else {
-                if ($node->previousSibling) {
+                if ($node->previousSibling && $node->previousSibling->nodeName !== static::BR_TAG) {
                     $trimmed = ' ' . $trimmed;
-                } elseif ($node->nextSibling) {
+                }
+
+                if ($node->nextSibling && $node->nextSibling->nodeName !== static::BR_TAG) {
                     $trimmed = $trimmed . ' ';
                 }
             }
