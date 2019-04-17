@@ -15,6 +15,9 @@ namespace shinsenter;
 
 trait DeferParser
 {
+    // To fix html entities decode
+    public static $__html_mapping = null;
+
     // For nodefer HTML
     protected $nodefer_html;
 
@@ -390,30 +393,18 @@ trait DeferParser
             }
 
             // Remove urls without HTTP protocol
-            if ($preload_flag && stripos($src, 'http') !== 0) {
+            if (stripos($src, 'http') !== 0) {
                 $preload_flag = false;
             }
 
             // Remove ads
-            if ($preload_flag && preg_match('/ads|click|googletags|publisher/i', $src)) {
+            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
                 $preload_flag = false;
             }
 
             if ($preload_flag) {
-                $rel = $node->getAttribute(static::ATTR_REL);
-
-                // Add the resouce URL to the preload list
-                if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
-                    $this->preload_map[$src] = $node;
-                }
-
                 $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
-
-                // Add the domain to the dns list
-                if (!empty($domain)) {
-                    $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
-                    $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
-                }
+                $this->addPreloadMap($src, $node)->addDnsMap($domain, $node);
             }
         }
 
@@ -429,10 +420,9 @@ trait DeferParser
      */
     protected function isAmpHtml($html)
     {
-        return
-            $this->xpath->query('//html[@amp]')->length > 0 ||
-            strpos($html, '&#x26A1;') !== false ||
-            strpos($html, '⚡') !== false;
+        return $this->xpath->query('//html[@amp]')->length > 0 ||
+        strpos($html, '&#x26A1;') !== false ||
+        strpos($html, '⚡') !== false;
     }
 
     /**
@@ -462,6 +452,19 @@ trait DeferParser
 
         if (empty($encoding) || $encoding == 'ASCII') {
             $encoding = 'HTML-ENTITIES';
+
+            if (is_null(static::$__html_mapping)) {
+                $mapping = array_values(get_html_translation_table(HTML_SPECIALCHARS));
+
+                static::$__html_mapping = [
+                    'from' => $mapping,
+                    'to'   => array_map('htmlspecialchars', $mapping),
+                ];
+
+                unset($mapping);
+            }
+
+            $html = str_replace(static::$__html_mapping['from'], static::$__html_mapping['to'], $html);
         }
 
         if ($this->charset !== $encoding) {
@@ -486,7 +489,7 @@ trait DeferParser
             $attributes = $content;
             $content    = null;
         } elseif (is_string($content)) {
-            $content = htmlentities($content);
+            $content = htmlspecialchars($content);
         }
 
         $node = $this->dom->createElement($tag, $content);
@@ -512,6 +515,47 @@ trait DeferParser
         if ($node->parentNode) {
             $node->parentNode->removeChild($node);
             $node = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add the resouce URL to the preload list
+     *
+     * @since  1.0.9
+     * @param  string  $url
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function addPreloadMap($url, $node)
+    {
+        $rel = $node->getAttribute(static::ATTR_REL);
+
+        // Add the resouce URL to the preload list
+        if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
+            $this->preload_map[$url] = $node;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add the domain to the dns list
+     *
+     * @since  1.0.9
+     * @param  string  $domain
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function addDnsMap($domain, $node)
+    {
+        $rel = $node->getAttribute(static::ATTR_REL);
+
+        // Add the domain to the dns list
+        if (!empty($domain)) {
+            $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
+            $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
         }
 
         return $this;
