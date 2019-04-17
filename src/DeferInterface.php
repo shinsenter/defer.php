@@ -38,9 +38,23 @@ if (!defined('DEFER_JS_IGNORE')) {
         'not(starts-with(@src,"data:image"))',
     ]));
 
+    define('DEFER_IMG_TAGS', implode(' or ', [
+        'self::img',
+        'self::picture',
+        'self::source',
+        'self::video',
+        'self::audio',
+    ]));
+
     define('DEFER_IFRAME_IGNORE', implode(' and ', [
         DEFER_JS_IGNORE,
         'not(@src=\'\')',
+    ]));
+
+    define('DEFER_IFRAME_TAGS', implode(' or ', [
+        'self::iframe',
+        'self::frame',
+        'self::embed',
     ]));
 
     define('DEFER_MINIFY_HTML_IGNORE', 'not(parent::*[self::textarea or self::code or self::pre or self::script])');
@@ -63,6 +77,7 @@ abstract class DeferInterface
 
     // Content tags
     const AUDIO_TAG    = 'audio';
+    const BODY_TAG     = 'body';
     const EMBED_TAG    = 'embed';
     const FRAME_TAG    = 'frame';
     const HEAD_TAG     = 'head';
@@ -71,7 +86,9 @@ abstract class DeferInterface
     const LINK_TAG     = 'link';
     const META_TAG     = 'meta';
     const NOSCRIPT_TAG = 'noscript';
+    const PICTURE_TAG  = 'picture';
     const SCRIPT_TAG   = 'script';
+    const SOURCE_TAG   = 'source';
     const STYLE_TAG    = 'style';
     const VIDEO_TAG    = 'video';
 
@@ -148,8 +165,8 @@ abstract class DeferInterface
     const PRELOAD_XPATH    = '//link[@rel="preload"]';
     const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
-    const IMG_XPATH        = '//img[' . DEFER_IMG_IGNORE . ']';
-    const IFRAME_XPATH     = '//*[(self::iframe or self::frame or self::embed) and ' . DEFER_IFRAME_IGNORE . ']';
+    const IMG_XPATH        = '//*[(' . DEFER_IMG_TAGS . ') and ' . DEFER_IMG_IGNORE . ']';
+    const IFRAME_XPATH     = '//*[(' . DEFER_IFRAME_TAGS . ') and ' . DEFER_IFRAME_IGNORE . ']';
     const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and @style and contains(@style,"url")]';
     const NORMALIZE_XPATH  = '//text()[' . DEFER_MINIFY_HTML_IGNORE . ' and not(.=normalize-space(.))]';
 

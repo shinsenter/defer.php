@@ -40,6 +40,7 @@ trait DeferOptions
         'enable_defer_images'     => true,
         'enable_defer_iframes'    => true,
         'enable_defer_background' => true,
+        'enable_defer_fallback'   => true,
 
         // Web-font optimizations
         'defer_web_fonts'         => true,

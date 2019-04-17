@@ -820,16 +820,15 @@ trait DeferOptimizer
     protected function makeNoScript($node)
     {
         // Create noscript tag for normal image fallback
-        if (!$this->debug_mode && $node->parentNode) {
+        if (!$this->debug_mode && $this->enable_defer_fallback && $node->parentNode) {
+            if ($node->nodeName == static::SOURCE_TAG) {
+                return $this->makeNoScript($node->parentNode);
+            }
+
             if ($node->nodeName !== static::LINK_TAG
                 && $node->nodeName !== static::STYLE_TAG
                 && $node->parentNode->nodeName === static::HEAD_TAG) {
                 $this->body->appendChild($node);
-            }
-
-            // If there is an existing noscript, then do nothing
-            if ($node->nextSibling && $node->nextSibling->nodeName == static::NOSCRIPT_TAG) {
-                return;
             }
 
             // Append normal image into the <noscript> tag

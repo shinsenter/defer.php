@@ -158,11 +158,8 @@ trait DeferParser
 
         // Add fallback class name into body class
         if ($this->enable_defer_images) {
-            $document        = $this->xpath->query('/html')->item(0);
-            $current_class   = explode(' ', (string) $document->getAttribute('class'));
-            $current_class[] = 'no-deferjs';
-            $current_class   = array_filter(array_unique($current_class));
-            $document->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            $document = $this->xpath->query('/html')->item(0);
+            $this->addClass($document, ['no-deferjs']);
             $document = null;
         }
 
@@ -317,7 +314,8 @@ trait DeferParser
 
         if ($this->enable_defer_images) {
             foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-                if (!$node->hasAttribute(static::ATTR_ALT)) {
+                if ($node->nodeName == static::IMG_TAG &&
+                    !$node->hasAttribute(static::ATTR_ALT)) {
                     $node->setAttribute(static::ATTR_ALT, '');
                 }
 
@@ -340,7 +338,8 @@ trait DeferParser
 
         if ($this->enable_defer_iframes) {
             foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-                if (!$node->hasAttribute(static::ATTR_TITLE)) {
+                if ($node->nodeName == static::IFRAME_TAG &&
+                    !$node->hasAttribute(static::ATTR_TITLE)) {
                     $node->setAttribute(static::ATTR_TITLE, '');
                 }
 
@@ -556,6 +555,72 @@ trait DeferParser
         if (!empty($domain)) {
             $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
             $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Remove class names from a node
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  array   $class_list
+     * @return self
+     */
+    protected function removeClass($node, $class_list)
+    {
+        $original_class = (string) $node->getAttribute(static::ATTR_CLASS);
+        $current_class  = explode(' ', $original_class);
+        $current_class  = array_filter($current_class, function ($item) use ($class_list) {
+            return !in_array($item, (array) $class_list);
+        });
+        $current_class = implode(' ', array_filter(array_unique($current_class)));
+
+        if ($current_class !== $original_class) {
+            $this->setOrRemoveAttribute($node, static::ATTR_CLASS, $current_class);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add class names to a node
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  array   $class_list
+     * @return self
+     */
+    protected function addClass($node, $class_list)
+    {
+        $original_class = (string) $node->getAttribute(static::ATTR_CLASS);
+        $current_class  = explode(' ', $original_class);
+        $current_class  = array_merge($current_class, (array) $class_list);
+        $current_class  = implode(' ', array_filter(array_unique($current_class)));
+
+        if ($current_class !== $original_class) {
+            $this->setOrRemoveAttribute($node, static::ATTR_CLASS, $current_class);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set or remove a node attribute
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  string  $attr
+     * @param  string  $value
+     * @return self
+     */
+    protected function setOrRemoveAttribute($node, $attr, $value)
+    {
+        if (empty($value)) {
+            $node->removeAttribute($attr);
+        } else {
+            $node->setAttribute($attr, $value);
         }
 
         return $this;

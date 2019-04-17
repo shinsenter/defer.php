@@ -54,14 +54,15 @@
 
     var IMG_SELECTOR = [
         'img' + COMMON_SELECTOR,
-        'source' + COMMON_SELECTOR,
+        'picture' + COMMON_EXCEPTIONS,
         '[data-style]' + COMMON_EXCEPTIONS
     ].join(',');
 
     var IFRAME_SELECTOR = [
         'iframe' + COMMON_SELECTOR,
         'frame'  + COMMON_SELECTOR,
-        'video'  + COMMON_SELECTOR
+        'audio'  + COMMON_EXCEPTIONS,
+        'video'  + COMMON_EXCEPTIONS
     ].join(',');
 
     var helper = {
@@ -80,7 +81,7 @@
 
     function copyright () {
         var text    = '%c shinsenter %c '+PROJECT_NAME+' ';
-        var common  = 'font-size:16px;color:#fff;padding:2px;border-radius:';
+        var common  = 'font-size:16px;color:#fff;padding:4px;border-radius:';
         var style1  = common + '4px 0 0 4px;background:#2a313c';
         var style2  = common + '0 4px 4px 0;background:#e61e25';
 
@@ -200,7 +201,7 @@
             window[JQUERY].fn.ready = function (fn) {
                 defer(function() {
                     old_ready(fn)
-                });
+                }, 8);
 
                 return this;
             }

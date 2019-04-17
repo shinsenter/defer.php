@@ -48,6 +48,7 @@ $defer->enable_defer_scripts    = true;
 $defer->enable_defer_images     = true;
 $defer->enable_defer_iframes    = true;
 $defer->enable_defer_background = true;
+$defer->enable_defer_fallback   = true;
 
 $defer->defer_web_fonts        = true;
 $defer->use_css_fadein_effects = true;

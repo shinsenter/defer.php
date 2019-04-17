@@ -1,8 +1,12 @@
-img[data-src]:not(.defer-lazied),
-img[data-srcset]:not(.defer-lazied),
-iframe[data-src]:not(.defer-lazied),
-frame[data-src]:not(.defer-lazied),
-*[data-style]:not(.defer-lazied) {
+.no-deferjs [data-style],
+.no-deferjs [data-src],
+.no-deferjs [data-srcset] {
+    display: none !important;
+}
+
+.deferjs [data-style],
+.deferjs [data-src],
+.deferjs [data-srcset] {
     min-width: 1px;
     min-height: 1px;
     visibility: visible;
@@ -19,12 +23,4 @@ frame[data-src]:not(.defer-lazied),
 .defer-lazied.defer-loading:not([data-style]) {
     opacity: .5 !important;
     background-color: rgba(240, 240, 240, 0.2);
-}
-
-.no-deferjs img,
-.no-deferjs source,
-.no-deferjs iframe,
-.no-deferjs frame,
-.no-deferjs video {
-    display: none !important;
 }
