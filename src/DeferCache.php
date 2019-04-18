@@ -130,9 +130,10 @@ class DeferCache
 
     public static function readdir($path, $type = null)
     {
-        $list = [];
+        $list   = [];
+        $handle = @opendir($path);
 
-        if ($handle = @opendir($path)) {
+        if ($handle) {
             while (false !== ($item = readdir($handle))) {
                 if ($item != '.' && $item !== '..') {
                     $list[] = $path . static::DS . $item;

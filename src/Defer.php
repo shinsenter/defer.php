@@ -81,8 +81,11 @@ class Defer extends DeferInterface
             return $this;
         }
 
+        // Check if gc_enable is true
+        $gc_enabled = @gc_enabled();
+
         // Turn on gc_enable
-        if (!($gc_enabled = @gc_enabled())) {
+        if (!$gc_enabled) {
             @gc_enable();
         }
 
