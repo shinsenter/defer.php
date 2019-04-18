@@ -1,8 +1,15 @@
-img[data-src]:not(.defer-lazied),
-img[data-srcset]:not(.defer-lazied),
-iframe[data-src]:not(.defer-lazied),
-frame[data-src]:not(.defer-lazied),
-*[data-style]:not(.defer-lazied) {
+.no-deferjs .has-noscript {
+    display: none !important;
+}
+
+img,
+picture,
+source,
+video,
+audio,
+iframe,
+frame,
+embed {
     min-width: 1px;
     min-height: 1px;
     visibility: visible;
@@ -16,15 +23,6 @@ frame[data-src]:not(.defer-lazied),
     background-color: transparent !important;
 }
 
-.defer-lazied.defer-loading:not([data-style]) {
+.defer-lazied.defer-loading:not([data-style]):not([data-ignore]) {
     opacity: .5 !important;
-    background-color: rgba(240, 240, 240, 0.2);
-}
-
-.no-deferjs img,
-.no-deferjs source,
-.no-deferjs iframe,
-.no-deferjs frame,
-.no-deferjs video {
-    display: none !important;
 }

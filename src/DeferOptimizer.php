@@ -13,6 +13,7 @@
 
 namespace shinsenter;
 
+use DOMElement;
 use Exception;
 use shinsenter\Helpers\JsMin;
 
@@ -83,7 +84,7 @@ trait DeferOptimizer
             static::$deferjs_script = $cache->get('deferjs_script' . $suffix);
 
             if (empty(static::$deferjs_script)) {
-                static::$deferjs_script = '/* ' . static::DEFERJS_URL . ' */' . @file_get_contents(static::DEFERJS_URL);
+                static::$deferjs_script = '/* ' . static::DEFERJS_URL . ' */' . $this->getUrl(static::DEFERJS_URL);
                 $cache->put('deferjs_script' . $suffix, static::$deferjs_script, $time, static::DEFERJS_URL);
             }
         }
@@ -92,7 +93,7 @@ trait DeferOptimizer
             static::$fingerprint = base64_decode($cache->get('fingerprint' . $suffix));
 
             if (empty(static::$fingerprint)) {
-                static::$fingerprint = @file_get_contents(static::FINGERPRINT_URL);
+                static::$fingerprint = $this->getUrl(static::FINGERPRINT_URL);
                 $cache->put('fingerprint' . $suffix, base64_encode(static::$fingerprint), $time);
             }
         }
@@ -101,7 +102,7 @@ trait DeferOptimizer
             static::$helpers = $cache->get('helpers' . $suffix);
 
             if (empty(static::$helpers)) {
-                static::$helpers = @file_get_contents(static::HELPERS_URL);
+                static::$helpers = $this->getUrl(static::HELPERS_URL);
                 $cache->put('helpers' . $suffix, static::$helpers, $time);
             }
         }
@@ -111,7 +112,7 @@ trait DeferOptimizer
             static::$inline_styles = $cache->get('inline_styles' . $suffix);
 
             if (empty(static::$inline_styles)) {
-                static::$inline_styles = @file_get_contents(static::INLINE_CSS_URL);
+                static::$inline_styles = $this->getUrl(static::INLINE_CSS_URL);
                 $cache->put('inline_styles' . $suffix, static::$inline_styles, $time);
             }
         }
@@ -143,7 +144,7 @@ trait DeferOptimizer
 
         // Append helpers
         $extra_scripts   = (array) $this->loader_scripts;
-        $extra_scripts[] = 'deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
+        $extra_scripts[] = '"IntersectionObserver"in window||deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         $extra_scripts[] = static::$helpers;
 
         $script = static::$deferjs_script . implode(';', array_filter($extra_scripts));
@@ -244,7 +245,7 @@ trait DeferOptimizer
         $the_anchor = $this->head->childNodes->item(0);
 
         foreach ($this->dns_map as $domain => $node) {
-            if (is_a($node, \DOMElement::class) && $node->nodeName == static::LINK_TAG) {
+            if (is_a($node, DOMElement::class) && $node->nodeName == static::LINK_TAG) {
                 $link_tag = $node;
             } else {
                 $link_tag = $this->createNode(static::LINK_TAG, [
@@ -258,7 +259,7 @@ trait DeferOptimizer
         }
 
         foreach ($this->preconnect_map as $domain => $node) {
-            if (is_a($node, \DOMElement::class) && $node->nodeName == static::LINK_TAG) {
+            if (is_a($node, DOMElement::class) && $node->nodeName == static::LINK_TAG) {
                 $link_tag = $node;
             } else {
                 $link_tag = $this->createNode(static::LINK_TAG, [
@@ -313,7 +314,7 @@ trait DeferOptimizer
                     static::ATTR_HREF => $url,
                 ]);
 
-                if (is_a($node, \DOMElement::class) && $node->hasAttribute(static::ATTR_CHARSET)) {
+                if (is_a($node, DOMElement::class) && $node->hasAttribute(static::ATTR_CHARSET)) {
                     $link_tag->setAttribute(static::ATTR_CHARSET, $node->getAttribute(static::ATTR_CHARSET));
                 }
 
@@ -399,21 +400,28 @@ trait DeferOptimizer
             return;
         }
 
+        $this->dom->normalizeDocument();
         $nodes = $this->xpath->query(static::NORMALIZE_XPATH);
 
         foreach ($nodes as $node) {
             $trimmed = trim(preg_replace('/\s+/', ' ', $node->nodeValue));
 
-            if (empty($trimmed) && ($node->previousSibling || $node->nextSibling)) {
-                $trimmed = ' ';
-            } elseif ($node->previousSibling) {
-                $trimmed = ' ' . $trimmed;
-            } elseif ($node->nextSibling) {
-                $trimmed = $trimmed . ' ';
+            if (empty($trimmed)) {
+                if ($node->previousSibling && $node->nextSibling) {
+                    $trimmed = ' ';
+                }
+            } else {
+                if ($node->previousSibling && $node->previousSibling->nodeName !== static::BR_TAG) {
+                    $trimmed = ' ' . $trimmed;
+                }
+
+                if ($node->nextSibling && $node->nextSibling->nodeName !== static::BR_TAG) {
+                    $trimmed = $trimmed . ' ';
+                }
             }
 
             if ($trimmed != $node->nodeValue) {
-                $node->nodeValue = $trimmed;
+                $node->nodeValue = htmlspecialchars($trimmed);
             }
         }
     }
@@ -446,7 +454,7 @@ trait DeferOptimizer
                 continue;
             }
 
-            $code = trim($node->nodeValue);
+            $code = $this->minifyInlineStyle($node->nodeValue);
 
             if (empty($code) && $node->parentNode) {
                 $node->parentNode->removeChild($node);
@@ -454,18 +462,14 @@ trait DeferOptimizer
                 continue;
             }
 
-            // Minify the css code
-            // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
-            $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
-            $code = str_replace([';}', "\r", "\n"], ['}', '', ''], $code);
-
-            // Strip comments
-            // See: https://gist.github.com/orangexception/1292778
-            $code = preg_replace('/\/\*(?:(?!\*\/).)*\*\//', '', $code);
-
             // Update the node content
             if ($node->nodeValue != $code) {
-                $node->nodeValue = htmlentities($code);
+                $node->nodeValue = htmlspecialchars($code);
+            }
+
+            // Defer the style tag if there is background url
+            if (preg_match('/url\s*\(/', $code)) {
+                $this->makeLazyStyle($node);
             }
         }
     }
@@ -487,26 +491,10 @@ trait DeferOptimizer
                 $node->removeAttribute(static::ATTR_DEFER);
             }
 
-            $code = trim($node->nodeValue);
+            $code = $this->minifyInlineScript($node->nodeValue);
 
-            if (!empty($code)) {
-                if (strstr($code, '<!--') !== false) {
-                    $code = preg_replace('/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/', '', $code);
-                }
-
-                try {
-                    $minify = JsMin::minify($code);
-                } catch (Exception $error) {
-                    $minify = null;
-                }
-
-                if ($minify) {
-                    $code = trim($minify);
-                }
-
-                if ($node->nodeValue != $code) {
-                    $node->nodeValue = htmlentities($code);
-                }
+            if ($node->nodeValue != $code) {
+                $node->nodeValue = htmlspecialchars($code);
             }
         }
     }
@@ -527,18 +515,21 @@ trait DeferOptimizer
                 continue;
             }
 
-            $replaced = $this->makeLazySrcset($node);
-            $replaced = $this->makeLazySrc($node) || $replaced;
+            $replaced_srcset = $this->makeLazySrcset($node);
+            $replaced_src    = $this->makeLazySrc($node);
+            $replaced        = $replaced_srcset || $replaced_src;
 
-            if ($replaced && !$node->hasAttribute(static::ATTR_SRC)) {
-                if ($this->empty_gif) {
-                    $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-                } else {
-                    $this->setPlaceholderSrc($node);
-                }
-
-                $this->addBackgroundColor($node);
+            if ($node->nodeName !== static::IMG_TAG || !$replaced || $node->hasAttribute(static::ATTR_SRC)) {
+                continue;
             }
+
+            if ($this->empty_gif) {
+                $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
+            } elseif ($node->nodeName == static::IMG_TAG) {
+                $this->setPlaceholderSrc($node);
+            }
+
+            $this->addBackgroundColor($node);
         }
     }
 
@@ -592,10 +583,12 @@ trait DeferOptimizer
                 }
             }
 
-            $node->setAttribute(static::ATTR_DATA_STYLE, implode(';', $props));
+            $props = $this->minifyInlineStyle(implode(';', $props));
+            $node->setAttribute(static::ATTR_DATA_STYLE, $props);
 
             if (!empty($safe_props)) {
-                $node->setAttribute(static::ATTR_STYLE, implode(';', $safe_props));
+                $safe_props = $this->minifyInlineStyle(implode(';', $safe_props));
+                $node->setAttribute(static::ATTR_STYLE, $safe_props);
             } else {
                 $node->removeAttribute(static::ATTR_STYLE);
             }
@@ -609,6 +602,22 @@ trait DeferOptimizer
     | Other helper functions
     |--------------------------------------------------------------------------
      */
+
+    /**
+     * Get remote contents
+     *
+     * @since  1.0.9
+     * @param  string $url
+     * @return string
+     */
+    protected function getUrl($url)
+    {
+        if (preg_match('/^https?\:\/\//', $url)) {
+            $url .= '?t=' . time();
+        }
+
+        return @file_get_contents($url);
+    }
 
     /**
      * Cleanup library cache directory
@@ -713,17 +722,7 @@ trait DeferOptimizer
         $src = $node->getAttribute(static::ATTR_HREF);
 
         if ($this->isWebfontUrl($src)) {
-            // Make a noscript fallback
-            $this->makeNoScript($node);
-
-            // The switch to the right media type when it is loaded
-            $node->setAttribute(static::ATTR_ONLOAD, sprintf(
-                'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
-                addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
-            ));
-
-            // Make a fake media type, force browser to load this as the lowest priority
-            $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width:1px)');
+            $this->makeLazyStyle($node);
         }
     }
 
@@ -738,7 +737,7 @@ trait DeferOptimizer
     {
         $as = null;
 
-        if (is_a($node, \DOMElement::class)) {
+        if (is_a($node, DOMElement::class)) {
             switch ($node->nodeName) {
                 case static::LINK_TAG:
                     if (in_array($node->getAttribute(static::ATTR_REL), [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
@@ -823,19 +822,21 @@ trait DeferOptimizer
     protected function makeNoScript($node)
     {
         // Create noscript tag for normal image fallback
-        if (!$this->debug_mode && $node->parentNode) {
-            if ($node->nodeName !== static::LINK_TAG
-                && $node->parentNode->nodeName === static::HEAD_TAG) {
-                $this->body->appendChild($node);
+        if (!$this->debug_mode && $this->enable_defer_fallback && $node->parentNode) {
+            if ($node->nodeName == static::SOURCE_TAG) {
+                return $this->makeNoScript($node->parentNode);
             }
 
-            // If there is an existing noscript, then do nothing
-            if ($node->nextSibling && $node->nextSibling->nodeName == static::NOSCRIPT_TAG) {
-                return;
+            if ($node->nodeName !== static::LINK_TAG && $node->nodeName !== static::STYLE_TAG) {
+                if ($node->parentNode->nodeName === static::HEAD_TAG) {
+                    $this->body->appendChild($node);
+                }
+
+                $this->addClass($node, ['has-noscript']);
             }
 
             // Append normal image into the <noscript> tag
-            $clone    = $node->cloneNode();
+            $clone    = $node->cloneNode(true);
             $noscript = $this->createNode(static::NOSCRIPT_TAG);
             $noscript->appendChild($clone);
 
@@ -844,6 +845,30 @@ trait DeferOptimizer
             // Cleanup
             $noscript = $clone = null;
         }
+    }
+
+    /**
+     * Defer a style or link tag
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function makeLazyStyle($node)
+    {
+        // Make a noscript fallback
+        $this->makeNoScript($node);
+
+        // The switch to the right media type when it is loaded
+        $node->setAttribute(static::ATTR_ONLOAD, sprintf(
+            'var self=this;defer(function(){self.media="%s";self.removeAttribute("onload")},2)',
+            addslashes($node->getAttribute(static::ATTR_MEDIA) ?: 'all')
+        ));
+
+        // Make a fake media type, force browser to load this as the lowest priority
+        $node->setAttribute(static::ATTR_MEDIA, 'screen and (max-width:1px)');
+
+        return $this;
     }
 
     /**
@@ -936,5 +961,58 @@ trait DeferOptimizer
         }
 
         return false;
+    }
+
+    /**
+     * Minify Inline CSS
+     *
+     * @since  1.0.9
+     * @param  string $code
+     * @return string
+     */
+    protected function minifyInlineStyle($code)
+    {
+        // Minify the css code
+        // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
+        $code = preg_replace('/\s*([,>+;:!}{]{1})\s*/', '$1', $code);
+        $code = str_replace([';}', "\r", "\n"], ['}', '', ''], $code);
+
+        // Strip comments
+        // See: https://gist.github.com/orangexception/1292778
+        $code = preg_replace('/\/\*(?:(?!\*\/).)*\*\//', '', $code);
+
+        return trim($code);
+    }
+
+    /**
+     * Minify Inline Script
+     *
+     * @since  1.0.9
+     * @param  string $code
+     * @return string
+     */
+    protected function minifyInlineScript($code)
+    {
+        $code = trim($code);
+
+        if (!empty($code)) {
+            if (strstr($code, '<!--') !== false) {
+                $code = preg_replace('/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/', '', $code);
+            }
+
+            $minify = null;
+
+            try {
+                $minify = JsMin::minify($code);
+            } catch (Exception $error) {
+                $minify = null;
+            }
+
+            if ($minify) {
+                $code = trim($minify);
+            }
+        }
+
+        return $code;
     }
 }

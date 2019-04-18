@@ -15,6 +15,9 @@ namespace shinsenter;
 
 trait DeferParser
 {
+    // To fix html entities decode
+    public static $__html_mapping = null;
+
     // For nodefer HTML
     protected $nodefer_html;
 
@@ -77,9 +80,6 @@ trait DeferParser
         $this->preconnect_map = [];
         $this->preload_map    = [];
 
-        // Preload polyfill
-        $this->preload_map[static::POLYFILL_URL] = static::PRELOAD_SCRIPT;
-
         // Preload defer.js
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
@@ -117,16 +117,21 @@ trait DeferParser
             $this->charset = mb_detect_encoding($html) ?: 'UTF-8';
         }
 
+        // Convert HTML into HTML entities
+        $html = $this->charset2entity($html, $this->charset);
+
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
         $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
 
         // Create DOM document
         $this->dom->preserveWhiteSpace = false;
-        $this->dom->loadHTML($this->charset2entity($html, $this->charset));
+        $this->dom->loadHTML($html);
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
+
+        // Check if this is an AMP page
         $this->isAmp = $this->isAmpHtml($html);
 
         // Check if the <head> tag exists
@@ -153,11 +158,8 @@ trait DeferParser
 
         // Add fallback class name into body class
         if ($this->enable_defer_images) {
-            $document        = $this->xpath->query('/html')->item(0);
-            $current_class   = explode(' ', (string) $document->getAttribute('class'));
-            $current_class[] = 'no-deferjs';
-            $current_class   = array_filter(array_unique($current_class));
-            $document->setAttribute(static::ATTR_CLASS, implode(' ', $current_class));
+            $document = $this->xpath->query('/html')->item(0);
+            $this->addClass($document, ['no-deferjs']);
             $document = null;
         }
 
@@ -312,7 +314,8 @@ trait DeferParser
 
         if ($this->enable_defer_images) {
             foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-                if (!$node->hasAttribute(static::ATTR_ALT)) {
+                if ($node->nodeName == static::IMG_TAG &&
+                    !$node->hasAttribute(static::ATTR_ALT)) {
                     $node->setAttribute(static::ATTR_ALT, '');
                 }
 
@@ -335,7 +338,8 @@ trait DeferParser
 
         if ($this->enable_defer_iframes) {
             foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-                if (!$node->hasAttribute(static::ATTR_TITLE)) {
+                if ($node->nodeName == static::IFRAME_TAG &&
+                    !$node->hasAttribute(static::ATTR_TITLE)) {
                     $node->setAttribute(static::ATTR_TITLE, '');
                 }
 
@@ -388,30 +392,18 @@ trait DeferParser
             }
 
             // Remove urls without HTTP protocol
-            if ($preload_flag && stripos($src, 'http') !== 0) {
+            if (stripos($src, 'http') !== 0) {
                 $preload_flag = false;
             }
 
             // Remove ads
-            if ($preload_flag && preg_match('/ads|click|googletags|publisher/i', $src)) {
+            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
                 $preload_flag = false;
             }
 
             if ($preload_flag) {
-                $rel = $node->getAttribute(static::ATTR_REL);
-
-                // Add the resouce URL to the preload list
-                if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
-                    $this->preload_map[$src] = $node;
-                }
-
                 $domain = preg_replace('#^(https?://[^/\?]+)([/\?]?.*)?$#', '$1', $src);
-
-                // Add the domain to the dns list
-                if (!empty($domain)) {
-                    $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
-                    $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
-                }
+                $this->addPreloadMap($src, $node)->addDnsMap($domain, $node);
             }
         }
 
@@ -427,7 +419,9 @@ trait DeferParser
      */
     protected function isAmpHtml($html)
     {
-        return $this->xpath->query('//html[@amp]')->length > 0 || strpos($html, '⚡') !== false;
+        return $this->xpath->query('//html[@amp]')->length > 0 ||
+        strpos($html, '&#x26A1;') !== false ||
+        strpos($html, '⚡') !== false;
     }
 
     /**
@@ -457,6 +451,19 @@ trait DeferParser
 
         if (empty($encoding) || $encoding == 'ASCII') {
             $encoding = 'HTML-ENTITIES';
+
+            if (is_null(static::$__html_mapping)) {
+                $mapping = array_values(get_html_translation_table(HTML_SPECIALCHARS));
+
+                static::$__html_mapping = [
+                    'from' => $mapping,
+                    'to'   => array_map('htmlspecialchars', $mapping),
+                ];
+
+                unset($mapping);
+            }
+
+            $html = str_replace(static::$__html_mapping['from'], static::$__html_mapping['to'], $html);
         }
 
         if ($this->charset !== $encoding) {
@@ -481,7 +488,7 @@ trait DeferParser
             $attributes = $content;
             $content    = null;
         } elseif (is_string($content)) {
-            $content = htmlentities($content);
+            $content = htmlspecialchars($content);
         }
 
         $node = $this->dom->createElement($tag, $content);
@@ -507,6 +514,113 @@ trait DeferParser
         if ($node->parentNode) {
             $node->parentNode->removeChild($node);
             $node = null;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add the resouce URL to the preload list
+     *
+     * @since  1.0.9
+     * @param  string  $url
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function addPreloadMap($url, $node)
+    {
+        $rel = $node->getAttribute(static::ATTR_REL);
+
+        // Add the resouce URL to the preload list
+        if (!in_array($rel, [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
+            $this->preload_map[$url] = $node;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add the domain to the dns list
+     *
+     * @since  1.0.9
+     * @param  string  $domain
+     * @param  DOMNode $node
+     * @return self
+     */
+    protected function addDnsMap($domain, $node)
+    {
+        $rel = $node->getAttribute(static::ATTR_REL);
+
+        // Add the domain to the dns list
+        if (!empty($domain)) {
+            $this->dns_map[$domain]        = $rel == static::REL_DNSPREFETCH ? $node : $rel;
+            $this->preconnect_map[$domain] = $rel == static::REL_PRECONNECT ? $node : $rel;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Remove class names from a node
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  array   $class_list
+     * @return self
+     */
+    protected function removeClass($node, $class_list)
+    {
+        $original_class = (string) $node->getAttribute(static::ATTR_CLASS);
+        $current_class  = explode(' ', $original_class);
+        $current_class  = array_filter($current_class, function ($item) use ($class_list) {
+            return !in_array($item, (array) $class_list);
+        });
+        $current_class = implode(' ', array_filter(array_unique($current_class)));
+
+        if ($current_class !== $original_class) {
+            $this->setOrRemoveAttribute($node, static::ATTR_CLASS, $current_class);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add class names to a node
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  array   $class_list
+     * @return self
+     */
+    protected function addClass($node, $class_list)
+    {
+        $original_class = (string) $node->getAttribute(static::ATTR_CLASS);
+        $current_class  = explode(' ', $original_class);
+        $current_class  = array_merge($current_class, (array) $class_list);
+        $current_class  = implode(' ', array_filter(array_unique($current_class)));
+
+        if ($current_class !== $original_class) {
+            $this->setOrRemoveAttribute($node, static::ATTR_CLASS, $current_class);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set or remove a node attribute
+     *
+     * @since  1.0.9
+     * @param  DOMNode $node
+     * @param  string  $attr
+     * @param  string  $value
+     * @return self
+     */
+    protected function setOrRemoveAttribute($node, $attr, $value)
+    {
+        if (empty($value)) {
+            $node->removeAttribute($attr);
+        } else {
+            $node->setAttribute($attr, $value);
         }
 
         return $this;

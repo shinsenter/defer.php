@@ -43,7 +43,7 @@ class DeferHttpRequest
      */
     public function request()
     {
-        return $this->request ?: false;
+        return $this->request ?: null;
     }
 
     /**
@@ -54,6 +54,6 @@ class DeferHttpRequest
      */
     public function response()
     {
-        return $this->response ?: false;
+        return $this->response ?: null;
     }
 }
