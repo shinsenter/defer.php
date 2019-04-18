@@ -111,8 +111,11 @@ trait DeferOptions
 
             if (isset($this->options[$key])) {
                 switch (true) {
-                    case is_array($this->options[$key]):
+                    case in_array($key, ['web_fonts_patterns', 'do_not_optimize']):
                         $this->options[$key] = (array) $this->escapeRegex($flag);
+                        break;
+                    case is_array($this->options[$key]):
+                        $this->options[$key] = (array) $flag;
                         break;
                     case is_numeric($this->options[$key]):
                         $this->options[$key] = (int) $flag;
