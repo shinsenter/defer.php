@@ -34,20 +34,20 @@
  */
 
 (function(window, document, console, name) {
-    var JQUERY          = 'jQuery';
-
-    var NOOP            = Function();
-    var GET_ATTRIBUTE   = 'getAttribute';
-    var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
-
-    var COMMON_EXCEPTIONS   = ':not([data-lazied])';
-    var COMMON_SELECTOR     = '[data-src]' + COMMON_EXCEPTIONS;
 
     var PROJECT_URL  = 'https://github.com/shinsenter/';
     var PROJECT_NAME = 'defer.js';
     var CLASS_PREFIX = 'defer-';
     var CLASS_SUFFIX = 'deferjs';
     var DATA_PREFIX  = 'data-';
+
+    var JQUERY          = 'jQuery';
+    var NOOP            = Function();
+    var GET_ATTRIBUTE   = 'getAttribute';
+    var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
+
+    var COMMON_EXCEPTIONS   = ':not([' + DATA_PREFIX + 'lazied]):not([' + DATA_PREFIX + 'ignore])';
+    var COMMON_SELECTOR     = '[' + DATA_PREFIX + 'src]' + COMMON_EXCEPTIONS;
 
     var ADD_EVENT_LISTENER = 'addEventListener';
     var LOAD_EVENT         = 'load';
@@ -182,7 +182,7 @@
     }
 
     function imgloader() {
-        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {rootMargin: '100%'})
+        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {rootMargin: '150%'})
     }
 
     function iframeloader() {
@@ -201,7 +201,7 @@
             window[JQUERY].fn.ready = function (fn) {
                 defer(function() {
                     old_ready(fn)
-                }, 8);
+                });
 
                 return this;
             }
@@ -218,10 +218,10 @@
     removeClass(helper.h, 'no-' + CLASS_SUFFIX);
     addClass(helper.h, CLASS_SUFFIX);
 
+    window[name] = helper;
+    window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript);
+
     defermedia();
     copyright();
-
-    window[name] = helper;
-    window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript)
 
 })(this, document, console, 'defer_helper');

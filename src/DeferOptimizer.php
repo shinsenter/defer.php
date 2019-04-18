@@ -827,10 +827,12 @@ trait DeferOptimizer
                 return $this->makeNoScript($node->parentNode);
             }
 
-            if ($node->nodeName !== static::LINK_TAG
-                && $node->nodeName !== static::STYLE_TAG
-                && $node->parentNode->nodeName === static::HEAD_TAG) {
-                $this->body->appendChild($node);
+            if ($node->nodeName !== static::LINK_TAG && $node->nodeName !== static::STYLE_TAG) {
+                if ($node->parentNode->nodeName === static::HEAD_TAG) {
+                    $this->body->appendChild($node);
+                }
+
+                $this->addClass($node, ['has-noscript']);
             }
 
             // Append normal image into the <noscript> tag
