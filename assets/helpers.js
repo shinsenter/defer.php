@@ -32,25 +32,24 @@
  * SOFTWARE.
  *
  */
+(function (window, document, console, name) {
 
-(function(window, document, console, name) {
-
-    var PROJECT_URL  = 'https://github.com/shinsenter/';
-    var PROJECT_NAME = 'defer.js';
-    var CLASS_PREFIX = 'defer-';
-    var CLASS_SUFFIX = 'deferjs';
-    var DATA_PREFIX  = 'data-';
+    var PROJECT_URL     = 'https://github.com/shinsenter/';
+    var PROJECT_NAME    = 'defer.js';
+    var CLASS_PREFIX    = 'defer-';
+    var CLASS_SUFFIX    = 'deferjs';
+    var DATA_PREFIX     = 'data-';
 
     var JQUERY          = 'jQuery';
     var NOOP            = Function();
     var GET_ATTRIBUTE   = 'getAttribute';
     var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
 
-    var COMMON_EXCEPTIONS   = ':not([' + DATA_PREFIX + 'lazied]):not([' + DATA_PREFIX + 'ignore])';
-    var COMMON_SELECTOR     = '[' + DATA_PREFIX + 'src]' + COMMON_EXCEPTIONS;
+    var COMMON_EXCEPTIONS = ':not([' + DATA_PREFIX + 'lazied]):not([' + DATA_PREFIX + 'ignore])';
+    var COMMON_SELECTOR = '[' + DATA_PREFIX + 'src]' + COMMON_EXCEPTIONS;
 
     var ADD_EVENT_LISTENER = 'addEventListener';
-    var LOAD_EVENT         = 'load';
+    var LOAD_EVENT = 'load';
 
     var IMG_SELECTOR = [
         'img' + COMMON_SELECTOR,
@@ -60,27 +59,29 @@
 
     var IFRAME_SELECTOR = [
         'iframe' + COMMON_SELECTOR,
-        'frame'  + COMMON_SELECTOR,
-        'audio'  + COMMON_EXCEPTIONS,
-        'video'  + COMMON_EXCEPTIONS
+        'frame' + COMMON_SELECTOR,
+        'audio' + COMMON_EXCEPTIONS,
+        'video' + COMMON_EXCEPTIONS
     ].join(',');
 
     var helper = {
         c: CLASS_PREFIX + 'lazied',
         l: CLASS_PREFIX + 'loading',
         d: CLASS_PREFIX + 'loaded',
-        h: document.getElementsByTagName('html').item(0),
+        h: document.getElementsByTagName('html')
+            .item(0),
         t: 10
     };
 
-    var log         = (console.log || NOOP).bind(console);
-    var defer       = window.defer || NOOP;
-    var deferimg    = window.deferimg || NOOP;
+    var log = (console.log || NOOP)
+        .bind(console);
+    var defer = window.defer || NOOP;
+    var deferimg = window.deferimg || NOOP;
     var deferiframe = window.deferiframe || NOOP;
     var old_ready;
 
-    function copyright () {
-        var text    = '%c shinsenter %c '+PROJECT_NAME+' ';
+    function copyright() {
+        var text    = '%c shinsenter %c ' + PROJECT_NAME + ' ';
         var common  = 'font-size:16px;color:#fff;padding:4px;border-radius:';
         var style1  = common + '4px 0 0 4px;background:#2a313c';
         var style2  = common + '0 4px 4px 0;background:#e61e25';
@@ -110,7 +111,7 @@
      * @returns {function}              Return a new function
      */
     function debounce(func, delay, throttle, ticker) {
-        return function() {
+        return function () {
             var context = this;
             var args    = arguments;
 
@@ -119,7 +120,7 @@
             }
 
             if (!throttle || !ticker) {
-                ticker = setTimeout(function() {
+                ticker = setTimeout(function () {
                     ticker = null;
                     func.apply(context, args);
                 }, delay);
@@ -131,7 +132,7 @@
      * Add/remove element classnames
      */
     function classFilter(haystack, needle) {
-        return haystack.split(' ').filter(function(v) {
+        return haystack.split(' ').filter(function (v) {
             return v != '' && v != needle;
         });
     }
@@ -139,7 +140,7 @@
     function addClass(element, classname) {
         var c = classFilter(element.className, classname);
         c.push(classname);
-        element.className=c.join(' ');
+        element.className = c.join(' ');
     }
 
     function removeClass(element, classname) {
@@ -152,8 +153,8 @@
     function mediafilter(media) {
         var timer,
             match,
-            src = media[GET_ATTRIBUTE](DATA_PREFIX + 'src'),
-            pattern =/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            src     = media[GET_ATTRIBUTE](DATA_PREFIX + 'src'),
+            pattern = /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
         addClass(media, helper.l);
 
@@ -168,7 +169,7 @@
         }
 
         if ((match = pattern.exec(src)) !== null) {
-            media.style.background = 'transparent url(https://img.youtube.com/vi/'+match[1]+'/hqdefault.jpg) 50% 50% / cover no-repeat';
+            media.style.background = 'transparent url(https://img.youtube.com/vi/' + match[1] + '/hqdefault.jpg) 50% 50% / cover no-repeat';
         }
 
         if (media.hasAttribute(DATA_PREFIX + 'ignore') ||
@@ -182,11 +183,15 @@
     }
 
     function imgloader() {
-        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {rootMargin: '150%'})
+        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {
+            rootMargin: '150%'
+        });
     }
 
     function iframeloader() {
-        deferiframe(IFRAME_SELECTOR, helper.t, helper.c, mediafilter, {rootMargin: '200%'})
+        deferiframe(IFRAME_SELECTOR, helper.t, helper.c, mediafilter, {
+            rootMargin: '200%'
+        });
     }
 
     function defermedia() {
@@ -195,11 +200,11 @@
     }
 
     function deferscript() {
-        if(!old_ready && JQUERY in window && 'fn' in window[JQUERY]) {
-            old_ready   = window[JQUERY].fn.ready;
+        if (!old_ready && JQUERY in window && 'fn' in window[JQUERY]) {
+            old_ready = window[JQUERY].fn.ready;
 
             window[JQUERY].fn.ready = function (fn) {
-                defer(function() {
+                defer(function () {
                     old_ready(fn)
                 });
 
