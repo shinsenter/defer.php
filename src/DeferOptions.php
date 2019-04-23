@@ -23,6 +23,9 @@ trait DeferOptions
         // Disable libxml errors and warnings
         'hide_warnings'           => true,
 
+        // manually add deferjs
+        'manually_add_deferjs'    => false,
+
         // Library injection
         'append_defer_js'         => false,
         'default_defer_time'      => 10,
