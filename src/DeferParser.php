@@ -50,6 +50,9 @@ trait DeferParser
     // https://bugs.php.net/bug.php?id=72288
     protected $bug72288_body;
 
+    // Bugs with script tags which contains HTML
+    protected $bug_script_templates;
+
     /**
      * Cleanup internal variables
      *
@@ -84,6 +87,10 @@ trait DeferParser
         if (!$this->append_defer_js) {
             $this->preload_map[static::DEFERJS_URL] = static::PRELOAD_SCRIPT;
         }
+
+        // Bug fixes
+        $this->bug72288_body        = null;
+        $this->bug_script_templates = [];
 
         @gc_collect_cycles();
 
@@ -123,10 +130,12 @@ trait DeferParser
         // Force HTML5 doctype
         $html = preg_replace('/<!DOCTYPE html[^>]*>/i', '<!DOCTYPE html>', $html, 1);
         $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
+        $html = $this->script_encode($html);
 
         // Create DOM document
-        $this->dom->preserveWhiteSpace = false;
+        $this->dom->preserveWhiteSpace = true;
         $this->dom->loadHTML($html);
+        $this->dom->formatOutput = false;
 
         // Create xpath object for searching tags
         $this->xpath = new \DOMXPath($this->dom);
@@ -624,5 +633,42 @@ trait DeferParser
         }
 
         return $this;
+    }
+
+    /**
+     * This is used to fix script tags which contain html templates
+     *
+     * @since  1.0.10
+     * @param  $html
+     * @return string
+     */
+    protected function script_encode($html)
+    {
+        return preg_replace_callback('/(<script[^>]*>)(.*?)(<\/script>)/si', function ($matches) {
+            if (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false) {
+                return $matches[0];
+            }
+
+            $next = '@@@SCRIPT@@@' . count($this->bug_script_templates) . '@@@SCRIPT@@@';
+            $this->bug_script_templates[$next] = trim($matches[2]);
+
+            return "{$matches[1]}{$next}{$matches[3]}";
+        }, $html);
+    }
+
+    /**
+     * This is used revert script tags to its original content
+     *
+     * @since  1.0.10
+     * @param  array  $matches
+     * @param  mixed  $html
+     * @return string
+     */
+    protected function script_decode($html)
+    {
+        $result                     = str_replace(array_keys($this->bug_script_templates), array_values($this->bug_script_templates), $html);
+        $this->bug_script_templates = [];
+
+        return $result;
     }
 }

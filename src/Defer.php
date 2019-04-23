@@ -38,6 +38,7 @@ class Defer extends DeferInterface
     {
         $this->native_libxml = class_exists('DOMDocument');
         $this->cache_manager = new DeferCache(static::DEFERJS_CACHE, 1);
+        $this->http          = new DeferHttpRequest();
 
         // Set library options
         if (!empty($options)) {
@@ -48,8 +49,6 @@ class Defer extends DeferInterface
         if (!empty($html)) {
             $this->fromHtml($html, $charset);
         }
-
-        $this->http = new DeferHttpRequest();
 
         return $this;
     }
@@ -141,7 +140,7 @@ class Defer extends DeferInterface
             $output = $this->dom->saveHtml();
         }
 
-        $output = $this->entity2charset($output, $this->charset);
+        $output = $this->script_decode($this->entity2charset($output, $this->charset));
 
         if (!empty($this->bug72288_body)) {
             $output = preg_replace('/(<body[^>]*>)/mi', $this->bug72288_body, $output, 1);

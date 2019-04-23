@@ -129,25 +129,38 @@ trait DeferOptimizer
             return;
         }
 
-        $the_anchor = $this->head->childNodes->item(0);
+        $extra_scripts  = [];
+        $the_anchor     = $this->head->childNodes->item(0);
 
-        // Append defer.js library loaded script is empty
-        if (!$this->append_defer_js || empty(static::$deferjs_script)) {
-            $script_tag = $this->createNode(static::SCRIPT_TAG, [
-                static::ATTR_SRC => static::DEFERJS_URL,
-                static::ATTR_ID  => 'defer-js',
+        // Append the defer.js library and polyfill
+        if (!$this->manually_add_deferjs) {
+            if (!$this->append_defer_js || empty(static::$deferjs_script)) {
+                $script_tag = $this->createNode(static::SCRIPT_TAG, [
+                    static::ATTR_SRC => static::DEFERJS_URL,
+                    static::ATTR_ID  => 'defer-js',
+                ]);
+
+                $this->head->insertBefore($script_tag, $the_anchor);
+                $script_tag = null;
+            }
+
+            $extra_scripts[] = static::$deferjs_script;
+            $extra_scripts[] = '"IntersectionObserver"in window||deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
+        } else {
+            $message = implode('\n', [
+                'You should manually add the defer.js.\n\nFor example:',
+                '<script id="defer-js" src="' . static::DEFERJS_URL . '"><\/script>',
+                '<script id="polyfill-js" src="' . static::POLYFILL_URL . '"><\/script>',
             ]);
-
-            $this->head->insertBefore($script_tag, $the_anchor);
-            $script_tag = null;
+            $extra_scripts[] = "window.defer=setTimeout;defer(function(){console.info('${message}')});";
         }
 
         // Append helpers
-        $extra_scripts   = (array) $this->loader_scripts;
-        $extra_scripts[] = '"IntersectionObserver"in window||deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         $extra_scripts[] = static::$helpers;
+        $extra_scripts   = array_merge($extra_scripts, $this->loader_scripts);
 
-        $script = static::$deferjs_script . implode(';', array_filter($extra_scripts));
+        // Combine all extra scripts
+        $script = implode(';', array_filter($extra_scripts));
 
         if (!empty($script)) {
             $script_tag = $this->createNode(static::SCRIPT_TAG, trim($script), [static::ATTR_ID => 'defer-script']);
