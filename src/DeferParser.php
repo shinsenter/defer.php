@@ -650,6 +650,7 @@ trait DeferParser
             }
 
             $next = '@@@SCRIPT@@@' . count($this->bug_script_templates) . '@@@SCRIPT@@@';
+
             $this->bug_script_templates[$next] = trim($matches[2]);
 
             return "{$matches[1]}{$next}{$matches[3]}";

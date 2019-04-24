@@ -54,9 +54,10 @@ $defer->defer_web_fonts        = true;
 $defer->use_css_fadein_effects = true;
 $defer->use_color_placeholder  = false;
 
-$defer->manually_add_deferjs   = true;
+// Manually add deferjs library script tag
+// $defer->manually_add_deferjs   = true;
 
-// $defer->clearCache();
+$defer->clearCache();
 
 // Scan test files
 $list = glob(INPUT . '*.html');

@@ -140,7 +140,8 @@ class Defer extends DeferInterface
             $output = $this->dom->saveHtml();
         }
 
-        $output = $this->script_decode($this->entity2charset($output, $this->charset));
+        $output = $this->script_decode($output);
+        $output = $this->entity2charset($output, $this->charset);
 
         if (!empty($this->bug72288_body)) {
             $output = preg_replace('/(<body[^>]*>)/mi', $this->bug72288_body, $output, 1);

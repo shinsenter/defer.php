@@ -120,6 +120,9 @@ $defer->empty_src               = '';
 $defer->use_color_placeholder   = true;
 $defer->use_css_fadein_effects  = true;
 
+// Manually add deferjs library script tag
+// $defer->manually_add_deferjs   = true;
+
 // Blacklist
 $defer->do_not_optimize = [
     'document\.write\s*\(',

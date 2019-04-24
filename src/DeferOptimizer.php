@@ -129,8 +129,8 @@ trait DeferOptimizer
             return;
         }
 
-        $extra_scripts  = [];
-        $the_anchor     = $this->head->childNodes->item(0);
+        $extra_scripts = [];
+        $the_anchor    = $this->head->childNodes->item(0);
 
         // Append the defer.js library and polyfill
         if (!$this->manually_add_deferjs) {
@@ -434,7 +434,7 @@ trait DeferOptimizer
             }
 
             if ($trimmed != $node->nodeValue) {
-                $node->nodeValue = htmlspecialchars($trimmed);
+                $node->nodeValue = $trimmed;
             }
         }
     }
