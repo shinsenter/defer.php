@@ -120,14 +120,30 @@ $defer->empty_src               = '';
 $defer->use_color_placeholder   = true;
 $defer->use_css_fadein_effects  = true;
 
-// Manually add deferjs library script tag
-// $defer->manually_add_deferjs   = true;
-
 // Blacklist
 $defer->do_not_optimize = [
     'document\.write\s*\(',
     '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
 ];
+
+// Then get the optimized output
+$result = $defer->fromHtml(file_get_contents('mypage.html'))->toHtml();
+var_dump($result);
+```
+
+
+
+### Manually add defer.js library script tag
+
+In some regions, you may want to serve defer.js library locally due to [The General Data Protection Regulation (EU)](https://en.wikipedia.org/wiki/General_Data_Protection_Regulation).
+
+```php
+// Include the library
+require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
+
+// Create a Defer object
+$defer = new \shinsenter\Defer();
+$defer->manually_add_deferjs = true;
 
 // Then get the optimized output
 $result = $defer->fromHtml(file_get_contents('mypage.html'))->toHtml();
@@ -143,6 +159,8 @@ WordPress remains one of the most popular CMS platform until now. This is a Word
 
 
 ## Keep in touch
+
+[![Donate via Paypal](https://pics.paypal.com/00/s/NTQ4M2ZiN2YtZDg1My00ZmRiLWJiMDQtMTFlMjg2ODY2N2Uy/file.PNG)](https://www.paypal.me/shinsenter)
 
 [![Become a sponsor](https://c5.patreon.com/external/logo/become_a_patron_button@2x.png)](https://www.patreon.com/appseeds)
 
