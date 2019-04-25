@@ -68,10 +68,12 @@ trait DeferOptimizer
      */
     protected function initLoaderJs()
     {
-        $cleanup = '//script[@id="defer-js" or @id="defer-script" or @id="polyfill-js"]|//style[@id="defer-css"]';
+        if (!$this->manually_add_deferjs) {
+            $cleanup = '//script[@id="defer-js" or @id="defer-script" or @id="polyfill-js"]|//style[@id="defer-css"]';
 
-        foreach ($this->xpath->query($cleanup) as $node) {
-            $this->removeNode($node);
+            foreach ($this->xpath->query($cleanup) as $node) {
+                $this->removeNode($node);
+            }
         }
 
         $cache  = $this->cache_manager;
@@ -140,7 +142,7 @@ trait DeferOptimizer
                     static::ATTR_ID  => 'defer-js',
                 ]);
 
-                $this->head->insertBefore($script_tag, $the_anchor);
+                $this->head->appendChild($script_tag);
                 $script_tag = null;
             }
 
@@ -148,11 +150,11 @@ trait DeferOptimizer
             $extra_scripts[] = '"IntersectionObserver"in window||deferscript("' . static::POLYFILL_URL . '","polyfill-js",1)';
         } else {
             $message = implode('\n', [
-                'You should manually add the defer.js.\n\nFor example:',
-                '<script id="defer-js" src="' . static::DEFERJS_URL . '"><\/script>',
-                '<script id="polyfill-js" src="' . static::POLYFILL_URL . '"><\/script>',
+                'You should manually add the defer.js.\n\nLike this:',
+                '<script data-ignore id="defer-js" src="' . static::DEFERJS_URL . '"><\/script>',
+                '<script data-ignore id="polyfill-js" src="' . static::POLYFILL_URL . '"><\/script>',
             ]);
-            $extra_scripts[] = "window.defer=setTimeout;defer(function(){console.info('${message}')});";
+            $extra_scripts[] = "if(!'defer'in window){window.defer=setTimeout;defer(function(){console.info('${message}')})}";
         }
 
         // Append helpers
@@ -165,7 +167,7 @@ trait DeferOptimizer
         if (!empty($script)) {
             $script_tag = $this->createNode(static::SCRIPT_TAG, trim($script), [static::ATTR_ID => 'defer-script']);
 
-            $this->head->insertBefore($script_tag, $the_anchor);
+            $this->head->appendChild($script_tag);
             $script_tag = null;
         }
 

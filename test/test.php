@@ -55,7 +55,7 @@ $defer->use_css_fadein_effects = true;
 $defer->use_color_placeholder  = false;
 
 // Manually add deferjs library script tag
-// $defer->manually_add_deferjs   = true;
+// $defer->manually_add_deferjs = true;
 
 $defer->clearCache();
 
