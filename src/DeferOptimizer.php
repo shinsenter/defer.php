@@ -142,7 +142,7 @@ trait DeferOptimizer
                     static::ATTR_ID  => 'defer-js',
                 ]);
 
-                $this->head->appendChild($script_tag);
+                $this->head->insertBefore($script_tag, $the_anchor);
                 $script_tag = null;
             }
 
@@ -167,7 +167,7 @@ trait DeferOptimizer
         if (!empty($script)) {
             $script_tag = $this->createNode(static::SCRIPT_TAG, trim($script), [static::ATTR_ID => 'defer-script']);
 
-            $this->head->appendChild($script_tag);
+            $this->head->insertBefore($script_tag, $the_anchor);
             $script_tag = null;
         }
 
