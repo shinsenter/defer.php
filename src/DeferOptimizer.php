@@ -842,6 +842,10 @@ trait DeferOptimizer
                 return $this->makeNoScript($node->parentNode);
             }
 
+            // Make a clone of the node
+            $clone = $node->cloneNode(true);
+
+            // Add css class to hide the node
             if ($node->nodeName !== static::LINK_TAG && $node->nodeName !== static::STYLE_TAG) {
                 if ($node->parentNode->nodeName === static::HEAD_TAG) {
                     $this->body->appendChild($node);
@@ -851,10 +855,8 @@ trait DeferOptimizer
             }
 
             // Append normal image into the <noscript> tag
-            $clone    = $node->cloneNode(true);
             $noscript = $this->createNode(static::NOSCRIPT_TAG);
             $noscript->appendChild($clone);
-
             $node->parentNode->insertBefore($noscript, $node->nextSibling);
 
             // Cleanup
