@@ -38,10 +38,14 @@
     var PROJECT_NAME    = 'defer.js';
     var CLASS_PREFIX    = 'defer-';
     var CLASS_SUFFIX    = 'deferjs';
-    var DATA_PREFIX     = 'data-';
+
+    var COPY_COMMON     = 'font-size:14px;color:#fff;'+'padding:2px;border-radius:';
+    var COPY_TEXT       = '%c ' + PROJECT_NAME + ' ';
+    var COPY_STYLE      = COPY_COMMON + '4px;background:#2a313c';
 
     var JQUERY          = 'jQuery';
     var NOOP            = Function();
+    var DATA_PREFIX     = 'data-';
     var GET_ATTRIBUTE   = 'getAttribute';
     var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
 
@@ -73,30 +77,22 @@
         t: 10
     };
 
-    var log = (console.log || NOOP)
-        .bind(console);
-    var defer = window.defer || NOOP;
-    var deferimg = window.deferimg || NOOP;
+    var log         = (console.log || NOOP).bind(console);
+    var defer       = window.defer || NOOP;
+    var deferimg    = window.deferimg || NOOP;
     var deferiframe = window.deferiframe || NOOP;
     var old_ready;
 
     function copyright() {
-        var text    = '%c shinsenter %c ' + PROJECT_NAME + ' ';
-        var common  = 'font-size:16px;color:#fff;padding:4px;border-radius:';
-        var style1  = common + '4px 0 0 4px;background:#2a313c';
-        var style2  = common + '0 4px 4px 0;background:#e61e25';
-
         if (IS_CHROME) {
-            log(text, style1, style2);
+            log(COPY_TEXT, COPY_STYLE);
         }
 
         log([
-            'This page was optimized with ' + PROJECT_NAME,
+            'Optimized by ' + PROJECT_NAME,
             '(c) 2019 Mai Nhut Tan <shin@shin.company>',
-            '',
             'Github:    ' + PROJECT_URL + PROJECT_NAME,
-            'PHP lib:   ' + PROJECT_URL + 'defer.php',
-            'WordPress: https://wordpress.org/plugins/shins-pageload-magic/'
+            'PHP lib:   ' + PROJECT_URL + 'defer.php'
         ].join('\n'));
     }
 

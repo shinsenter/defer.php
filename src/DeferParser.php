@@ -496,7 +496,7 @@ trait DeferParser
         if (is_array($content)) {
             $attributes = $content;
             $content    = null;
-        } elseif (is_string($content)) {
+        } elseif (in_array($tag, [static::SCRIPT_TAG]) && is_string($content)) {
             $content = htmlspecialchars($content);
         }
 
@@ -526,6 +526,43 @@ trait DeferParser
         }
 
         return $this;
+    }
+
+    /**
+     * Prepend HTML
+     *
+     * @since  1.0.15
+     * @param  DOMNode $node
+     * @param  string  $html
+     * @return self
+     */
+    protected function prependHtml(&$node, $html)
+    {
+        $tpl = $this->dom->createDocumentFragment();
+        $tpl->appendXML($html);
+
+        $the_anchor = $node->childNodes->item(0);
+        $node->insertBefore($tpl, $the_anchor);
+
+        return $node;
+    }
+
+    /**
+     * Append HTML
+     *
+     * @since  1.0.15
+     * @param  DOMNode $node
+     * @param  string  $html
+     * @return self
+     */
+    protected function appendHtml(&$node, $html)
+    {
+        $tpl = $this->dom->createDocumentFragment();
+        $tpl->appendXML($html);
+
+        $node->appendChild($tpl);
+
+        return $node;
     }
 
     /**

@@ -30,6 +30,9 @@ trait DeferOptions
         'append_defer_js'         => false,
         'default_defer_time'      => 10,
 
+        // Splash screen
+        'custom_splash_screen'    => '',
+
         // Page optimizations
         'enable_preloading'       => true,
         'enable_dns_prefetch'     => true,

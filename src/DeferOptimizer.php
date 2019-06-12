@@ -51,6 +51,9 @@ trait DeferOptimizer
         $this->addMissingMeta();
         $this->addFingerprint();
 
+        // Add custom splash screen
+        $this->addCustomSplashScreen();
+
         // Minify
         $this->minifyOutputHTML();
     }
@@ -612,6 +615,23 @@ trait DeferOptimizer
         }
     }
 
+    /**
+     * Added splash screen
+     *
+     * @since  1.0.15
+     */
+    protected function addCustomSplashScreen()
+    {
+        $splash = $this->custom_splash_screen;
+
+        if (empty($splash)) {
+            return;
+        }
+
+        $this->prependHtml($this->body, sprintf(static::SLASH_TEMPLATE, $splash));
+        $this->appendHtml($this->body, static::SLASH_HIDE_SCRIPT);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Other helper functions
@@ -755,9 +775,15 @@ trait DeferOptimizer
         if (is_a($node, DOMElement::class)) {
             switch ($node->nodeName) {
                 case static::LINK_TAG:
+                    if ($node->hasAttribute(static::ATTR_AS)) {
+                        $as = $node->getAttribute(static::ATTR_AS);
+                        break;
+                    }
+
                     if (in_array($node->getAttribute(static::ATTR_REL), [static::REL_DNSPREFETCH, static::REL_PRECONNECT])) {
                         break;
                     }
+
                     $as = static::PRELOAD_STYLE;
                     break;
                 case static::STYLE_TAG:
