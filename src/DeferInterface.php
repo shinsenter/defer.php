@@ -58,6 +58,18 @@ if (!defined('DEFER_JS_IGNORE')) {
     ]));
 
     define('DEFER_MINIFY_HTML_IGNORE', 'not(parent::*[self::textarea or self::code or self::pre or self::script])');
+
+    // Splash screen
+
+    define('DEFER_SLASH_TEMPLATE', implode('', [
+        '<style>#deferjs-splash{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999}</style>',
+        '<div id="deferjs-splash">%s</div>',
+    ]));
+
+    define('DEFER_SLASH_HIDE_SCRIPT', implode('', [
+        '<noscript><style>#deferjs-splash{display:none}</style></noscript>',
+        '<script>defer(function(){document.getElementById("deferjs-splash").style.display="none"},1)</script>',
+    ]));
 }
 
 abstract class DeferInterface
@@ -67,6 +79,10 @@ abstract class DeferInterface
     const DEFERJS_URL    = DEFER_JS_CDN . '/dist/defer_plus.min.js';
     const HELPERS_URL    = DEFER_JS_ROOT . '/public/helpers.min.js';
     const INLINE_CSS_URL = DEFER_JS_ROOT . '/public/styles.min.css';
+
+    // For splash screen
+    const SLASH_TEMPLATE       = DEFER_SLASH_TEMPLATE;
+    const SLASH_HIDE_SCRIPT    = DEFER_SLASH_HIDE_SCRIPT;
 
     // Polyfill & library's fingerprint
     const POLYFILL_URL    = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';

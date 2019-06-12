@@ -97,6 +97,9 @@ $defer = new \shinsenter\Defer();
 $defer->append_defer_js     = false;
 $defer->default_defer_time  = 10;
 
+// Add custom splash screen
+$defer->custom_splash_screen = '<div id="splash">Loading</div>';
+
 // Page optimizations
 $defer->enable_preloading   = true;
 $defer->enable_dns_prefetch = true;
