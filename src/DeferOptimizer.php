@@ -486,7 +486,7 @@ trait DeferOptimizer
             }
 
             // Defer the style tag if there is background url
-            if (preg_match('/url\s*\(/', $code)) {
+            if (preg_match('/url\s*\(/', $code) && !$node->hasAttribute(static::ATTR_DATA_NOLAZY)) {
                 $this->makeLazyStyle($node);
             }
         }
@@ -537,13 +537,14 @@ trait DeferOptimizer
             $replaced_src    = $this->makeLazySrc($node);
             $replaced        = $replaced_srcset || $replaced_src;
 
-            if ($node->nodeName !== static::IMG_TAG || !$replaced || $node->hasAttribute(static::ATTR_SRC)) {
+            if (($node->nodeName !== static::IMG_TAG && $node->nodeName !== static::INPUT_TAG) ||
+                !$replaced || $node->hasAttribute(static::ATTR_SRC)) {
                 continue;
             }
 
             if ($this->empty_gif) {
                 $node->setAttribute(static::ATTR_SRC, $this->empty_gif);
-            } elseif ($node->nodeName == static::IMG_TAG) {
+            } else {
                 $this->setPlaceholderSrc($node);
             }
 

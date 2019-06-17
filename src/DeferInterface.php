@@ -30,6 +30,7 @@ if (!defined('DEFER_JS_CDN')) {
 }
 
 if (!defined('DEFER_JS_IGNORE')) {
+    define('DEFER_CSS_IGNORE', 'not(@data-ignore) and not(ancestor::noscript)');
     define('DEFER_JS_IGNORE', 'not(@data-ignore) and not(ancestor::noscript)');
 
     define('DEFER_IMG_IGNORE', implode(' and ', [
@@ -39,6 +40,7 @@ if (!defined('DEFER_JS_IGNORE')) {
     ]));
 
     define('DEFER_IMG_TAGS', implode(' or ', [
+        '(self::input and @type="image")',
         'self::img',
         'self::picture',
         'self::source',
@@ -92,22 +94,23 @@ abstract class DeferInterface
     const SVG_PLACEHOLDER = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 %d %d'></svg>";
 
     // Content tags
-    const AUDIO_TAG    = 'audio';
-    const BR_TAG       = 'br';
-    const BODY_TAG     = 'body';
-    const EMBED_TAG    = 'embed';
-    const FRAME_TAG    = 'frame';
-    const HEAD_TAG     = 'head';
-    const IFRAME_TAG   = 'iframe';
-    const IMG_TAG      = 'img';
-    const LINK_TAG     = 'link';
-    const META_TAG     = 'meta';
-    const NOSCRIPT_TAG = 'noscript';
-    const PICTURE_TAG  = 'picture';
-    const SCRIPT_TAG   = 'script';
-    const SOURCE_TAG   = 'source';
-    const STYLE_TAG    = 'style';
-    const VIDEO_TAG    = 'video';
+    const AUDIO_TAG      = 'audio';
+    const BR_TAG         = 'br';
+    const BODY_TAG       = 'body';
+    const EMBED_TAG      = 'embed';
+    const FRAME_TAG      = 'frame';
+    const HEAD_TAG       = 'head';
+    const IFRAME_TAG     = 'iframe';
+    const IMG_TAG        = 'img';
+    const INPUT_TAG      = 'input';
+    const LINK_TAG       = 'link';
+    const META_TAG       = 'meta';
+    const NOSCRIPT_TAG   = 'noscript';
+    const PICTURE_TAG    = 'picture';
+    const SCRIPT_TAG     = 'script';
+    const SOURCE_TAG     = 'source';
+    const STYLE_TAG      = 'style';
+    const VIDEO_TAG      = 'video';
 
     // LINK tag's rel attribute
     const REL_DNSPREFETCH = 'dns-prefetch';
@@ -138,6 +141,7 @@ abstract class DeferInterface
     const ATTR_CONTENT     = 'content';
     const ATTR_CROSSORIGIN = 'crossorigin';
     const ATTR_DATA_IGNORE = 'data-ignore';
+    const ATTR_DATA_NOLAZY = 'data-nolazy';
     const ATTR_DATA_SRC    = 'data-src';
     const ATTR_DATA_SRCSET = 'data-srcset';
     const ATTR_DATA_STYLE  = 'data-style';
@@ -180,7 +184,7 @@ abstract class DeferInterface
     const COMMENT_XPATH    = '//comment()[not(contains(.,"[if ")) and not(contains(.,"[endif]"))]';
     const DNSCONN_XPATH    = '//link[@rel="dns-prefetch" or @rel="preconnect"]';
     const PRELOAD_XPATH    = '//link[@rel="preload"]';
-    const STYLE_XPATH      = '//style[' . DEFER_JS_IGNORE . ']|//link[' . DEFER_JS_IGNORE . ' and @rel="stylesheet"]';
+    const STYLE_XPATH      = '//style[' . DEFER_CSS_IGNORE . ']|//link[' . DEFER_CSS_IGNORE . ' and @rel="stylesheet"]';
     const SCRIPT_XPATH     = '//script[' . DEFER_JS_IGNORE . ' and (not(@type) or contains(@type,"javascript"))]';
     const IMG_XPATH        = '//*[(' . DEFER_IMG_TAGS . ') and ' . DEFER_IMG_IGNORE . ']';
     const IFRAME_XPATH     = '//*[(' . DEFER_IFRAME_TAGS . ') and ' . DEFER_IFRAME_IGNORE . ']';

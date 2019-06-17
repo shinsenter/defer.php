@@ -51,10 +51,10 @@ trait DeferOptions
         // Web-font optimizations
         'defer_web_fonts'         => true,
         'web_fonts_patterns'      => [
-            '_debugbar.*stylesheets',
+            '(font-?awesome).*?\.css',
             'fonts\.google(apis)?\.com',
             '(gadget|popup|modal|icons)[^\/]*\.css',
-            '(font-awesome)([-_][\d\.]+)?(\.min)?\.css',
+            '_debugbar.*stylesheets',
         ],
 
         // Custom loader scripts
