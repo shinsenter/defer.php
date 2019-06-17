@@ -52,7 +52,7 @@ $defer->enable_defer_fallback   = true;
 
 $defer->defer_web_fonts        = true;
 $defer->use_css_fadein_effects = true;
-$defer->use_color_placeholder  = false;
+$defer->use_color_placeholder  = 'grey';
 
 // Manually add deferjs library script tag
 // $defer->manually_add_deferjs = true;

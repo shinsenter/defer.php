@@ -121,7 +121,7 @@ $defer->defer_web_fonts = true;
 $defer->empty_gif               = '';
 $defer->empty_src               = '';
 $defer->use_color_placeholder   = true;
-$defer->use_css_fadein_effects  = true;
+$defer->use_css_fadein_effects  = true; // true or 'grey'
 
 // Blacklist
 $defer->do_not_optimize = [
