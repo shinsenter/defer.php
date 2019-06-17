@@ -121,7 +121,13 @@ trait DeferParser
 
         // Detect charset charset
         if (empty($this->charset)) {
-            $this->charset = mb_detect_encoding($html) ?: 'UTF-8';
+            $encoding = mb_detect_encoding($html, 'auto');
+
+            if ($encoding === false || $encoding === 'ASCII') {
+                $encoding = 'UTF-8';
+            }
+
+            $this->charset = $encoding;
         }
 
         // Convert HTML into HTML entities
@@ -406,7 +412,7 @@ trait DeferParser
             }
 
             // Remove ads
-            if (preg_match('/ads|click|googletags|publisher/i', $src)) {
+            if (preg_match('#ads|click|googletags|publisher|gpt\.js#i', $src)) {
                 $preload_flag = false;
             }
 
@@ -434,7 +440,7 @@ trait DeferParser
     }
 
     /**
-     * Return TRUE if it is an AMP page
+     * Convert input string into html entities
      *
      * @since  1.0.7
      * @param  string $html
@@ -447,7 +453,7 @@ trait DeferParser
     }
 
     /**
-     * Return TRUE if it is an AMP page
+     * Detect and convert html entities into normal text
      *
      * @since  1.0.7
      * @param  string $html
@@ -456,9 +462,9 @@ trait DeferParser
      */
     protected function entity2charset($html, $charset)
     {
-        $encoding = mb_detect_encoding($html);
+        $encoding = mb_detect_encoding($html, 'auto');
 
-        if (empty($encoding) || $encoding == 'ASCII') {
+        if ($encoding === false || $encoding === 'ASCII') {
             $encoding = 'HTML-ENTITIES';
 
             if (is_null(static::$__html_mapping)) {
