@@ -466,23 +466,18 @@ trait DeferParser
 
         if ($encoding === false || $encoding === 'ASCII') {
             $encoding = 'HTML-ENTITIES';
+        }
 
-            if (is_null(static::$__html_mapping)) {
-                $mapping = array_values(get_html_translation_table(HTML_SPECIALCHARS));
-
-                static::$__html_mapping = [
-                    'from' => $mapping,
-                    'to'   => array_map('htmlspecialchars', $mapping),
-                ];
-
-                unset($mapping);
-            }
-
-            $html = str_replace(static::$__html_mapping['from'], static::$__html_mapping['to'], $html);
+        if ($encoding == 'HTML-ENTITIES') {
+            $html = $this->escapeHtmlEntity($html, false);
         }
 
         if ($this->charset !== $encoding) {
             $html = mb_convert_encoding($html, $charset, $encoding);
+        }
+
+        if ($encoding == 'HTML-ENTITIES') {
+            $html = $this->escapeHtmlEntity($html, true);
         }
 
         return $html;
@@ -714,5 +709,47 @@ trait DeferParser
         $this->bug_script_templates = [];
 
         return $result;
+    }
+
+    /**
+     * Escape / unescape regular HTML entities
+     *
+     * @since  1.0.17
+     * @param  string $html
+     * @param  bool   $revert = false
+     * @return string
+     */
+    protected function escapeHtmlEntity($html, $revert = false)
+    {
+        // Initial HTML entity optimizer
+        if (is_null(static::$__html_mapping)) {
+            $mapping = array_values(get_html_translation_table(HTML_SPECIALCHARS));
+
+            static::$__html_mapping = [
+                'from' => $mapping,
+                'to'   => array_map(function ($v) {
+                    return str_replace(['&', ';'], ['@&@', '@;@'], $v);
+                }, $mapping),
+            ];
+
+            unset($mapping);
+        }
+
+        // Process the HTML
+        if ($revert) {
+            $html = str_replace(
+                static::$__html_mapping['to'],
+                static::$__html_mapping['from'],
+                $html
+            );
+        } else {
+            $html = str_replace(
+                static::$__html_mapping['from'],
+                static::$__html_mapping['to'],
+                $html
+            );
+        }
+
+        return $html;
     }
 }

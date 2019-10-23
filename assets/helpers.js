@@ -34,7 +34,7 @@
  */
 (function (window, document, console, name) {
 
-    var PROJECT_URL     = 'https://github.com/shinsenter/';
+    var PROJECT_URL     = '   https://github.com/shinsenter/';
     var PROJECT_NAME    = 'defer.js';
     var CLASS_PREFIX    = 'defer-';
     var CLASS_SUFFIX    = 'deferjs';
@@ -90,9 +90,9 @@
 
         log([
             'Optimized by ' + PROJECT_NAME,
-            '(c) 2019 Mai Nhut Tan <shin@shin.company>',
-            'Github:    ' + PROJECT_URL + PROJECT_NAME,
-            'PHP lib:   ' + PROJECT_URL + 'defer.php'
+            '(c) 2019 Mai Nhut Tan',
+            'Github: ' + PROJECT_URL + PROJECT_NAME,
+            'PHP lib:' + PROJECT_URL + 'defer.php'
         ].join('\n'));
     }
 
@@ -223,6 +223,6 @@
     window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript);
 
     defermedia();
-    copyright();
+    // copyright();
 
 })(this, document, console, 'defer_helper');

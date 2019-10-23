@@ -208,7 +208,8 @@ class Defer extends DeferInterface
     protected function nodefer()
     {
         $no_libxml   = !$this->native_libxml;
-        $has_nodefer = (bool) $this->http->request()->get($this->no_defer_parameter);
+        $request     = $this->http->request();
+        $has_nodefer = $request ? (bool) $request->get($this->no_defer_parameter) : false;
 
         return $has_nodefer || $no_libxml;
     }
@@ -239,6 +240,6 @@ class Defer extends DeferInterface
             $output[] = $this->dom->saveHtml($node);
         }
 
-        return implode("\n", $output);
+        return implode("\n", array_unique($output));
     }
 }
