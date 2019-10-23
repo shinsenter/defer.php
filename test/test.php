@@ -14,7 +14,7 @@
 error_reporting(E_ALL);
 
 if (!defined('DEFER_JS_VERSION')) {
-    define('DEFER_JS_VERSION', '1.1.7-c');
+    define('DEFER_JS_VERSION', '1.1.10');
 }
 
 define('TEST_DS', DIRECTORY_SEPARATOR);
