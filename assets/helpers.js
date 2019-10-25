@@ -223,6 +223,6 @@
     window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript);
 
     defermedia();
-    // copyright();
+    copyright();
 
 })(this, document, console, 'defer_helper');
