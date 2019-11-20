@@ -683,7 +683,7 @@ trait DeferParser
     protected function script_encode($html)
     {
         return preg_replace_callback('/(<script[^>]*>)(.*?)(<\/script>)/si', function ($matches) {
-            if (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false) {
+            if (!preg_match('/<\/[^>]*>/i', $matches[2]) && (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false)) {
                 return $matches[0];
             }
 
