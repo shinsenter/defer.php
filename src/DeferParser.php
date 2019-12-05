@@ -412,7 +412,23 @@ trait DeferParser
             }
 
             // Remove ads
-            if (preg_match('#ads|click|googletags|publisher|gpt\.js#i', $src)) {
+            $ads_excludes = implode('|', [
+                'ads',
+                'click',
+                'googletags',
+                'publisher',
+                'gpt\.js',
+                'adservice\.google',
+                'ampproject\.org',
+                'doubleclick\.net',
+                'facebook\.com',
+                'facebook\.net',
+                'googlesyndication\.com',
+                'twimg\.com',
+                'twitter\.com',
+            ]);
+
+            if (preg_match('#' . $ads_excludes . '#', $src)) {
                 $preload_flag = false;
             }
 
@@ -478,6 +494,13 @@ trait DeferParser
 
         if ($encoding == 'HTML-ENTITIES') {
             $html = $this->escapeHtmlEntity($html, true);
+        }
+
+        // Convert &#[0-9]+; entities to UTF-8
+        if ($this->charset == 'UTF-8') {
+            $html = preg_replace_callback('/(&#[0-9]+;)/', function ($m) {
+                return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
+            }, $html);
         }
 
         return $html;
@@ -683,8 +706,15 @@ trait DeferParser
     protected function script_encode($html)
     {
         return preg_replace_callback('/(<script[^>]*>)(.*?)(<\/script>)/si', function ($matches) {
-            if (!preg_match('/<\/[^>]*>/i', $matches[2]) && (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false)) {
-                return $matches[0];
+            if (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false) {
+                $output = $matches[0];
+
+                if (preg_match('/<\/[^>]*>/', $matches[2])) {
+                    $next = preg_replace('/<\/([^>]*)>/', '<\\/$1>', $matches[2]);
+                    $output = "{$matches[1]}{$next}{$matches[3]}";
+                }
+
+                return $output;
             }
 
             $next = '@@@SCRIPT@@@' . count($this->bug_script_templates) . '@@@SCRIPT@@@';

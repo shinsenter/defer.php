@@ -49,13 +49,15 @@ trait DeferOptimizer
 
         // Meta optimizations
         $this->addMissingMeta();
-        $this->addFingerprint();
 
         // Add custom splash screen
         $this->addCustomSplashScreen();
 
         // Minify
         $this->minifyOutputHTML();
+
+        // Footer
+        $this->addFingerprint();
     }
 
     /*
@@ -482,7 +484,7 @@ trait DeferOptimizer
 
             // Update the node content
             if ($node->nodeValue != $code) {
-                $node->nodeValue = htmlspecialchars($code);
+                $node->nodeValue = $code;
             }
 
             // Defer the style tag if there is background url
@@ -512,7 +514,7 @@ trait DeferOptimizer
             $code = $this->minifyInlineScript($node->nodeValue);
 
             if ($node->nodeValue != $code) {
-                $node->nodeValue = htmlspecialchars($code);
+                $node->nodeValue = $code;
             }
         }
     }

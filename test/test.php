@@ -14,11 +14,11 @@
 error_reporting(E_ALL);
 
 if (!defined('DEFER_JS_VERSION')) {
-    define('DEFER_JS_VERSION', '1.1.10');
+    define('DEFER_JS_VERSION', '1.1.11');
 }
 
 define('TEST_DS', DIRECTORY_SEPARATOR);
-define('BASE', dirname(__FILE__));
+define('BASE', __DIR__);
 define('ROOT', dirname(BASE));
 define('INPUT', BASE . TEST_DS . 'input' . TEST_DS);
 define('OUTPUT', BASE . TEST_DS . 'output' . TEST_DS);
@@ -59,21 +59,28 @@ $defer->use_color_placeholder  = 'grey';
 
 $defer->clearCache();
 
+debug();
+debug('INPUT:  ' . INPUT);
+debug('OUTPUT: ' . OUTPUT);
+
 // Scan test files
 $list = glob(INPUT . '*.html');
 
 // Ready
-// mem_info();
+mem_info();
 
 foreach ($list as $file) {
     $html = file_get_contents($file);
+    $out  = preg_replace('/^.*[\/\\\\]/', '', $file);
 
-    debug();
     $results = $defer->fromHtml($html)->toHtml();
     $html    = null;
-    $defer->cleanup();
-    mem_info('After: ' . preg_replace('/^.*\//', '', $file));
 
-    @file_put_contents(OUTPUT . preg_replace('/^.+\//', '', $file), $results);
+    debug();
+    mem_info('After: ' . $out);
+
+    @file_put_contents(OUTPUT . $out, $results);
+
+    $defer->cleanup();
     $results = null;
 }
