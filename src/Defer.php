@@ -209,7 +209,9 @@ class Defer extends DeferInterface
     {
         $no_libxml   = !$this->native_libxml;
         $request     = $this->http->request();
-        $has_nodefer = $request ? (bool) $request->get($this->no_defer_parameter) : false;
+        $has_nodefer = $request
+            ? (bool) $request->get($this->no_defer_parameter)
+            : !empty($_REQUEST[$this->no_defer_parameter]);
 
         return $has_nodefer || $no_libxml;
     }
