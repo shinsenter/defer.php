@@ -263,8 +263,10 @@ trait DeferParser
                 $this->normalizeUrl($node, static::ATTR_HREF);
             }
 
-            if ($node->hasAttribute(static::ATTR_TYPE) &&
-                stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false) {
+            if (
+                $node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'css') !== false
+            ) {
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
@@ -301,13 +303,17 @@ trait DeferParser
                 $node->removeAttribute(static::ATTR_ASYNC);
             }
 
-            if ($node->hasAttribute(static::ATTR_TYPE) &&
-                stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false) {
+            if (
+                $node->hasAttribute(static::ATTR_TYPE) &&
+                stripos($node->getAttribute(static::ATTR_TYPE), 'javascript') !== false
+            ) {
                 $node->removeAttribute(static::ATTR_TYPE);
             }
 
-            if ($node->hasAttribute(static::ATTR_LANGUAGE) &&
-                stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false) {
+            if (
+                $node->hasAttribute(static::ATTR_LANGUAGE) &&
+                stripos($node->getAttribute(static::ATTR_LANGUAGE), 'javascript') !== false
+            ) {
                 $node->removeAttribute(static::ATTR_LANGUAGE);
             }
 
@@ -329,8 +335,10 @@ trait DeferParser
 
         if ($this->enable_defer_images) {
             foreach ($this->xpath->query(static::IMG_XPATH) as $node) {
-                if ($node->nodeName == static::IMG_TAG &&
-                    !$node->hasAttribute(static::ATTR_ALT)) {
+                if (
+                    $node->nodeName == static::IMG_TAG &&
+                    !$node->hasAttribute(static::ATTR_ALT)
+                ) {
                     $node->setAttribute(static::ATTR_ALT, '');
                 }
 
@@ -353,8 +361,10 @@ trait DeferParser
 
         if ($this->enable_defer_iframes) {
             foreach ($this->xpath->query(static::IFRAME_XPATH) as $node) {
-                if ($node->nodeName == static::IFRAME_TAG &&
-                    !$node->hasAttribute(static::ATTR_TITLE)) {
+                if (
+                    $node->nodeName == static::IFRAME_TAG &&
+                    !$node->hasAttribute(static::ATTR_TITLE)
+                ) {
                     $node->setAttribute(static::ATTR_TITLE, '');
                 }
 
@@ -406,13 +416,24 @@ trait DeferParser
                 $node->setAttribute($attr, $src);
             }
 
-            // Remove urls without HTTP protocol
-            if (stripos($src, 'http') !== 0) {
-                $preload_flag = false;
-            }
-
             // Remove ads
-            if (preg_match('#ads|click|googletags|publisher|gpt\.js#i', $src)) {
+            $ads_excludes = implode('|', [
+                'ads',
+                'click',
+                'googletags',
+                'publisher',
+                'gpt\.js',
+                'adservice\.google',
+                'ampproject\.org',
+                'doubleclick\.net',
+                'facebook\.com',
+                'facebook\.net',
+                'googlesyndication\.com',
+                'twimg\.com',
+                'twitter\.com',
+            ]);
+
+            if (stripos($src, 'http') !== 0 || preg_match('#' . $ads_excludes . '#', $src)) {
                 $preload_flag = false;
             }
 
@@ -435,8 +456,8 @@ trait DeferParser
     protected function isAmpHtml($html)
     {
         return $this->xpath->query('//html[@amp]')->length > 0 ||
-        strpos($html, '&#x26A1;') !== false ||
-        strpos($html, '⚡') !== false;
+            strpos($html, '&#x26A1;') !== false ||
+            strpos($html, '⚡') !== false;
     }
 
     /**
@@ -478,6 +499,13 @@ trait DeferParser
 
         if ($encoding == 'HTML-ENTITIES') {
             $html = $this->escapeHtmlEntity($html, true);
+        }
+
+        // Convert &#[0-9]+; entities to UTF-8
+        if ($this->charset == 'UTF-8') {
+            $html = preg_replace_callback('/(&#[0-9]+;)/', function ($m) {
+                return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
+            }, $html);
         }
 
         return $html;
@@ -683,8 +711,15 @@ trait DeferParser
     protected function script_encode($html)
     {
         return preg_replace_callback('/(<script[^>]*>)(.*?)(<\/script>)/si', function ($matches) {
-            if (!preg_match('/<\/[^>]*>/i', $matches[2]) && (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false)) {
-                return $matches[0];
+            if (!preg_match('/type=/i', $matches[1]) || strpos($matches[1], 'text/javascript') !== false) {
+                $output = $matches[0];
+
+                if (preg_match('/<\/[^>]*>/', $matches[2])) {
+                    $next = preg_replace('/<\/([^>]*)>/', '<\\/$1>', $matches[2]);
+                    $output = "{$matches[1]}{$next}{$matches[3]}";
+                }
+
+                return $output;
             }
 
             $next = '@@@SCRIPT@@@' . count($this->bug_script_templates) . '@@@SCRIPT@@@';
@@ -705,7 +740,12 @@ trait DeferParser
      */
     protected function script_decode($html)
     {
-        $result                     = str_replace(array_keys($this->bug_script_templates), array_values($this->bug_script_templates), $html);
+        $result = str_replace(
+            array_keys($this->bug_script_templates),
+            array_values($this->bug_script_templates),
+            $html
+        );
+
         $this->bug_script_templates = [];
 
         return $result;

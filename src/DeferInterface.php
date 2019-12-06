@@ -14,7 +14,7 @@
 namespace shinsenter;
 
 if (!defined('DEFER_JS_ROOT')) {
-    define('DEFER_JS_ROOT', dirname(dirname(__FILE__)));
+    define('DEFER_JS_ROOT', dirname(__DIR__));
 }
 
 if (!defined('DEFER_JS_VERSION')) {
@@ -189,7 +189,7 @@ abstract class DeferInterface
     const IMG_XPATH        = '//*[(' . DEFER_IMG_TAGS . ') and ' . DEFER_IMG_IGNORE . ']';
     const IFRAME_XPATH     = '//*[(' . DEFER_IFRAME_TAGS . ') and ' . DEFER_IFRAME_IGNORE . ']';
     const BACKGROUND_XPATH = '//*[' . DEFER_JS_IGNORE . ' and @style and contains(@style,"url")]';
-    const NORMALIZE_XPATH  = '//text()[' . DEFER_MINIFY_HTML_IGNORE . ' and not(.=normalize-space(.))]';
+    const NORMALIZE_XPATH  = '//text()[not(.=normalize-space(.))]';
 
     // Variable holders
     public static $deferjs_script = null;
