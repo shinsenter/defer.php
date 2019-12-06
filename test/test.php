@@ -70,13 +70,14 @@ $list = glob(INPUT . '*.html');
 mem_info();
 
 foreach ($list as $file) {
+    debug();
+
     $html = file_get_contents($file);
     $out  = preg_replace('/^.*[\/\\\\]/', '', $file);
 
     $results = $defer->fromHtml($html)->toHtml();
     $html    = null;
 
-    debug();
     mem_info('After: ' . $out);
 
     @file_put_contents(OUTPUT . $out, $results);
