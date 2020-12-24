@@ -11,34 +11,34 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
-namespace shinsenter;
+namespace AppSeeds;
 
 trait DeferOptions
 {
     public $options = [
         // Debug optimized tags (instead of optimized HTML)
-        'debug_mode'              => false,
-        'no_defer_parameter'      => 'nodefer',
+        'debug_mode'         => false,
+        'no_defer_parameter' => 'nodefer',
 
         // Disable libxml errors and warnings
-        'hide_warnings'           => true,
+        'hide_warnings' => true,
 
         // manually add deferjs
-        'manually_add_deferjs'    => false,
+        'manually_add_deferjs' => false,
 
         // Library injection
-        'append_defer_js'         => false,
-        'default_defer_time'      => 10,
+        'append_defer_js'    => false,
+        'default_defer_time' => 10,
 
         // Splash screen
-        'custom_splash_screen'    => '',
+        'custom_splash_screen' => '',
 
         // Page optimizations
-        'enable_preloading'       => true,
-        'enable_dns_prefetch'     => true,
-        'fix_render_blocking'     => true,
-        'minify_output_html'      => true,
-        'add_missing_meta_tags'   => true,
+        'enable_preloading'     => true,
+        'enable_dns_prefetch'   => true,
+        'fix_render_blocking'   => true,
+        'minify_output_html'    => true,
+        'add_missing_meta_tags' => true,
 
         // Tag optimizations
         'enable_defer_css'        => true,
@@ -49,8 +49,8 @@ trait DeferOptions
         'enable_defer_fallback'   => true,
 
         // Web-font optimizations
-        'defer_web_fonts'         => true,
-        'web_fonts_patterns'      => [
+        'defer_web_fonts'    => true,
+        'web_fonts_patterns' => [
             '(font-?awesome).*?\.css',
             'fonts\.google(apis)?\.com',
             '(gadget|popup|modal|icons)[^\/]*\.css',
@@ -58,19 +58,19 @@ trait DeferOptions
         ],
 
         // Custom loader scripts
-        'loader_scripts'          => [],
+        'loader_scripts' => [],
 
         // Blacklist patterns
-        'do_not_optimize'         => [
+        'do_not_optimize' => [
             'document\.write\s*\(',
             '(jquery([-_][\d\.]+)?(\.min)?\.js|jquery-core)',
         ],
 
         // Content placeholders
-        'use_css_fadein_effects'  => true,
-        'use_color_placeholder'   => false,
-        'empty_gif'               => '',
-        'empty_src'               => 'about:blank',
+        'use_css_fadein_effects' => true,
+        'use_color_placeholder'  => false,
+        'empty_gif'              => '',
+        'empty_src'              => 'about:blank',
     ];
 
     protected $backup_options;

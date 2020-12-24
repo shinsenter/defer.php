@@ -36,7 +36,7 @@
     "autoload": {
         "files": [],
         "psr-4": {
-            "shinsenter\\": "src/"
+            "AppSeeds\\": "src/"
         }
     },
     "authors": [
@@ -49,9 +49,7 @@
     ],
     "scripts":
     {
-        "css": "cleancss -o public/styles.min.css assets/styles.css",
-        "js": "uglifyjs --config-file=.uglifyjs -o public/helpers.min.js assets/helpers.js",
-        "helper": ["@css","@js"],
+        "helper": "npm run js && npm run css",
         "fixer": "php-cs-fixer fix --show-progress=estimating --verbose",
         "test": "php test/test.php"
     },
@@ -69,5 +67,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "type": "library",
-    "license": "MIT"
+    "license": "MIT",
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.17"
+    }
 }

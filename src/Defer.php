@@ -11,7 +11,7 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
-namespace shinsenter;
+namespace AppSeeds;
 
 class Defer extends DeferInterface
 {

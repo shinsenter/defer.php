@@ -46,7 +46,7 @@ if (!function_exists('debug')) {
         }
 
         if (!empty($msgs)) {
-            echo($text . implode("\n", $msgs)) . "\n";
+            echo ($text . implode("\n", $msgs)) . "\n";
         }
 
         $last_time = new DateTime();
