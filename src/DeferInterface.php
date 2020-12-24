@@ -11,7 +11,7 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
-namespace shinsenter;
+namespace AppSeeds;
 
 if (!defined('DEFER_JS_ROOT')) {
     define('DEFER_JS_ROOT', dirname(__DIR__));
@@ -83,8 +83,8 @@ abstract class DeferInterface
     const INLINE_CSS_URL = DEFER_JS_ROOT . '/public/styles.min.css';
 
     // For splash screen
-    const SLASH_TEMPLATE       = DEFER_SLASH_TEMPLATE;
-    const SLASH_HIDE_SCRIPT    = DEFER_SLASH_HIDE_SCRIPT;
+    const SLASH_TEMPLATE    = DEFER_SLASH_TEMPLATE;
+    const SLASH_HIDE_SCRIPT = DEFER_SLASH_HIDE_SCRIPT;
 
     // Polyfill & library's fingerprint
     const POLYFILL_URL    = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
@@ -94,23 +94,23 @@ abstract class DeferInterface
     const SVG_PLACEHOLDER = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 %d %d'></svg>";
 
     // Content tags
-    const AUDIO_TAG      = 'audio';
-    const BR_TAG         = 'br';
-    const BODY_TAG       = 'body';
-    const EMBED_TAG      = 'embed';
-    const FRAME_TAG      = 'frame';
-    const HEAD_TAG       = 'head';
-    const IFRAME_TAG     = 'iframe';
-    const IMG_TAG        = 'img';
-    const INPUT_TAG      = 'input';
-    const LINK_TAG       = 'link';
-    const META_TAG       = 'meta';
-    const NOSCRIPT_TAG   = 'noscript';
-    const PICTURE_TAG    = 'picture';
-    const SCRIPT_TAG     = 'script';
-    const SOURCE_TAG     = 'source';
-    const STYLE_TAG      = 'style';
-    const VIDEO_TAG      = 'video';
+    const AUDIO_TAG    = 'audio';
+    const BR_TAG       = 'br';
+    const BODY_TAG     = 'body';
+    const EMBED_TAG    = 'embed';
+    const FRAME_TAG    = 'frame';
+    const HEAD_TAG     = 'head';
+    const IFRAME_TAG   = 'iframe';
+    const IMG_TAG      = 'img';
+    const INPUT_TAG    = 'input';
+    const LINK_TAG     = 'link';
+    const META_TAG     = 'meta';
+    const NOSCRIPT_TAG = 'noscript';
+    const PICTURE_TAG  = 'picture';
+    const SCRIPT_TAG   = 'script';
+    const SOURCE_TAG   = 'source';
+    const STYLE_TAG    = 'style';
+    const VIDEO_TAG    = 'video';
 
     // LINK tag's rel attribute
     const REL_DNSPREFETCH = 'dns-prefetch';

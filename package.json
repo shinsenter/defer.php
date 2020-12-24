@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "clean-css-cli": "^4.3.0",
+    "uglify-js": "^3.12.3"
+  },
+  "scripts": {
+    "css": "cleancss -o public/styles.min.css assets/styles.css",
+    "js": "uglifyjs --config-file .uglifyjs -o public/helpers.min.js assets/helpers.js"
+  }
+}

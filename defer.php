@@ -16,7 +16,7 @@ $libDir    = $baseDir . '/vendor';
 $vendorDir = dirname(dirname($baseDir));
 $autoload  = '/autoload.php';
 
-if (!class_exists('shinsenter\Defer')) {
+if (!class_exists('AppSeeds\Defer')) {
     if (file_exists($libDir . $autoload)) {
         require_once $libDir . $autoload;
     } elseif (file_exists($vendorDir . $autoload)) {

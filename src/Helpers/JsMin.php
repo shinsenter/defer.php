@@ -11,7 +11,7 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
-namespace shinsenter\Helpers;
+namespace AppSeeds\Helpers;
 
 /*
  * JsMin.php - modified PHP implementation of Douglas Crockford's JsMin.
@@ -81,11 +81,11 @@ class JsMin
     const ACTION_DELETE_A   = 2;
     const ACTION_DELETE_A_B = 3;
 
-    protected $a            = '';
-    protected $b            = '';
-    protected $input        = '';
-    protected $inputIndex   = 0;
-    protected $inputLength  = 0;
+    protected $a           = '';
+    protected $b           = '';
+    protected $input       = '';
+    protected $inputIndex  = 0;
+    protected $inputLength = 0;
     protected $lookAhead;
 
     protected $output = '';

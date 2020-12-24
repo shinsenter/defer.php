@@ -11,11 +11,11 @@
  * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
  */
 
-namespace shinsenter;
+namespace AppSeeds;
 
+use AppSeeds\Helpers\JsMin;
 use DOMElement;
 use Exception;
-use shinsenter\Helpers\JsMin;
 
 trait DeferOptimizer
 {
@@ -840,7 +840,7 @@ trait DeferOptimizer
                 $placeholder = 'background-color:hsl(' . rand(1, 360) . ',30%,96%);';
             }
 
-            $style       = (string) $node->getAttribute(static::ATTR_STYLE);
+            $style = (string) $node->getAttribute(static::ATTR_STYLE);
             $node->setAttribute(static::ATTR_STYLE, $placeholder . $style);
         }
     }

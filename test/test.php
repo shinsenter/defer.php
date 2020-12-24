@@ -29,7 +29,7 @@ require_once BASE . TEST_DS . 'helpers.php';
 
 // $_GET['nodefer'] = true;
 
-$defer = new shinsenter\Defer();
+$defer = new AppSeeds\Defer();
 
 // Set test options
 $defer->debug_mode    = false;

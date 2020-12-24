@@ -37,7 +37,7 @@ composer require shinsenter/defer.php
 require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 
 // Create a Defer object
-$defer = new \shinsenter\Defer();
+$defer = new \AppSeeds\Defer();
 
 // Read HTML source from file
 $html_source = file_get_contents('mypage.html');
@@ -65,7 +65,7 @@ require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 // Create a function for output optimization
 function deferjs_optimization($html) {
     // Create a Defer object
-    $defer = new \shinsenter\Defer();
+    $defer = new \AppSeeds\Defer();
 
     // Then get the optimized output
     return $defer->fromHtml($html)->toHtml();
@@ -91,7 +91,7 @@ ob_end_flush();
 require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 
 // Create a Defer object
-$defer = new \shinsenter\Defer();
+$defer = new \AppSeeds\Defer();
 
 // Library injection
 $defer->append_defer_js     = false;
@@ -145,7 +145,7 @@ In some regions, you may want to serve defer.js library locally due to [The Gene
 require_once __DIR__ . '/vendor/shinsenter/defer.php/defer.php';
 
 // Create a Defer object
-$defer = new \shinsenter\Defer();
+$defer = new \AppSeeds\Defer();
 $defer->manually_add_deferjs = true;
 
 // Then get the optimized output
