@@ -90,7 +90,7 @@
 
         log([
             'Optimized by ' + PROJECT_NAME,
-            '(c) 2019 Mai Nhut Tan',
+            '(c) 2019 AppSeeds',
             'Github: ' + PROJECT_URL + PROJECT_NAME,
             'PHP lib:' + PROJECT_URL + 'defer.php'
         ].join('\n'));

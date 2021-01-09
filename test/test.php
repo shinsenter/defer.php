@@ -14,7 +14,11 @@
 error_reporting(E_ALL);
 
 if (!defined('DEFER_JS_VERSION')) {
-    define('DEFER_JS_VERSION', '1.1.11');
+    define('DEFER_JS_VERSION', '1.1.15');
+}
+
+if (!defined('DEFER_JS_CDN')) {
+    define('DEFER_JS_CDN', __DIR__ . '/../../defer.js');
 }
 
 define('TEST_DS', DIRECTORY_SEPARATOR);
@@ -35,13 +39,13 @@ $defer = new AppSeeds\Defer();
 $defer->debug_mode    = false;
 $defer->hide_warnings = true;
 
-$defer->append_defer_js    = false;
+$defer->append_defer_js    = true;
 $defer->default_defer_time = 10;
 
 $defer->enable_preloading   = true;
 $defer->enable_dns_prefetch = true;
 $defer->fix_render_blocking = true;
-$defer->minify_output_html  = true;
+$defer->minify_output_html  = false;
 
 $defer->enable_defer_css        = true;
 $defer->enable_defer_scripts    = true;
