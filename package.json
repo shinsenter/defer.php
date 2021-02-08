@@ -1,10 +1,16 @@
 {
+  "homepage": "https://github.com/shinsenter/defer.php#readme",
+  "author": "Mai Nhut Tan <shin@shin.company>",
+  "license": "MIT",
+  "dependencies": {
+    "@shinsenter/defer.js": "^1.1.15"
+  },
   "devDependencies": {
-    "clean-css-cli": "^4.3.0",
-    "uglify-js": "^3.12.3"
+    "clean-css-cli": "latest",
+    "uglify-js": "latest"
   },
   "scripts": {
     "css": "cleancss -o public/styles.min.css assets/styles.css",
-    "js": "uglifyjs --config-file .uglifyjs -o public/helpers.min.js assets/helpers.js"
+    "js": "uglifyjs --config-file assets/.uglifyjs -o public/helpers.min.js assets/helpers.js"
   }
 }

@@ -1,28 +1,28 @@
-.no-deferjs .has-noscript {
-    display: none !important;
+.no-deferjs .has-fallback {
+  display: none !important;
 }
 
-img,
 picture,
-source,
 video,
 audio,
+source,
+img,
 iframe,
 frame,
 embed {
-    min-width: 1px;
-    min-height: 1px;
-    visibility: visible;
+  min-width: 1px;
+  min-height: 1px;
+  visibility: visible;
 }
 
-.defer-lazied {
-    transition: opacity .1s linear;
+.defer-loaded {
+  background-color: transparent!important;
 }
 
-.defer-lazied.defer-loaded {
-    background-color: transparent !important;
+.defer-faded .defer-lazied{
+  transition: opacity 0.1s ease-in-out;
 }
 
-.defer-lazied.defer-loading:not([data-style]):not([data-ignore]) {
-    opacity: .5 !important;
+.defer-faded .defer-loading:not([data-ignore]) {
+  opacity: 0.5 !important;
 }

@@ -1,2 +1,6 @@
 * text=auto
-/public/* -diff -merge
+*.* text eol=lf
+
+/public/*    -diff -merge
+/tests       export-ignore
+/phpunit.xml export-ignore

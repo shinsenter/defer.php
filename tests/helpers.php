@@ -1,26 +1,19 @@
 <?php
 
 /**
- * A PHP helper class to efficiently defer JavaScript for your website.
- * (c) 2019 AppSeeds https://appseeds.net/
+ * Defer.php aims to help you concentrate on web performance optimization.
+ * (c) 2021 AppSeeds https://appseeds.net/
  *
- * @package   shinsenter/defer.php
- * @since     1.0.0
+ * PHP Version >=5.6
+ *
+ * @category  Web_Performance_Optimization
+ * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2019 AppSeeds
- * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
+ * @copyright 2021 AppSeeds
+ * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
+ * @link      https://code.shin.company/defer.php
+ * @see       https://code.shin.company/defer.php/blob/master/README.md
  */
-
-if (!function_exists('micro')) {
-    /**
-     * Get micro time
-     * @param mixed $time
-     */
-    function micro($time)
-    {
-        return (float) ($time->getTimestamp() . $time->format('.u'));
-    }
-}
 
 if (!function_exists('debug')) {
     /**
@@ -31,10 +24,9 @@ if (!function_exists('debug')) {
         static $last_time;
 
         $args = func_get_args();
-        $now  = new DateTime();
-        $time = $now->format('Y-m-d H:i:s.u');
-        $diff = !$last_time ? 0 : number_format(micro($now) - micro($last_time), 3);
-        $text = "{$time} {$diff} " . (count($args) > 1 ? "\n" : '');
+        $now  = date('Y-m-d H:i:s');
+        $diff = !$last_time ? 0 : number_format(microtime(true) - $last_time, 3);
+        $text = "{$now} {$diff} " . (count($args) > 1 ? "\n" : '');
         $msgs = [];
 
         foreach ($args as $msg) {
@@ -49,7 +41,7 @@ if (!function_exists('debug')) {
             echo ($text . implode("\n", $msgs)) . "\n";
         }
 
-        $last_time = new DateTime();
+        $last_time = microtime(true);
     }
 }
 

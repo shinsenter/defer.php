@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  test:
+    tty: true
+    privileged: true
+    build: .
+    image: defer-php-test
+    container_name: defer-php
+    hostname: defer-php-test
+    volumes:
+      - ..:/home/defer-php
+    environment:
+      - APP_ENV=local
+    working_dir: /home/defer-php

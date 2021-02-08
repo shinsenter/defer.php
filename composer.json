@@ -1,44 +1,8 @@
 {
     "name": "shinsenter/defer.php",
     "description": "🚀 A PHP library that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.",
-    "keywords": [
-        "defer",
-        "lazyload",
-        "lazyload image",
-        "lazyload video",
-        "lazyload font",
-        "lazyload js",
-        "lazyload css",
-        "lazyload wordpress",
-        "lazyload facebook",
-        "lazyload youtube",
-        "lazyload laravel",
-        "lazyload php",
-        "performance",
-        "website speed optimization",
-        "page speed optimization",
-        "pagespeed insight",
-        "gtmetrix",
-        "defer.js",
-        "defer php",
-        "lazy loading",
-        "lazy loader",
-        "lazy load",
-        "avoid render blocking",
-        "dom optimization",
-        "php library"
-    ],
-    "support":
-    {
-        "issues": "https://github.com/shinsenter/defer.php/issues",
-        "source": "https://github.com/shinsenter/defer.php"
-    },
-    "autoload": {
-        "files": [],
-        "psr-4": {
-            "AppSeeds\\": "src/"
-        }
-    },
+    "type": "library",
+    "license": "MIT",
     "authors": [
         {
             "name": "Mai Nhut Tan",
@@ -47,28 +11,95 @@
             "role": "Owner"
         }
     ],
-    "scripts":
-    {
-        "helper": "npm run js && npm run css",
-        "fixer": "php-cs-fixer fix --show-progress=estimating --verbose",
-        "test": "php test/test.php"
+    "support": {
+        "issues": "https://github.com/shinsenter/defer.php/issues",
+        "source": "https://github.com/shinsenter/defer.php"
     },
-    "config":
-    {
-        "preferred-install": "dist",
-        "optimize-autoloader": true,
-        "sort-packages": true
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/shinsenter/defer.php/stargazers"
+        },
+        {
+            "type": "paypal",
+            "url": "https://www.patreon.com/appseeds"
+        },
+        {
+            "type": "patreon",
+            "url": "https://www.patreon.com/shinsenter"
+        }
+    ],
+    "keywords": [
+        "defer",
+        "defer.php",
+        "lazyload",
+        "loading lazy",
+        "lazy loading",
+        "lazyload image",
+        "lazyload video",
+        "lazyload font",
+        "lazyload js",
+        "lazyload css",
+        "lazyload wordpress",
+        "lazyload facebook",
+        "lazyload youtube",
+        "site performance",
+        "speed optimization",
+        "pagespeed",
+        "page speed",
+        "gtmetrix",
+        "avoid render blocking",
+        "dom optimization",
+        "html minify",
+        "php library"
+    ],
+    "autoload": {
+        "psr-4": {
+            "AppSeeds\\": "src/"
+        }
     },
-    "require":
-    {
+    "scripts": {
+        "offline": "@php offline.php",
+        "fixer": "php-cs-fixer fix --show-progress=estimating --verbose --ansi",
+        "test": "@php tests/v2/test.php --ansi",
+        "bf": "blackfire run php tests/v2/test.php --ansi",
+        "assets": [
+            "npm run js",
+            "npm run css"
+        ],
+        "pull": [
+            "rm -rf ./cache/*/ ./vendor/ ./node_modules/ ./composer.lock ./package-lock.json",
+            "composer update -o -a -n --no-dev --prefer-dist --ansi",
+            "npm i --ansi",
+            "npm up --ansi"
+        ],
+        "docker": [
+            "@pull",
+            "@offline",
+            "@test"
+        ]
+    },
+    "require": {
         "php": "^5.6 || ^7.0 || ^8.0",
-        "symfony/polyfill-mbstring": "^1.0.0"
+        "ext-libxml": "*",
+        "lib-libxml": ">=2.7.7",
+        "mrclay/jsmin-php": "^2.0",
+        "psr/simple-cache": "^1.0",
+        "symfony/css-selector": "^2.0 || ^3.0 || ^4.0 || ^5.0",
+        "symfony/options-resolver": "^2.0 || ^3.0 || ^4.0 || ^5.0",
+        "symfony/polyfill-mbstring": "^1.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.0"
+    },
+    "suggest": {
+        "ext-mbstring": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "type": "library",
-    "license": "MIT",
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.17"
+    "config": {
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "sort-packages": true
     }
 }

@@ -7,7 +7,7 @@
  * http://lisperator.net/uglifyjs/
  *
  * Released under the MIT license
- * https://raw.githubusercontent.com/shinsenter/defer.js/master/LICENSE
+ * https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE
  *
  * MIT License
  *
@@ -32,197 +32,255 @@
  * SOFTWARE.
  *
  */
-(function (window, document, console, name) {
+(function (window, document, console, name, dataLayer, delayTime) {
+  // Fix missing dataLayer (for Google Analytics)
+  // See: https://developers.google.com/analytics/devguides/collection/analyticsjs
+  window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+  window[dataLayer] = window[dataLayer] || [];
 
-    var PROJECT_URL     = '   https://github.com/shinsenter/';
-    var PROJECT_NAME    = 'defer.js';
-    var CLASS_PREFIX    = 'defer-';
-    var CLASS_SUFFIX    = 'deferjs';
+  /*
+  |--------------------------------------------------------------------------
+  | DeferNoscript functions
+  |--------------------------------------------------------------------------
+  */
 
-    var COPY_COMMON     = 'font-size:14px;color:#fff;'+'padding:2px;border-radius:';
-    var COPY_TEXT       = '%c ' + PROJECT_NAME + ' ';
-    var COPY_STYLE      = COPY_COMMON + '4px;background:#2a313c';
+  if(!window.defer) return;
 
-    var JQUERY          = 'jQuery';
-    var NOOP            = Function();
-    var DATA_PREFIX     = 'data-';
-    var GET_ATTRIBUTE   = 'getAttribute';
-    var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
+  // For defer.php
+  var PROJECT_NAME = "defer.php";
+  var PROJECT_URL  = "https://code.shin.company/" + PROJECT_NAME;
 
-    var COMMON_EXCEPTIONS = ':not([' + DATA_PREFIX + 'lazied]):not([' + DATA_PREFIX + 'ignore])';
-    var COMMON_SELECTOR = '[' + DATA_PREFIX + 'src]' + COMMON_EXCEPTIONS;
+  // Copyright note on DevTools
+  var COPY_COMMON = "font-size:14px;color:#fff;" + "padding:2px;border-radius:";
+  var COPY_TEXT   = "%c " + PROJECT_NAME + " ";
+  var COPY_STYLE  = COPY_COMMON + "4px;background:#2a313c";
 
-    var ADD_EVENT_LISTENER = 'addEventListener';
-    var LOAD_EVENT = 'load';
+  /*
+  |--------------------------------------------------------------------------
+  | Common defines
+  |--------------------------------------------------------------------------
+  */
 
-    var IMG_SELECTOR = [
-        'img' + COMMON_SELECTOR,
-        'picture' + COMMON_EXCEPTIONS,
-        '[data-style]' + COMMON_EXCEPTIONS
-    ].join(',');
+  var FN_JQUERY = "jQuery";
+  var FN_NOOP   = Function();
 
-    var IFRAME_SELECTOR = [
-        'iframe' + COMMON_SELECTOR,
-        'frame' + COMMON_SELECTOR,
-        'audio' + COMMON_EXCEPTIONS,
-        'video' + COMMON_EXCEPTIONS
-    ].join(',');
+  var log      = (console.log || FN_NOOP).bind(console);
+  var defer    = window.defer;
+  var deferimg = window.deferimg || FN_NOOP;
+  var old_ready;
 
-    var helper = {
-        c: CLASS_PREFIX + 'lazied',
-        l: CLASS_PREFIX + 'loading',
-        d: CLASS_PREFIX + 'loaded',
-        h: document.getElementsByTagName('html')
-            .item(0),
-        t: 10
+  /*
+  |--------------------------------------------------------------------------
+  | Common variables
+  |--------------------------------------------------------------------------
+  */
+
+  var DATA_PREFIX = "data-";
+  var DATA_IGNORE = DATA_PREFIX + "ignore";
+
+  var COMMON_EXCEPTIONS =
+    ":not([" + DATA_PREFIX + "lazied]):not([" + DATA_IGNORE + "])";
+  var MEDIA_SELECTOR = [
+    "[data-src]"    + COMMON_EXCEPTIONS,
+    "[data-srcset]" + COMMON_EXCEPTIONS,
+    "[data-sizes]"  + COMMON_EXCEPTIONS,
+    "[data-style]"  + COMMON_EXCEPTIONS,
+  ].join(",");
+
+  var GET_ATTRIBUTE      = "getAttribute";
+  var ADD_EVENT_LISTENER = "addEventListener";
+  var LOAD_EVENT         = "load";
+  var ERROR_EVENT         = "error";
+  var PAGESHOW_EVENT     = "pageshow";
+
+  /*
+  |--------------------------------------------------------------------------
+  | Init helper instance
+  |--------------------------------------------------------------------------
+  */
+
+  var CLASS_PREFIX = "defer-";
+  var CLASS_SUFFIX = "deferjs";
+
+  var helper = {
+    c: CLASS_PREFIX + "lazied",
+    l: CLASS_PREFIX + "loading",
+    d: CLASS_PREFIX + "loaded",
+    h: document.getElementsByTagName("html").item(0),
+    t: window[delayTime] || 10,
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | DOM helpers
+  |--------------------------------------------------------------------------
+  */
+
+  function classFilter(haystack, needle) {
+    return haystack.split(" ").filter(function (v) {
+      return v != "" && v != needle;
+    });
+  }
+
+  function addClass(element, classname) {
+    var c = classFilter(element.className, classname);
+    c.push(classname);
+    element.className = c.join(" ");
+  }
+
+  function removeClass(element, classname) {
+    element.className = classFilter(element.className, classname).join(" ");
+  }
+
+  /**
+   * This function aims to provide both function
+   * throttling and debouncing in as few bytes as possible.
+   *
+   * @param   {function}  func        The file URL
+   * @param   {integer}   delay       The delay time to create the tag
+   * @param   {boolean}   throttle    Set false to debounce, true to throttle
+   * @param   {integer}   ticker      Placeholder for holding timer
+   * @returns {function}              Return a new function
+   */
+  function debounce(func, delay, throttle, ticker) {
+    return function () {
+      var context = this;
+      var args = arguments;
+
+      if (!throttle) {
+        clearTimeout(ticker);
+      }
+
+      if (!throttle || !ticker) {
+        ticker = setTimeout(function () {
+          ticker = null;
+          func.apply(context, args);
+        }, delay);
+      }
     };
+  }
 
-    var log         = (console.log || NOOP).bind(console);
-    var defer       = window.defer || NOOP;
-    var deferimg    = window.deferimg || NOOP;
-    var deferiframe = window.deferiframe || NOOP;
-    var old_ready;
+  /*
+  |--------------------------------------------------------------------------
+  | Lazy-loading methods
+  |--------------------------------------------------------------------------
+  */
 
-    function copyright() {
-        if (IS_CHROME) {
-            log(COPY_TEXT, COPY_STYLE);
+  function lazyload(selector, options) {
+    deferimg(
+      selector,
+      helper.t,
+      helper.c,
+      function (media, timer, match, src, regex) {
+        regex = /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        src = media[GET_ATTRIBUTE](DATA_PREFIX + "src");
+
+        if ((match = regex.exec(src)) !== null) {
+          media.style.background =
+            "transparent url(https://img.youtube.com/vi/" +
+            match[1] +
+            "/hqdefault.jpg) 50% 50% / cover no-repeat";
         }
-
-        log([
-            'Optimized by ' + PROJECT_NAME,
-            '(c) 2019 AppSeeds',
-            'Github: ' + PROJECT_URL + PROJECT_NAME,
-            'PHP lib:' + PROJECT_URL + 'defer.php'
-        ].join('\n'));
-    }
-
-    /**
-     * This function aims to provide both function
-     * throttling and debouncing in as few bytes as possible.
-     *
-     * @param   {function}  func        The file URL
-     * @param   {integer}   delay       The delay time to create the tag
-     * @param   {boolean}   throttle    Set false to debounce, true to throttle
-     * @param   {integer}   ticker      Placeholder for holding timer
-     * @returns {function}              Return a new function
-     */
-    function debounce(func, delay, throttle, ticker) {
-        return function () {
-            var context = this;
-            var args    = arguments;
-
-            if (!throttle) {
-                clearTimeout(ticker);
-            }
-
-            if (!throttle || !ticker) {
-                ticker = setTimeout(function () {
-                    ticker = null;
-                    func.apply(context, args);
-                }, delay);
-            }
-        }
-    }
-
-    /*
-     * Add/remove element classnames
-     */
-    function classFilter(haystack, needle) {
-        return haystack.split(' ').filter(function (v) {
-            return v != '' && v != needle;
-        });
-    }
-
-    function addClass(element, classname) {
-        var c = classFilter(element.className, classname);
-        c.push(classname);
-        element.className = c.join(' ');
-    }
-
-    function removeClass(element, classname) {
-        element.className = classFilter(element.className, classname).join(' ');
-    }
-
-    /*
-     * Lazy-load img and iframe elements
-     */
-    function mediafilter(media) {
-        var timer,
-            match,
-            src     = media[GET_ATTRIBUTE](DATA_PREFIX + 'src'),
-            pattern = /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-
-        addClass(media, helper.l);
 
         function onload() {
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
-            }
+          if (timer) {
+            clearTimeout(timer);
+          }
 
-            removeClass(media, helper.l);
-            addClass(media, helper.d);
+          removeClass(media, helper.l);
+          addClass(media, helper.d);
         }
 
-        if ((match = pattern.exec(src)) !== null) {
-            media.style.background = 'transparent url(https://img.youtube.com/vi/' + match[1] + '/hqdefault.jpg) 50% 50% / cover no-repeat';
-        }
-
-        if (media.hasAttribute(DATA_PREFIX + 'ignore') ||
-            (src && media.src == src) ||
-            (!src && media[GET_ATTRIBUTE](DATA_PREFIX + 'style'))) {
-            onload();
+        if (
+          media.hasAttribute(DATA_IGNORE) ||
+          (src && media.src == src) ||
+          (!src && media[GET_ATTRIBUTE](DATA_PREFIX + "style"))
+        ) {
+          onload();
         } else {
-            media[ADD_EVENT_LISTENER](LOAD_EVENT, onload);
-            timer = setTimeout(onload, 3000);
+          timer = setTimeout(onload, 3000);
+          media[ADD_EVENT_LISTENER](LOAD_EVENT, onload);
+          media[ADD_EVENT_LISTENER](ERROR_EVENT, onload);
         }
-    }
+      },
+      options || { rootMargin: "150%" }
+    );
+  }
 
-    function imgloader() {
-        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {
-            rootMargin: '150%'
-        });
-    }
-
-    function iframeloader() {
-        deferiframe(IFRAME_SELECTOR, helper.t, helper.c, mediafilter, {
-            rootMargin: '200%'
-        });
-    }
-
-    function defermedia() {
-        imgloader();
-        iframeloader();
-    }
-
-    function deferscript() {
-        if (!old_ready && JQUERY in window && 'fn' in window[JQUERY]) {
-            old_ready = window[JQUERY].fn.ready;
-
-            window[JQUERY].fn.ready = function (fn) {
-                defer(function () {
-                    old_ready(fn)
-                });
-
-                return this;
-            }
-        }
-    }
-
-    // Expose global methods
-    helper.copyright    = copyright;
-    helper.debounce     = debounce;
-    helper.defermedia   = defermedia;
-    helper.addClass     = addClass;
-    helper.removeClass  = removeClass;
-
-    removeClass(helper.h, 'no-' + CLASS_SUFFIX);
+  function defermedia() {
+    lazyload(MEDIA_SELECTOR);
+    removeClass(helper.h, "no-" + CLASS_SUFFIX);
     addClass(helper.h, CLASS_SUFFIX);
+  }
 
-    window[name] = helper;
-    window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript);
+  /*
+  |--------------------------------------------------------------------------
+  | Print library info into DevTools console
+  |--------------------------------------------------------------------------
+  */
 
-    defermedia();
-    copyright();
+  function copyright() {
+    if (
+      typeof window.chrome == "object" &&
+      window.navigator.userAgent.indexOf("Trident/") == -1
+    )
+      log(COPY_TEXT, COPY_STYLE);
 
-})(this, document, console, 'defer_helper');
+    log(
+      [
+        "Optimized by " + PROJECT_NAME,
+        "(c) 2021 AppSeeds",
+        "Github: " + PROJECT_URL,
+      ].join("\n")
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Insert helper instance to global
+  |--------------------------------------------------------------------------
+  */
+
+  helper.copyright = copyright;
+  helper.debounce = debounce;
+  helper.defermedia = defermedia;
+  helper.addClass = addClass;
+  helper.removeClass = removeClass;
+  window[name] = helper;
+
+  /*
+  |--------------------------------------------------------------------------
+  | Replace jQuery.ready by defer.js
+  |--------------------------------------------------------------------------
+  */
+
+  function fakeJquery() {
+    if (!old_ready && FN_JQUERY in window && "fn" in window[FN_JQUERY]) {
+      old_ready = window[FN_JQUERY].fn.ready;
+
+      window[FN_JQUERY].fn.ready = function (fn) {
+        defer(function () {
+          old_ready(fn);
+        });
+
+        return this;
+      };
+    }
+  }
+
+  window[ADD_EVENT_LISTENER](
+    "on" + PAGESHOW_EVENT in window ? PAGESHOW_EVENT : LOAD_EVENT,
+    fakeJquery
+  );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Start defer elements
+  |--------------------------------------------------------------------------
+  */
+
+  defermedia();
+  copyright();
+
+  //- end of file -----------------------------------------------------------
+})(this, document, console, "defer_helper", "dataLayer", "DEFERJS_DELAY");
