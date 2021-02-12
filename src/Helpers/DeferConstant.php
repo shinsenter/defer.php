@@ -76,6 +76,7 @@ class DeferConstant
         'data-lazy',
         'data-lazy-src',
         'data-original',
+        'data-img-url',
     ];
 
     // Unify the srcset attribute from other related attributes
@@ -131,7 +132,7 @@ class DeferConstant
     // -------------------------------------------------------------------------
 
     // Source files
-    const SRC_DEFERJS_CDN      = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@1.1.15/dist/defer_plus.min.js';
+    const SRC_DEFERJS_CDN      = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.0.0/dist/defer_plus.min.js';
     const SRC_POLYFILL_CDN     = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
     const SRC_DEFERJS_FALLBACK = DEFER_PHP_ROOT . '/node_modules/@shinsenter/defer.js/dist/defer_plus.min.js';
     const SCR_DEFERJS_CACHE    = DEFER_PHP_ROOT . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
@@ -153,8 +154,11 @@ class DeferConstant
     // Some well-known third-party patterns
     // See: https://gist.github.com/lukecav/9931c3f6e402e23f58065d6b2665ef5b
     const WELL_KNOWN_THIRDPARTY = [
+        '.addthis.com',
         '.ampproject.org',
         '.bootstrapcdn.com',
+        '.disqus.com',
+        '.doubleclick.net',
         '.fontawesome.com',
         '.google-analytics.com',
         '.googlesyndication.com',
@@ -166,7 +170,6 @@ class DeferConstant
         '.twimg.com',
         '.wp.com',
         '.youtube.com',
-        '//adservice.google.',
         '//api.pinterest.com',
         '//apis.google.com',
         '//cdnjs.cloudflare.com',
@@ -183,10 +186,8 @@ class DeferConstant
         '//platform.twitter.com',
         '//s.w.org',
         '//s.yimg.',
-        '//s7.addthis.com',
-        '//securepubads.g.doubleclick.net',
-        '//sitename.disqus.com',
         '//syndication.twitter.com',
         '//youtube.com',
+        'adservice.google.',
     ];
 }

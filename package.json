@@ -3,7 +3,7 @@
   "author": "Mai Nhut Tan <shin@shin.company>",
   "license": "MIT",
   "dependencies": {
-    "@shinsenter/defer.js": "^1.1.15"
+    "@shinsenter/defer.js": "^2.0.0"
   },
   "devDependencies": {
     "clean-css-cli": "latest",

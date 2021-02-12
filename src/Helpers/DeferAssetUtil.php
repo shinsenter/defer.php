@@ -106,6 +106,12 @@ class DeferAssetUtil
      */
     public static function isThirdParty($url, $lookup)
     {
+        $host = '';
+
+        if (!empty(($_SERVER['HTTP_HOST']))) {
+            $host = '//' . $_SERVER['HTTP_HOST'];
+        }
+
         if ($lookup instanceof DeferOptions) {
             $lookup = $lookup->getWellKnown3rd();
         } elseif (empty($lookup) || !is_array($lookup)) {
@@ -113,6 +119,13 @@ class DeferAssetUtil
         }
 
         foreach ($lookup as $pattern) {
+            // If server origin esists in
+            // third-party list, always returns false
+            if (strstr($host, $pattern) !== false) {
+                return false;
+            }
+
+            // Else check the URL if it is a third-party
             if (strstr($url, $pattern) !== false) {
                 return true;
             }

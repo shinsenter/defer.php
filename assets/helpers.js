@@ -44,7 +44,7 @@
   |--------------------------------------------------------------------------
   */
 
-  if(!window.defer) return;
+  if(!window.Defer) return;
 
   // For defer.php
   var PROJECT_NAME = "defer.php";
@@ -65,8 +65,7 @@
   var FN_NOOP   = Function();
 
   var log      = (console.log || FN_NOOP).bind(console);
-  var defer    = window.defer;
-  var deferimg = window.deferimg || FN_NOOP;
+  var Defer    = window.Defer;
   var old_ready;
 
   /*
@@ -167,7 +166,7 @@
   */
 
   function lazyload(selector, options) {
-    deferimg(
+    Defer.dom(
       selector,
       helper.t,
       helper.c,
@@ -259,7 +258,7 @@
       old_ready = window[FN_JQUERY].fn.ready;
 
       window[FN_JQUERY].fn.ready = function (fn) {
-        defer(function () {
+        Defer(function () {
           old_ready(fn);
         });
 

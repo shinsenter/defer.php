@@ -2,20 +2,26 @@
 
 🚀 A PHP library that aims to help you concentrate on web performance optimization.
 
+- **Package**: [@shinsenter/defer.php](https://www.npmjs.com/package/@shinsenter/defer.php)
+- **Version**: 2.0
+- **Author**: Mai Nhut Tan <shin@shin.company>
+- **Copyright**: 2021 AppSeeds <https://code.shin.company/>
+- **License**: [MIT](https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE)
+
 [![GitHub](https://img.shields.io/github/license/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php)
 [![GitHub Release Date](https://img.shields.io/github/release-date/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php/releases)
-
-[![CodeFactor](https://www.codefactor.io/repository/github/shinsenter/defer.php/badge)](https://www.codefactor.io/repository/github/shinsenter/defer.php)
-[![Libraries.io dependency status for GitHub repo](https://img.shields.io/librariesio/github/shinsenter/defer.php.svg)](https://libraries.io/packagist/shinsenter%2Fdefer.php)
+[![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/shinsenter/defer.php)](https://www.codefactor.io/repository/github/shinsenter/defer.php)
 [![Post an issue](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/shinsenter/defer.php/issues)
 [![GitHub issues](https://img.shields.io/github/issues-raw/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php/issues/new)
 
+* * *
 
-🔌 Powered by [defer.js](https://github.com/shinsenter/defer.js).
-Defer almost anything, easily speed up your website. Easily speed up your website!
+🥇 Powered by [defer.js](https://github.com/shinsenter/defer.js) - A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
+
+* * *
 
 
-## TODO
+## Features
 
 - [x] Simplify library options
 - [x] Embed defer.js library
@@ -39,17 +45,9 @@ Defer almost anything, easily speed up your website. Easily speed up your websit
 - [x] Attribute to ignore lazyloading the element
 - [x] Optimize AMP document
 - [x] Minify HTML output
-- [x] Update README.md
 
 
 ## Installation
-
-
-### Backward compatible
-
-This library recommends that the server is running PHP version 7.3 or greater for better performance and support.
-
-Library's options of v2.x version are not backward compatible with previous release's options. Please read the library manual for more details.
 
 
 ### Install with composer
@@ -77,6 +75,13 @@ require_once __DIR__ . '/vendor/autoload.php';
 // TODO: your code is from here
 
 ```
+
+
+### Backward compatible
+
+This library recommends that the server is running PHP version 7.3 or greater for better performance and support.
+
+Library's options of v2.x version are not backward compatible with previous release's options. Please read the library manual for more details.
 
 
 ## Usages
@@ -127,7 +132,7 @@ $options = [
   'manually_add_deferjs' => false,
 
   // URL to defer.js javascript file.
-  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@1.1.15/dist/defer_plus.min.js
+  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.0.0/dist/defer_plus.min.js
   'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
 
   // URL to javascript contains fixes.
@@ -350,31 +355,35 @@ Even when the library is turned off, above tags that contain `defer` attribute a
 Only few options of this library are applicable to AMP pages (minifying HTML content for example).
 
 
-## Plugin for WordPress
+## My works
 
-🚀 [defer-wordpress](https://wordpress.org/plugins/shins-pageload-magic/) is a WordPress plugin that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the WordPress page.
+### Defer.js
 
+https://github.com/shinsenter/defer.js/
 
-## Keep in touch
-
-- [Become a stargazer](https://github.com/shinsenter/defer.php/stargazers)
-- [Report an issue](https://github.com/shinsenter/defer.php/issues/new)
-- [Keep up-to-date with new releases](https://github.com/shinsenter/defer.php/releases)
+🥇 A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
 
 
-[![Donate via Paypal](https://pics.paypal.com/00/s/NTQ4M2ZiN2YtZDg1My00ZmRiLWJiMDQtMTFlMjg2ODY2N2Uy/file.PNG)](https://www.paypal.me/shinsenter)
+### Wordpress plugin
 
-[![Become a sponsor](https://c5.patreon.com/external/logo/become_a_patron_button@2x.png)](https://www.patreon.com/appseeds)
+https://github.com/shinsenter/defer-wordpress/
+
+⚡️ A native, blazing fast lazy loader. ✅ Legacy browsers support (IE9+). 💯 SEO friendly. 🧩 Lazy load almost anything.
 
 
-## Follow my defer.js project:
+### Laravel package
 
-- [https://github.com/shinsenter/defer.js/releases](https://github.com/shinsenter/defer.js/releases)
-- [https://github.com/shinsenter/defer.js/stargazers](https://github.com/shinsenter/defer.js/stargazers)
+Under development.
 
----
 
-Released under the MIT license.
-[https://github.com/shinsenter/defer.php/blob/master/LICENSE](https://github.com/shinsenter/defer.php/blob/master/LICENSE)
+## Support my activities
 
-Copyright (c) 2021 Mai Nhut Tan &lt;[shin@shin.company](mailto:shin@shin.company)&gt;
+[![Donate via Paypal](https://img.shields.io/badge/Donate-Paypal-blue)](https://www.paypal.me/shinsenter)
+[![Become a sponsor](https://img.shields.io/badge/Donate-Patreon-orange)](https://www.patreon.com/appseeds)
+[![Become a stargazer](https://img.shields.io/badge/Support-Stargazer-yellow)](https://github.com/shinsenter/defer.php/stargazers)
+[![Report an issue](https://img.shields.io/badge/Support-Issues-red)](https://github.com/shinsenter/defer.php/issues/new)
+
+
+* * *
+
+From Vietnam 🇻🇳 with love.
