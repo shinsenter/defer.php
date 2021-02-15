@@ -5,12 +5,12 @@
   "dependencies": {
     "@shinsenter/defer.js": "^2.0.0"
   },
-  "devDependencies": {
-    "clean-css-cli": "latest",
-    "uglify-js": "latest"
-  },
   "scripts": {
-    "css": "cleancss -o public/styles.min.css assets/styles.css",
-    "js": "uglifyjs --config-file assets/.uglifyjs -o public/helpers.min.js assets/helpers.js"
+    "cleanup": "rm -rf ./node_modules package-lock.json",
+    "tools": "npm -g i js-beautify uglify-js clean-css-cli",
+    "pull": "npm run cleanup && npm run tools && npm i --prod",
+    "lint": "eslint --config assets/.eslintrc --ext .js assets --fix",
+    "js": "uglifyjs --config-file assets/.uglifyjs -o public/helpers.min.js assets/helpers.js",
+    "css": "cleancss -o public/styles.min.css assets/styles.css"
   }
 }

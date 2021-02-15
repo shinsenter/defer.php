@@ -161,10 +161,11 @@ class MediaResolver extends DeferResolver implements
 
         // Add color
         if ($this->isImg() && $this->options->use_color_placeholder) {
-            $grey  = $this->options->use_color_placeholder === 'grey';
-            $style = implode(';', array_filter(array_unique([
-                $this->node->getAttribute('style'),
-                DeferAssetUtil::getBgColortyle($grey),
+            $original = $this->node->getAttribute('style');
+            $grey     = $this->options->use_color_placeholder === 'grey';
+            $style    = implode(';', array_filter(array_unique([
+                $original,
+                DeferAssetUtil::getBgColorStyle($grey),
             ])));
 
             $this->node->setAttribute('style', $style);

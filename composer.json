@@ -64,14 +64,14 @@
         "test": "@php tests/v2/test.php --ansi",
         "bf": "blackfire run php tests/v2/test.php --ansi",
         "assets": [
-            "npm run js",
-            "npm run css"
+            "npm run lint --ansi",
+            "npm run js --ansi",
+            "npm run css --ansi"
         ],
         "pull": [
-            "rm -rf ./cache/*/ ./vendor/ ./node_modules/ ./composer.lock ./package-lock.json",
+            "rm -rf ./cache/*/ ./vendor/ ./composer.lock",
             "composer update -o -a -n --no-dev --prefer-dist --ansi",
-            "npm i --ansi",
-            "npm up --ansi"
+            "npm run pull --ansi"
         ],
         "docker": [
             "@pull",

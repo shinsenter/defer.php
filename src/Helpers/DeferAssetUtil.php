@@ -58,7 +58,7 @@ class DeferAssetUtil
      * @param  bool   $grey
      * @return string
      */
-    public static function getBgColortyle($grey = false)
+    public static function getBgColorStyle($grey = false)
     {
         if ($grey) {
             return sprintf(DeferConstant::TEMPLATE_CSS_GREY, rand(91, 99));

@@ -88,30 +88,24 @@ class DeferJs
     /**
      * Return new inline <script> node
      *
-     * @param  mixed       $withPolyfill
      * @return ElementNode
      */
-    public function getInlineScript(DocumentNode $dom, $withPolyfill = true)
+    public function getInlineScript(DocumentNode $dom)
     {
         static $defer;
 
         if (!isset($defer)) {
-            $defer = $this->getFromCache();
-
-            if ($withPolyfill) {
-                if ($this->isWebUrl($this->polyfill_src)) {
-                    $defer .= ';("deferscript"in window'
-                        . '&&("IntersectionObserver"in window'
-                        . '||deferscript("' . $this->polyfill_src
-                        . '","' . self::POLYFILL_ID . '",0)));';
-                }
-
-                if (file_exists($this->polyfill_src)) {
-                    $defer .= @file_get_contents($this->polyfill_src);
-                }
+            if ($this->isLocal($this->deferjs_src)) {
+                $defer = @file_get_contents($this->deferjs_src);
+            } else {
+                $defer = $this->getFromCache();
             }
 
-            $defer = DeferMinifier::minifyJs($defer);
+            $name = $this->isWebUrl($this->deferjs_src)
+                ? $this->deferjs_src
+                : '@shinsenter/defer.js';
+
+            $defer = '/*!' . $name . '*/' . PHP_EOL . DeferMinifier::minifyJs($defer);
         }
 
         return $dom->newNode('script', $defer, [
@@ -150,43 +144,47 @@ class DeferJs
 
     /**
      * Return new <script src="defer.js"> node
-     *
-     * @param  mixed       $withPolyfill
      * @return ElementNode
      */
-    public function getDeferJsNode(DocumentNode $dom, $withPolyfill = true)
+    public function getDeferJsNode(DocumentNode $dom)
     {
         // Fallback to inline script when a local path given
         if (!$this->isWebUrl($this->deferjs_src)) {
-            return $this->getInlineScript($dom, $withPolyfill);
+            return $this->getInlineScript($dom);
         }
 
-        static $content;
-
-        if (!isset($content) && $withPolyfill) {
-            if ($this->isWebUrl($this->polyfill_src)) {
-                $content .= '"deferscript"in window'
-                . '&&("IntersectionObserver"in window'
-                . '||deferscript("' . $this->polyfill_src
-                . '","' . self::POLYFILL_ID . '",0));';
-            }
-
-            if (file_exists($this->polyfill_src)) {
-                $content .= @file_get_contents($this->polyfill_src);
-            }
-        }
-
-        return $dom->newNode('script', $content, [
+        return $dom->newNode('script', [
             'id'  => self::DEFERJS_ID,
             'src' => $this->deferjs_src,
         ]);
     }
 
     /**
+     * Return polyfill script node
+     *
+     * @return null|ElementNode
+     */
+    public function getPolyfillNode(DocumentNode $dom)
+    {
+        static $script;
+
+        if (!isset($script)) {
+            if ($this->isWebUrl($this->polyfill_src)) {
+                $script = "'IntersectionObserver'in window||"
+                        . "document.write('<script src=\"" . $this->polyfill_src . "\"><\\/script>');";
+            } elseif ($this->isLocal($this->polyfill_src)) {
+                $script = @file_get_contents($this->polyfill_src);
+            }
+        }
+
+        return empty($script) ? null : $dom->newNode('script', $script, ['id' => self::POLYFILL_ID]);
+    }
+
+    /**
      * Return helper script node
      *
-     * @param  mixed       $default_defer_time
-     * @return ElementNode
+     * @param  mixed            $default_defer_time
+     * @return null|ElementNode
      */
     public function getHelperJsNode(DocumentNode $dom, $default_defer_time = null)
     {
@@ -201,13 +199,13 @@ class DeferJs
             }
         }
 
-        return $dom->newNode('script', $script, ['id' => self::HELPERS_JS]);
+        return empty($script) ? null : $dom->newNode('script', $script, ['id' => self::HELPERS_JS]);
     }
 
     /**
      * Return helper script node
      *
-     * @return ElementNode
+     * @return null|ElementNode
      */
     public function getHelperCssNode(DocumentNode $dom)
     {
@@ -217,7 +215,7 @@ class DeferJs
             $content = @file_get_contents(DEFER_PHP_ROOT . '/public/styles.min.css');
         }
 
-        return $dom->newNode('style', $content, ['id' => self::HELPERS_CSS]);
+        return empty($content) ? null : $dom->newNode('style', $content, ['id' => self::HELPERS_CSS]);
     }
 
     /*
@@ -331,11 +329,6 @@ class DeferJs
             return false;
         }
 
-        $name = $this->isWebUrl($this->deferjs_src)
-            ? $this->deferjs_src
-            : '@shinsenter/defer.js';
-
-        $defer = '/*! ' . $name . ' */' . PHP_EOL . $defer;
         $this->cache()->set($key ?: $this->cacheKey(), $defer, $duration);
 
         return $defer;

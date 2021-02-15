@@ -1,5 +1,5 @@
 # Dockerfile
-FROM php:7.1-zts
+FROM php:7-zts
 
 # Install Composer, NPM
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \

@@ -193,29 +193,34 @@ class Defer
         // Embed defer.js library
         if (!$dom->isAmpHtml()) {
             $node = null;
+            $lib  = $this->deferjs;
 
             if ($this->options->manually_add_deferjs) {
-                $node = $this->deferjs->getInlineGuide($dom, true)->optimize($this->options);
+                $node = $lib->getInlineGuide($dom, true)->optimize($this->options);
             } else {
-                $this->deferjs->cleanDeferTags($dom);
+                $lib->cleanDeferTags($dom);
 
                 if ($this->options->inline_deferjs) {
-                    $node = $this->deferjs->getInlineScript($dom, true);
+                    $node = $lib->getInlineScript($dom, true);
                 } else {
-                    $node = $this->deferjs->getDeferJsNode($dom, true);
+                    $node = $lib->getDeferJsNode($dom, true);
                 }
             }
 
             // Optimize the script tag
             if (!empty($node)) {
                 $node->optimize($this->options);
+                $lib->cleanHelperTags($this->document);
 
-                // Append helper nodes
-                $this->deferjs->cleanHelperTags($this->document);
+                // Append helper CSS
+                $node->precede($lib->getHelperCssNode($this->document));
 
+                // Append helper script
                 $defer_time = $this->options->default_defer_time;
-                $node->precede($this->deferjs->getHelperCssNode($this->document));
-                $node->follow($this->deferjs->getHelperJsNode($this->document, $defer_time));
+                $node->follow($lib->getHelperJsNode($this->document, $defer_time));
+
+                // Append polyfill
+                $node->follow($lib->getPolyfillNode($this->document));
             }
         }
 

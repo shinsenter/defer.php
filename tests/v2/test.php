@@ -50,6 +50,7 @@ $defer = new AppSeeds\Defer([
 // Debug IN/OUT paths
 debug('INPUT:  ' . INPUT);
 debug('OUTPUT: ' . OUTPUT);
+
 // Test set
 $list = [
     'bike_detail_pc.html'  => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=pc',
