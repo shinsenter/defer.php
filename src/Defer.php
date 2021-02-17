@@ -38,7 +38,6 @@ class Defer
 {
     protected $options;
     protected $document;
-    protected $deferjs;
 
     /**
      * Hotfix array
@@ -85,12 +84,6 @@ class Defer
         ];
 
         $this->options = new DeferOptions($options ?: []);
-        $this->deferjs = new DeferJs(
-            $this->options->deferjs_src,
-            $this->options->polyfill_src,
-            $this->options->offline_cache_path,
-            $this->options->offline_cache_ttl
-        );
 
         $this->fromHtml($html);
     }
@@ -193,7 +186,7 @@ class Defer
         // Embed defer.js library
         if (!$dom->isAmpHtml()) {
             $node = null;
-            $lib  = $this->deferjs;
+            $lib  = $this->deferjs();
 
             if ($this->options->manually_add_deferjs) {
                 $node = $lib->getInlineGuide($dom, true)->optimize($this->options);
@@ -297,7 +290,12 @@ class Defer
      */
     public function deferjs()
     {
-        return $this->deferjs;
+        return new DeferJs(
+            $this->options->deferjs_src,
+            $this->options->polyfill_src,
+            $this->options->offline_cache_path,
+            $this->options->offline_cache_ttl
+        );
     }
 
     /**

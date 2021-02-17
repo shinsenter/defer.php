@@ -357,7 +357,8 @@ class DeferOptions
             'debug_mode' => !empty($_REQUEST[DeferConstant::ARG_DEBUG]),
 
             // Manually add deferjs
-            'manually_add_deferjs' => false,
+            'manually_add_deferjs'   => false,
+            'deferjs_type_attribute' => 'deferjs',
 
             // Asset sources
             'deferjs_src'  => DeferConstant::SRC_DEFERJS_CDN,
