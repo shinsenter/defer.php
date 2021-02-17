@@ -92,21 +92,17 @@ class DeferJs
      */
     public function getInlineScript(DocumentNode $dom)
     {
-        static $defer;
+        if ($this->isLocal($this->deferjs_src)) {
+            $defer = @file_get_contents($this->deferjs_src);
+        } else {
+            $defer = $this->getFromCache();
+        }
 
-        if (!isset($defer)) {
-            if ($this->isLocal($this->deferjs_src)) {
-                $defer = @file_get_contents($this->deferjs_src);
-            } else {
-                $defer = $this->getFromCache();
-            }
-
-            $name = $this->isWebUrl($this->deferjs_src)
+        $name = $this->isWebUrl($this->deferjs_src)
                 ? $this->deferjs_src
                 : '@shinsenter/defer.js';
 
-            $defer = '/*!' . $name . '*/' . PHP_EOL . DeferMinifier::minifyJs($defer);
-        }
+        $defer = '/*!' . $name . '*/' . PHP_EOL . DeferMinifier::minifyJs($defer);
 
         return $dom->newNode('script', $defer, [
             'id' => self::DEFERJS_ID,
@@ -166,15 +162,11 @@ class DeferJs
      */
     public function getPolyfillNode(DocumentNode $dom)
     {
-        static $script;
-
-        if (!isset($script)) {
-            if ($this->isWebUrl($this->polyfill_src)) {
-                $script = "'IntersectionObserver'in window||"
+        if ($this->isWebUrl($this->polyfill_src)) {
+            $script = "'IntersectionObserver'in window||"
                         . "document.write('<script src=\"" . $this->polyfill_src . "\"><\\/script>');";
-            } elseif ($this->isLocal($this->polyfill_src)) {
-                $script = @file_get_contents($this->polyfill_src);
-            }
+        } elseif ($this->isLocal($this->polyfill_src)) {
+            $script = @file_get_contents($this->polyfill_src);
         }
 
         return empty($script) ? null : $dom->newNode('script', $script, ['id' => self::POLYFILL_ID]);
