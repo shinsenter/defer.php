@@ -27,7 +27,7 @@ class BugAmpAttribute implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function before($html)
+    public function before($html, $options)
     {
         $find  = implode('|', [preg_quote('&#x26A1;', '@'), '⚡', 'amp']);
         $regex = '@(<html[^>]*)(' . $find . ')([^>]*>)@iu';
@@ -42,7 +42,7 @@ class BugAmpAttribute implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function after($html)
+    public function after($html, $options)
     {
         return $html;
     }

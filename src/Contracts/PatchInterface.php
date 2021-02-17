@@ -23,17 +23,19 @@ interface PatchInterface
      * Escape HTML before Defer::fromHtml()
      *
      * @param  string $html
+     * @param  mixed  $options
      * @return string
      */
-    public function before($html);
+    public function before($html, $options);
 
     /**
      * Render HTML after Defer::toHtml()
      *
      * @param  string $html
+     * @param  mixed  $options
      * @return string
      */
-    public function after($html);
+    public function after($html, $options);
 
     /**
      * Cleanup

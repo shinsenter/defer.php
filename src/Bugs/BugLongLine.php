@@ -32,7 +32,7 @@ class BugLongLine implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function before($html)
+    public function before($html, $options)
     {
         $this->_bug72288_body = preg_match('/(<body[^>]*>)/mi', $html, $match) ? $match[1] : null;
 
@@ -42,7 +42,7 @@ class BugLongLine implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function after($html)
+    public function after($html, $options)
     {
         if (!empty($this->_bug72288_body)) {
             $html = preg_replace('/(<body[^>]*>)/mi', $this->_bug72288_body, $html, 1);

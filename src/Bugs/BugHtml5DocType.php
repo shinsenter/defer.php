@@ -30,7 +30,7 @@ class BugHtml5DocType implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function before($html)
+    public function before($html, $options)
     {
         return $html;
     }
@@ -38,7 +38,7 @@ class BugHtml5DocType implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function after($html)
+    public function after($html, $options)
     {
         // Remove XML meta
         $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);

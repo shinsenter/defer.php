@@ -39,7 +39,7 @@ class BugCharset implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function before($html)
+    public function before($html, $options)
     {
         if (empty($this->charset)) {
             $this->charset = $this->detectCharset($html);
@@ -54,7 +54,7 @@ class BugCharset implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function after($html)
+    public function after($html, $options)
     {
         $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
 

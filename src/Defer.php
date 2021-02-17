@@ -349,7 +349,7 @@ class Defer
     protected function patchBefore(&$html)
     {
         foreach ($this->_patchers as $fixer) {
-            $html = $fixer->before($html);
+            $html = $fixer->before($html, $this->options);
         }
 
         return $html;
@@ -367,7 +367,7 @@ class Defer
         $patchers = array_reverse($this->_patchers);
 
         foreach ($patchers as $fixer) {
-            $html = $fixer->after($html);
+            $html = $fixer->after($html, $this->options);
             $fixer->cleanup();
             unset($fixer);
         }

@@ -29,41 +29,47 @@ class BugTemplateScripts implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function before($html)
+    public function before($html, $options)
     {
-        $html = preg_replace_callback('/(<script[^>]*>)(.*?)(<\/script>)/si', function ($matches) {
-            $open = strtolower($matches[1]);
-            $content = $matches[2];
+        $type = ' type="' . $options->deferjs_type_attribute . '"';
 
-            // Escape invalid syntax from javascript
-            if (strstr($open, ' type=') === false
+        $html = preg_replace_callback(
+            '/(<script[^>]*>)(.*?)(<\/script>)/si',
+            function ($matches) use ($type) {
+                $open = strtolower($matches[1]);
+                $content = $matches[2];
+
+                // Escape invalid syntax from javascript
+                if (strstr($open, ' type=') === false
                 || strstr($open, '/javascript') !== false
-                || strstr($open, ' type="deferjs"') !== false) {
-                $content = preg_replace([
-                    // Strip HTML comments
-                    '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/',
+                || strstr($open, ' type="' . $type . '"') !== false) {
+                    $content = preg_replace([
+                        // Strip HTML comments
+                        '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/',
 
-                    // Fix closing HTML tags inside script
-                    '/<\/([^>]*)>/',
+                        // Fix closing HTML tags inside script
+                        '/<\/([^>]*)>/',
 
-                    // Remove HTML comment from script
-                    '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$|\s*\/\/$)/',
+                        // Remove HTML comment from script
+                        '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$|\s*\/\/$)/',
 
-                    // Fix yen symbols to backslashes
-                    '/\\\/',
-                ], ['', '<&#92;/$1>', '', '&#92;'], trim($content));
-            }
+                        // Fix yen symbols to backslashes
+                        '/\\\/',
+                    ], ['', '<&#92;/$1>', '', '&#92;'], trim($content));
+                }
 
-            // Backup all scripts contain html-like content
-            if (preg_match('/<\/([^>]*)>/', $content)) {
-                $placeholder = '/** ' . uniqid('@@@SCRIPT@@@:') . ' **/';
-                $this->_script_backups[$placeholder] = $content;
-                $content = $placeholder;
-            }
+                // Backup all scripts contain html-like content
+                if (preg_match('/<\/([^>]*)>/', $content)) {
+                    $placeholder = '/** ' . uniqid('@@@SCRIPT@@@:') . ' **/';
+                    $this->_script_backups[$placeholder] = $content;
+                    $content = $placeholder;
+                }
 
-            // Return modified tag
-            return "{$matches[1]}{$content}{$matches[3]}";
-        }, $html);
+                // Return modified tag
+                return "{$matches[1]}{$content}{$matches[3]}";
+            },
+            $html
+        );
 
         return $html;
     }
@@ -71,7 +77,7 @@ class BugTemplateScripts implements PatchInterface
     /**
      * {@inheritdoc}
      */
-    public function after($html)
+    public function after($html, $options)
     {
         // Restore scripts from backup
         if (!empty($this->_script_backups)) {
