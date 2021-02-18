@@ -369,8 +369,9 @@ class DeferOptions
             'offline_cache_ttl'  => 86400,
 
             // Copyright
-            'copyright'      => DeferConstant::TXT_SHORT_COPYRIGHT,
-            'long_copyright' => DeferConstant::TXT_LONG_COPYRIGHT,
+            'copyright'         => DeferConstant::TXT_SHORT_COPYRIGHT,
+            'long_copyright'    => DeferConstant::TXT_LONG_COPYRIGHT,
+            'console_copyright' => null,
 
             // Library injection
             'inline_deferjs'     => true,

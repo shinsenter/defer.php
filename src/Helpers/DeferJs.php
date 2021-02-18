@@ -175,11 +175,15 @@ class DeferJs
     /**
      * Return helper script node
      *
-     * @param  mixed            $default_defer_time
+     * @param  int              $default_defer_time
+     * @param  null|string      $copy
      * @return null|ElementNode
      */
-    public function getHelperJsNode(DocumentNode $dom, $default_defer_time = null)
-    {
+    public function getHelperJsNode(
+        DocumentNode $dom,
+        $default_defer_time = null,
+        $copy = null
+    ) {
         static $script;
 
         if (!isset($script)) {
@@ -189,6 +193,11 @@ class DeferJs
                 $script = 'var ' . DeferConstant::JS_GLOBAL_DELAY_VAR
                     . '=' . $default_defer_time . ';' . $script;
             }
+        }
+
+        if ($script && $copy) {
+            $copy   = '[\'' . strtr($copy, ["\n" => '\n', "\r" => '\n', "'" => '\\\'']) . '\']';
+            $script = preg_replace('#\[\'Optimized[^\]]+\]#i', $copy, $script);
         }
 
         return empty($script) ? null : $dom->newNode('script', $script, ['id' => self::HELPERS_JS]);

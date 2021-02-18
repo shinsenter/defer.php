@@ -210,7 +210,8 @@ class Defer
 
                 // Append helper script
                 $defer_time = $this->options->default_defer_time;
-                $node->follow($lib->getHelperJsNode($this->document, $defer_time));
+                $copy       = $this->options->console_copyright;
+                $node->follow($lib->getHelperJsNode($this->document, $defer_time, $copy));
 
                 // Append polyfill
                 $node->follow($lib->getPolyfillNode($this->document));
