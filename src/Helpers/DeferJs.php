@@ -210,6 +210,23 @@ class DeferJs
         return empty($content) ? null : $dom->newNode('style', $content, ['id' => self::HELPERS_CSS]);
     }
 
+    /**
+     * Get script when using custom defer type
+     *
+     * @param  mixed            $type
+     * @return null|ElementNode
+     */
+    public function getCustomDeferTypeNode(DocumentNode $dom, $type)
+    {
+        if ($type == DeferConstant::TXT_DEFAULT_DEFERJS) {
+            return null;
+        }
+
+        $script = sprintf('Defer.all(\'script[type="%s"]\')', $type);
+
+        return $dom->newNode('script', $script);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helper methods

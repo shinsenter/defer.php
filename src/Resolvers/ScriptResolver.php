@@ -74,7 +74,7 @@ class ScriptResolver extends DeferResolver implements
         $type = strtolower($this->node->getAttribute('type')) ?: '';
 
         // Check script type
-        if (in_array($type, ['', 'text/javascript', 'application/javascript', 'deferjs'])) {
+        if (in_array($type, ['', 'text/javascript', 'application/javascript', $this->options->deferjs_type_attribute])) {
             return true;
         }
 
@@ -207,7 +207,7 @@ class ScriptResolver extends DeferResolver implements
             $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
 
             // Convert to type=deferjs node
-            $this->node->setAttribute('type', 'deferjs');
+            $this->node->setAttribute('type', $this->options->deferjs_type_attribute);
 
             $lazied = true;
         }

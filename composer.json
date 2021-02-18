@@ -59,23 +59,24 @@
         }
     },
     "scripts": {
-        "offline": "@php offline.php",
         "fixer": "php-cs-fixer fix --show-progress=estimating --verbose --ansi",
         "test": "@php tests/v2/test.php --ansi",
         "bf": "blackfire run php tests/v2/test.php --ansi",
         "assets": [
             "npm run lint --ansi",
             "npm run js --ansi",
-            "npm run css --ansi"
+            "npm run css --ansi",
+            "npm run copy --ansi"
         ],
         "pull": [
             "rm -rf ./cache/*/ ./vendor/ ./composer.lock",
             "composer update -o -a -n --no-dev --prefer-dist --ansi",
-            "npm run pull --ansi"
+            "npm run pull --ansi",
+            "@assets"
         ],
         "docker": [
             "@pull",
-            "@offline",
+            "@fixer",
             "@test"
         ]
     },

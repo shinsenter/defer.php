@@ -214,6 +214,14 @@ class Defer
 
                 // Append polyfill
                 $node->follow($lib->getPolyfillNode($this->document));
+
+                // Custom type for deferred script tags
+                if ($this->options->deferjs_type_attribute != '') {
+                    $dom->body()->appendWith($lib->getCustomDeferTypeNode(
+                        $this->document,
+                        $this->options->deferjs_type_attribute
+                    ));
+                }
             }
         }
 

@@ -358,7 +358,7 @@ class DeferOptions
 
             // Manually add deferjs
             'manually_add_deferjs'   => false,
-            'deferjs_type_attribute' => 'deferjs',
+            'deferjs_type_attribute' => DeferConstant::TXT_DEFAULT_DEFERJS,
 
             // Asset sources
             'deferjs_src'  => DeferConstant::SRC_DEFERJS_CDN,

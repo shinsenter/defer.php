@@ -28,7 +28,7 @@
  * SOFTWARE.
  *
  */
-/*@shinsenter/defer.php*/
+
 (function (window, document, console) {
 
     /*
@@ -84,8 +84,6 @@
     var defer    = window.Defer;
     var _delay   = window.DEFERJS_DELAY || 8;
     var _options = window.DEFERJS_OPTIONS || {rootMargin: '150%'};
-
-    if (!defer) {return;}
 
     /*
     |--------------------------------------------------------------------------
@@ -164,6 +162,21 @@
 
     /*
     |--------------------------------------------------------------------------
+    | Define helper object
+    |--------------------------------------------------------------------------
+    */
+
+    // Remove no-deferjs class
+    _removeClass(_domHtml, 'no-' + _txtDeferClass);
+
+    // Check if missing defer feature
+    if (!defer) {return;}
+
+    // Fallback for older versions
+    window.defer_helper = {defermedia: _lazyload};
+
+    /*
+    |--------------------------------------------------------------------------
     | Fallback for external libraries
     |--------------------------------------------------------------------------
     */
@@ -185,20 +198,10 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Define helper object
-    |--------------------------------------------------------------------------
-    */
-
-    // Fallback for older versions
-    window.defer_helper = {defermedia: _lazyload};
-
-    /*
-    |--------------------------------------------------------------------------
     | Main
     |--------------------------------------------------------------------------
     */
 
-    _removeClass(_domHtml, 'no-' + _txtDeferClass);
     _addClass(_domHtml, _txtDeferClass);
     _boot();
 

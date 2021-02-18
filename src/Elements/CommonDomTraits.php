@@ -167,13 +167,15 @@ trait CommonDomTraits
      */
     public function precede($input)
     {
-        if (!($input instanceof NodeList)) {
-            $input = new NodeList([$input]);
-        }
+        if ($input) {
+            if (!($input instanceof NodeList)) {
+                $input = new NodeList([$input]);
+            }
 
-        if ($this->parentNode instanceof DOMNode) {
-            foreach ($input as $node) {
-                $this->parentNode->insertBefore($node, $this);
+            if ($this->parentNode instanceof DOMNode) {
+                foreach ($input as $node) {
+                    $this->parentNode->insertBefore($node, $this);
+                }
             }
         }
 
@@ -187,16 +189,18 @@ trait CommonDomTraits
      */
     public function follow($input)
     {
-        if (!($input instanceof NodeList)) {
-            $input = new NodeList([$input]);
-        }
+        if ($input) {
+            if (!($input instanceof NodeList)) {
+                $input = new NodeList([$input]);
+            }
 
-        if ($this->parentNode instanceof DOMNode) {
-            foreach ($input as $node) {
-                if (is_null($this->nextSibling)) {
-                    $this->parentNode->appendChild($node);
-                } else {
-                    $this->parentNode->insertBefore($node, $this->nextSibling);
+            if ($this->parentNode instanceof DOMNode) {
+                foreach ($input as $node) {
+                    if (is_null($this->nextSibling)) {
+                        $this->parentNode->appendChild($node);
+                    } else {
+                        $this->parentNode->insertBefore($node, $this->nextSibling);
+                    }
                 }
             }
         }
@@ -211,12 +215,14 @@ trait CommonDomTraits
      */
     public function prependWith($input)
     {
-        if (!($input instanceof NodeList)) {
-            $input = new NodeList([$input]);
-        }
+        if ($input) {
+            if (!($input instanceof NodeList)) {
+                $input = new NodeList([$input]);
+            }
 
-        foreach ($input as $node) {
-            $this->insertBefore($node, $this->firstChild);
+            foreach ($input as $node) {
+                $this->insertBefore($node, $this->firstChild);
+            }
         }
 
         return $this;
@@ -229,12 +235,14 @@ trait CommonDomTraits
      */
     public function appendWith($input)
     {
-        if (!($input instanceof NodeList)) {
-            $input = new NodeList([$input]);
-        }
+        if ($input) {
+            if (!($input instanceof NodeList)) {
+                $input = new NodeList([$input]);
+            }
 
-        foreach ($input as $node) {
-            $this->appendChild($node);
+            foreach ($input as $node) {
+                $this->appendChild($node);
+            }
         }
 
         return $this;
