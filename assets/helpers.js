@@ -53,6 +53,7 @@
     var _txtDeferClass  = 'deferjs';
     var _txtDeferPrefix = 'defer-';
     var _txtLazied      = 'lazied';
+    var _txtMedia       = 'media';
 
     // Common attributes
     var _attrClassName  = 'className';
@@ -143,6 +144,11 @@
                 element[_addEventListener]('load', _onLoad);
             }
         }, _options);
+
+        [].slice.call(document.querySelectorAll('style[defer]')).
+            forEach(function(node){
+                node[_txtMedia] = node[_getAttribute](_txtDataPrefix + _txtMedia) || 'all';
+            });
     }
 
     function _copyright(_copyText) {

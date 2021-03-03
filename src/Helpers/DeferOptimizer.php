@@ -101,6 +101,11 @@ class DeferOptimizer
             )->optimize($options);
         }
 
+        // Fix unsafe links to cross-origin destinations
+        if ($options->optimize_anchors) {
+            $body->find('a[target]' . $ignore)->optimize($options);
+        }
+
         // Add fade-in effect
         if ($options->use_css_fadein_effects) {
             $html->addClass(DeferConstant::CLASS_DEFER_FADED);

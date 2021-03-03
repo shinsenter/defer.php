@@ -68,6 +68,11 @@ class DeferConstant
 
     // -------------------------------------------------------------------------
 
+    // Unify the media attribute from other related attributes
+    const UNIFY_MEDIA = [
+        'data-media',
+    ];
+
     // Unify the style attribute from other related attributes
     const UNIFY_STYLE = [
         'data-style',
@@ -118,6 +123,9 @@ class DeferConstant
 
     // Template for restoring media attribute
     const TEMPLATE_RESTORE_MEDIA_ATTR = 'var self=this;defer(function(){self.media="%s"},2);';
+
+    // Template for restoring media attribute
+    const TEMPLATE_RESTORE_STYLE_TAGS = 'var self=this;defer(function(){self.media="%s"},2);';
 
     // Template for restoring rel attribute
     const TEMPLATE_RESTORE_REL_ATTR = 'rel="%s",removeAttribute("as"),removeAttribute("onload");';

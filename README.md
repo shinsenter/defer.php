@@ -188,6 +188,11 @@ $options = [
   // Default: true (automatically create fallback noscript tags)
   'optimize_fallback'   => true,
 
+  // Optimize anchor tags, fix unsafe links to cross-origin destinations
+  // See: https://web.dev/external-anchors-use-rel-noopener/
+  // Default: true (automatically optimize)
+  'optimize_anchors' => true,
+
   // Add missing meta tags such as meta[name="viewport"], meta[charset] etc.
   // See: https://web.dev/viewport/
   // Default: true (automatically optimize)

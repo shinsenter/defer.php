@@ -17,6 +17,7 @@
 
 namespace AppSeeds\Resolvers;
 
+use AppSeeds\Contracts\DeferLazyable;
 use AppSeeds\Contracts\DeferMinifyable;
 use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Contracts\DeferReorderable;
@@ -26,7 +27,8 @@ use AppSeeds\Helpers\DeferMinifier;
 class StyleResolver extends DeferResolver implements
     DeferNormalizable,
     DeferReorderable,
-    DeferMinifyable
+    DeferMinifyable,
+    DeferLazyable
 {
     /*
     |--------------------------------------------------------------------------
@@ -39,6 +41,8 @@ class StyleResolver extends DeferResolver implements
      */
     public function normalize()
     {
+        $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA);
+
         $this->node->removeAttribute('type');
         $media = $this->node->getAttribute('media') ?: 'all';
 
@@ -92,5 +96,40 @@ class StyleResolver extends DeferResolver implements
 
         $this->node->removeAttribute('type');
         $this->node->removeAttribute('class');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DeferLazyable functions
+    |--------------------------------------------------------------------------
+     */
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shouldLazyload()
+    {
+        return parent::shouldLazyload() && $this->hasLazyloadFlag();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function lazyload()
+    {
+        // Only defer when it is a CSS node
+        // and "onload" attribute is not provided
+        $media = $this->node->getAttribute('media');
+
+        if (!empty($media)) {
+            $this->node->setAttribute('data-media', $media);
+        }
+
+        // Lazyload the style
+        $this->node->setAttribute('media', DeferConstant::TEMPLATE_LAZY_MEDIA_ATTR);
+        $this->node->setAttribute(DeferConstant::ATTR_DEFER, 'style');
+        $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
+
+        return true;
     }
 }

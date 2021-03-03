@@ -86,35 +86,37 @@ class DeferResolver
     public static function resolver(ElementNode &$node, DeferOptions $options)
     {
         switch ($node->nodeName) {
-                case 'link':
-                    return new LinkResolver($node, $options);
-                case 'meta':
-                    return new MetaResolver($node, $options);
-                case 'style':
-                    return new StyleResolver($node, $options);
-                case 'script':
-                    return new ScriptResolver($node, $options);
-                case 'embed':
-                case 'frame':
-                case 'iframe':
-                    return new IframeResolver($node, $options);
-                case 'img':
-                case 'picture':
-                case 'video':
-                case 'audio':
-                case 'source':
+            case 'a':
+                return new AnchorResolver($node, $options);
+            case 'link':
+                return new LinkResolver($node, $options);
+            case 'meta':
+                return new MetaResolver($node, $options);
+            case 'style':
+                return new StyleResolver($node, $options);
+            case 'script':
+                return new ScriptResolver($node, $options);
+            case 'embed':
+            case 'frame':
+            case 'iframe':
+                return new IframeResolver($node, $options);
+            case 'img':
+            case 'picture':
+            case 'video':
+            case 'audio':
+            case 'source':
+                return new MediaResolver($node, $options);
+            case 'input':
+                if (strtolower($node->getAttribute('type')) == 'image') {
                     return new MediaResolver($node, $options);
-                case 'input':
-                    if (strtolower($node->getAttribute('type')) == 'image') {
-                        return new MediaResolver($node, $options);
-                    }
-                    break;
-                default:
-                    if ($node->hasAttribute('style')) {
-                        return new InlineStyleResolver($node, $options);
-                    }
+                }
                 break;
-            }
+            default:
+                if ($node->hasAttribute('style')) {
+                    return new InlineStyleResolver($node, $options);
+                }
+            break;
+        }
 
         return new static($node, $options);
     }
