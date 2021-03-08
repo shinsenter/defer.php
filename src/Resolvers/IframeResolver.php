@@ -22,7 +22,8 @@ use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
 
-class IframeResolver extends DeferResolver implements DeferNormalizable,
+class IframeResolver extends DeferResolver implements
+    DeferNormalizable,
     DeferLazyable
 {
     /*

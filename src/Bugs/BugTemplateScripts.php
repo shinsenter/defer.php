@@ -31,7 +31,7 @@ class BugTemplateScripts implements PatchInterface
      */
     public function before($html, $options)
     {
-        $type = ' type="' . $options->deferjs_type_attribute . '"';
+        $type = $options->deferjs_type_attribute;
 
         $html = preg_replace_callback(
             '/(<script[^>]*>)(.*?)(<\/script>)/si',

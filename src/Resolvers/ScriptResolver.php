@@ -73,8 +73,9 @@ class ScriptResolver extends DeferResolver implements
     {
         $type = strtolower($this->node->getAttribute('type')) ?: '';
 
-        // Check script type
-        if (in_array($type, ['', 'text/javascript', 'application/javascript', $this->options->deferjs_type_attribute])) {
+        if (empty($type)
+        || strstr($type, '/javascript') !== false
+        || $type === $this->options->deferjs_type_attribute) {
             return true;
         }
 

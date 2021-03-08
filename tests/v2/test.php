@@ -53,6 +53,7 @@ debug('OUTPUT: ' . OUTPUT);
 
 // Test set
 $list = [
+    'cibertareas.html'     => 'https://cibertareas.info?nodefer=1',
     'bike_detail_pc.html'  => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=pc',
     'bike_detail_sp.html'  => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=sp',
     'detail_pc.html'       => 'https://www.webike.net/sd/24008665/?nodefer=1&ua=pc',
