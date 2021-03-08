@@ -117,6 +117,11 @@ class MediaResolver extends DeferResolver implements
                     }
                 }
             }
+
+            // Browser-level image lazy-loading for the web
+            if (!$this->node->hasAttribute('loading')) {
+                $this->node->setAttribute('loading', 'lazy');
+            }
         }
     }
 
@@ -169,11 +174,6 @@ class MediaResolver extends DeferResolver implements
             ])));
 
             $this->node->setAttribute('style', $style);
-        }
-
-        // Browser-level image lazy-loading for the web
-        if (!$this->node->hasAttribute('loading')) {
-            $this->node->setAttribute('loading', 'lazy');
         }
 
         return $lazied;

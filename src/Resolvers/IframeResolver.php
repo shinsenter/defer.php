@@ -52,6 +52,11 @@ class IframeResolver extends DeferResolver implements
         if (empty($this->node->getAttribute('title'))) {
             $this->node->setAttribute('title', '');
         }
+
+        // Browser-level image lazy-loading for the web
+        if (!$this->node->hasAttribute('loading')) {
+            $this->node->setAttribute('loading', 'lazy');
+        }
     }
 
     /*
@@ -72,11 +77,6 @@ class IframeResolver extends DeferResolver implements
          && !$this->skipLazyloading('src')) {
             $this->createDataAttr('src', $this->options->iframe_placeholder);
             $lazied = true;
-        }
-
-        // Browser-level image lazy-loading for the web
-        if (!$this->node->hasAttribute('loading')) {
-            $this->node->setAttribute('loading', 'lazy');
         }
 
         return $lazied;
