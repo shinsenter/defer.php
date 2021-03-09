@@ -128,6 +128,7 @@
             function _onLoad() {
                 if (!_loaded) {
                     _loaded = true;
+                    defer.reveal(element);
                     _removeClass(element, _classLoading);
                     _addClass(element, _classLoaded);
                 }
