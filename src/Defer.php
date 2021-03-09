@@ -153,7 +153,7 @@ class Defer
      */
     public function toHtml()
     {
-        if (empty($this->_html)) {
+        if (empty($this->_html) && !empty($this->document)) {
             $html = $this->document->getHtml();
             $html = $this->patchAfter($html);
             $this->cleanup();
