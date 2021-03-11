@@ -20,10 +20,6 @@ if (!defined('DEFER_PHP_ROOT')) {
 }
 
 if (!class_exists('AppSeeds\Defer')) {
-    if (!ini_get('date.timezone')) {
-        date_default_timezone_set('GMT');
-    }
-
     $baseDir = DEFER_PHP_ROOT;
     $localV  = DEFER_PHP_ROOT . '/vendor/autoload.php';
     $globalV = dirname(dirname($baseDir)) . '/autoload.php';

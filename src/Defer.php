@@ -26,11 +26,15 @@ use AppSeeds\Elements\DocumentNode;
 use AppSeeds\Helpers\DeferJs;
 use AppSeeds\Helpers\DeferOptions;
 
-if (!defined('DEFER_PHP_ROOT')) {
-    if (!ini_get('date.timezone')) {
-        date_default_timezone_set('GMT');
+if (!date_default_timezone_get()) {
+    try {
+        date_default_timezone_get('GMT');
+    } catch (\Exception $th) {
+        unset($th);
     }
+}
 
+if (!defined('DEFER_PHP_ROOT')) {
     define('DEFER_PHP_ROOT', dirname(dirname(__FILE__)));
 }
 
