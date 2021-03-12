@@ -24,6 +24,8 @@ use AppSeeds\Contracts\PatchInterface;
  */
 class BugAmpAttribute implements PatchInterface
 {
+    private $_tag_backups = [];
+
     /**
      * {@inheritdoc}
      */
@@ -36,6 +38,17 @@ class BugAmpAttribute implements PatchInterface
             $html = preg_replace($regex, '$1amp$3', $html);
         }
 
+        $html = preg_replace_callback(
+            '/<(amp-[^\s>]+)[^>]*>.*?(<\/\1>)/si',
+            function ($matches) {
+                $placeholder = '<amp>' . uniqid('@@@AMP@@@:') . '</amp>';
+                $this->_tag_backups[$placeholder] = $matches[0];
+
+                return $placeholder;
+            },
+            $html
+        );
+
         return $html;
     }
 
@@ -44,6 +57,11 @@ class BugAmpAttribute implements PatchInterface
      */
     public function after($html, $options)
     {
+        // Restore scripts from backup
+        if (!empty($this->_tag_backups)) {
+            $html = strtr($html, $this->_tag_backups);
+        }
+
         return $html;
     }
 
@@ -52,5 +70,7 @@ class BugAmpAttribute implements PatchInterface
      */
     public function cleanup()
     {
+        unset($this->_tag_backups);
+        $this->_tag_backups = [];
     }
 }

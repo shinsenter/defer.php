@@ -79,7 +79,7 @@ $list = [
     'cibertareas.html'     => 'https://cibertareas.info?nodefer=1',
     'detail_pc.html'       => 'https://www.webike.net/sd/24008665/?nodefer=1&ua=pc',
     'detail_sp.html'       => 'https://www.webike.net/sd/24008665/?nodefer=1&ua=sp',
-    'moto_amp.html'        => 'https://moto.webike.net/SUZUKI/0_50/STREET_MAGIC/amp/',
+    'moto_amp.html'        => 'https://moto.webike.net/b-gentsuki/list/amp/?nodefer=1',
     'moto_report_amp.html' => 'https://moto.webike.net/moto_report/amp/',
     'moto_report.html'     => 'https://moto.webike.net/moto_report/?nodefer=1',
     'moto_top_pc.html'     => 'https://moto.webike.net/?nodefer=1&ua=pc',
