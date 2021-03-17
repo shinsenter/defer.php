@@ -51,7 +51,7 @@ $defer = new AppSeeds\Defer([
     'optimize_images'     => true,
     'optimize_iframes'    => true,
     'optimize_background' => true,
-    'optimize_fallback'   => true,
+    'optimize_fallback'   => false,
 
     // Web-font optimizations
     'defer_third_party' => true,
@@ -66,6 +66,16 @@ $defer = new AppSeeds\Defer([
 
     // Splash screen
     'custom_splash_screen' => '',
+
+    // Blacklists
+    // 'ignore_lazyload_css_class' => [
+    //     'zoom-lens',
+    // ],
+    // 'ignore_lazyload_css_selectors' => [
+    //     '.header_top_icon_list img',
+    //     '.header_logo img',
+    //     '.banner img',
+    // ],
 ]);
 
 // Debug IN/OUT paths

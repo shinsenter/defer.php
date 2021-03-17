@@ -266,6 +266,17 @@ $options = [
   //   one of the array's texts (exact match keywords).
   // Default: blank array
   'ignore_lazyload_texts'  => [],
+
+  // Do not lazy-load for tags containing
+  //   one of these CSS class names.
+  // Default: blank array
+  'ignore_lazyload_css_class'  => [],
+
+  // Do not lazy-load for tags containing
+  //   one of these CSS selectors.
+  // See: https://www.w3schools.com/cssref/css_selectors.asp
+  // Default: blank array
+  'ignore_lazyload_css_selectors'  => [],
 ];
 
 // Create a Defer object

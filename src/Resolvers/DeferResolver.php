@@ -222,11 +222,13 @@ class DeferResolver
      */
     public function skipLazyloading($attr = 'src')
     {
-        if (!empty($this->options->ignore_lazyload_paths)) {
+        $blacklist = $this->options->ignore_lazyload_paths;
+
+        if (!empty($blacklist)) {
             $value = $this->node->getAttribute($attr);
 
             if (!empty($value)) {
-                foreach ($this->options->ignore_lazyload_paths as $keyword) {
+                foreach ($blacklist as $keyword) {
                     if (strstr($value, $keyword) !== true) {
                         return true;
                     }
@@ -234,12 +236,29 @@ class DeferResolver
             }
         }
 
-        if (!empty($this->options->ignore_lazyload_texts)) {
+        $blacklist = $this->options->ignore_lazyload_texts;
+
+        if (!empty($blacklist)) {
             $text = $this->node->getText();
 
             if (!empty($text)) {
-                foreach ($this->options->ignore_lazyload_texts as $keyword) {
+                foreach ($blacklist as $keyword) {
                     if (strstr($text, $keyword) !== true) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        $blacklist = $this->options->ignore_lazyload_css_class;
+        $blacklist = array_filter(explode(',', implode(',', $blacklist)));
+
+        if (!empty($blacklist)) {
+            $class = array_filter(explode(' ', $this->node->getAttribute('class')));
+
+            if (!empty($class)) {
+                foreach ($blacklist as $name) {
+                    if (in_array($name, $class)) {
                         return true;
                     }
                 }

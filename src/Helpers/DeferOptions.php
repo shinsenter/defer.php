@@ -349,6 +349,17 @@ class DeferOptions
      *  // Default: blank array
      *  'ignore_lazyload_texts'  => [],
      *
+     *  // Do not lazy-load for tags containing
+     *  //   one of these CSS class names.
+     *  // Default: blank array
+     *  'ignore_lazyload_css_class'  => [],
+     *
+     *  // Do not lazy-load for tags containing
+     *  //   one of these CSS selectors.
+     *  // See: https://www.w3schools.com/cssref/css_selectors.asp
+     *  // Default: blank array
+     *  'ignore_lazyload_css_selectors'  => [],
+     *
      * @since  2.0.0
      * @return self
      */
@@ -396,8 +407,8 @@ class DeferOptions
             'optimize_images'     => true,
             'optimize_iframes'    => true,
             'optimize_background' => true,
-            'optimize_fallback'   => true,
             'optimize_anchors'    => true,
+            'optimize_fallback'   => true,
 
             // Third-party optimizations
             'defer_third_party' => true,
@@ -416,6 +427,10 @@ class DeferOptions
             // Blacklists
             'ignore_lazyload_paths' => [],
             'ignore_lazyload_texts' => [],
+
+            // Blacklists using CSS class names
+            'ignore_lazyload_css_class'     => [],
+            'ignore_lazyload_css_selectors' => [],
         ]);
 
         return $this;

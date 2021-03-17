@@ -52,6 +52,19 @@ class DeferOptimizer
         // Optimize performance by filtering data-ignore nodes
         $ignore = ':not([' . DeferConstant::ATTR_IGNORE . '])';
 
+        // Ignore elements that match ignore_lazyload_css_selectors
+        $blacklist = $options->ignore_lazyload_css_selectors;
+
+        if (!empty($blacklist)) {
+            $selector = implode(',', $blacklist);
+
+            try {
+                $body->find($selector)->setAttribute(DeferConstant::ATTR_NOLAZY, 'selector');
+            } finally {
+                // Skipped
+            }
+        }
+
         // Preload key requests
         if ($options->enable_dns_prefetch || $options->enable_preloading) {
             $html->find(
