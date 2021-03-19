@@ -50,7 +50,8 @@ class DeferOptimizer
         }
 
         // Optimize performance by filtering data-ignore nodes
-        $ignore = ':not([' . DeferConstant::ATTR_IGNORE . '])';
+        $ignore  = ':not([' . DeferConstant::ATTR_IGNORE . '])';
+        $skipped = null;
 
         // Ignore elements that match ignore_lazyload_css_selectors
         $blacklist = $options->ignore_lazyload_css_selectors;
@@ -59,7 +60,8 @@ class DeferOptimizer
             $selector = implode(',', $blacklist);
 
             try {
-                $body->find($selector)->setAttribute(DeferConstant::ATTR_NOLAZY, 'selector');
+                $skipped = $body->find($selector);
+                $skipped->setAttribute(DeferConstant::ATTR_NOLAZY, 'selector');
             } finally {
                 // Skipped
             }
@@ -138,6 +140,16 @@ class DeferOptimizer
         // Fix missing meta tags
         if ($options->add_missing_meta_tags) {
             $doc->addMissingMeta();
+        }
+
+        // Remove nolazy attribute from the first step
+        if (!empty($skipped)) {
+            $skipped->each(function ($node) {
+                if ($node->getAttribute(DeferConstant::ATTR_NOLAZY) == 'selector') {
+                    $node->removeAttribute(DeferConstant::ATTR_NOLAZY);
+                }
+            });
+            unset($skipped);
         }
 
         // Minify HTML output
