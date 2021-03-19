@@ -37,9 +37,7 @@ class IframeResolver extends DeferResolver implements
      */
     public function normalize()
     {
-        $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
-
-        $src = $this->node->getAttribute('src');
+        $src = $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
 
         if (!empty($src)) {
             $normalized = DeferAssetUtil::normalizeUrl($src);
@@ -50,12 +48,12 @@ class IframeResolver extends DeferResolver implements
         }
 
         if (empty($this->node->getAttribute('title'))) {
-            $this->node->setAttribute('title', '');
+            $this->node->setAttribute('title', basename($src ?: ''));
         }
 
         // Browser-level image lazy-loading for the web
-        if (!$this->node->hasAttribute('loading')) {
-            $this->node->setAttribute('loading', 'lazy');
+        if (!$this->node->hasAttribute(DeferConstant::ATTR_LOADING)) {
+            $this->node->setAttribute(DeferConstant::ATTR_LOADING, 'lazy');
         }
     }
 

@@ -41,15 +41,14 @@ class StyleResolver extends DeferResolver implements
      */
     public function normalize()
     {
-        $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA);
-
-        $this->node->removeAttribute('type');
-        $media = $this->node->getAttribute('media') ?: 'all';
+        $media = $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA) ?: 'all';
 
         if ($media == 'all' || $media == DeferConstant::TEMPLATE_LAZY_MEDIA_ATTR) {
             $this->node->removeAttribute('media');
             $this->node->removeAttribute('onload');
         }
+
+        $this->node->removeAttribute('type');
     }
 
     /*

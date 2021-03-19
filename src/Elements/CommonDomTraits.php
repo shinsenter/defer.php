@@ -137,6 +137,21 @@ trait CommonDomTraits
     }
 
     /**
+     * @param  callable|string $class
+     * @return bool
+     */
+    public function hasClass($class)
+    {
+        $attr = (string) $this->getAttribute('class');
+
+        if (!empty($class) && !empty($attr)) {
+            return strstr(' ' . $attr . ' ', ' ' . $class . ' ') != false;
+        }
+
+        return false;
+    }
+
+    /**
      * @return string
      */
     public function getText()

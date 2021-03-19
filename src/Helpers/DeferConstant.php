@@ -53,6 +53,9 @@ class DeferConstant
     const ATTR_DEFER = 'defer';
     const ATTR_LAZY  = 'data-lazy';
 
+    // Native loading attribute for lazy-loading
+    const ATTR_LOADING = 'loading';
+
     // -------------------------------------------------------------------------
 
     // Class name will be inserted into the element

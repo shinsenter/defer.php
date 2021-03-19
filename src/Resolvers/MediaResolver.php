@@ -81,11 +81,9 @@ class MediaResolver extends DeferResolver implements
      */
     public function normalize()
     {
-        $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
         $this->resolveAttr('srcset', DeferConstant::UNIFY_SRCSET);
         $this->resolveAttr('sizes', DeferConstant::UNIFY_SIZES);
-
-        $src = $this->node->getAttribute('src');
+        $src = $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
 
         if (!empty($src)) {
             $normalized = DeferAssetUtil::normalizeUrl($src);
@@ -97,7 +95,7 @@ class MediaResolver extends DeferResolver implements
 
         if ($this->isImg()) {
             if (empty($this->node->getAttribute('alt'))) {
-                $this->node->setAttribute('alt', '');
+                $this->node->setAttribute('alt', basename($src ?: ''));
             }
 
             if (!empty($src)
@@ -116,11 +114,6 @@ class MediaResolver extends DeferResolver implements
                         $this->node->setAttribute('height', $height);
                     }
                 }
-            }
-
-            // Browser-level image lazy-loading for the web
-            if (!$this->node->hasAttribute('loading')) {
-                $this->node->setAttribute('loading', 'lazy');
             }
         }
     }
@@ -159,6 +152,11 @@ class MediaResolver extends DeferResolver implements
 
             if ($standalone) {
                 $this->node->addClass(DeferConstant::CLASS_DEFER_LOADING);
+            }
+
+            // Browser-level image lazy-loading for the web
+            if (!$this->node->hasAttribute(DeferConstant::ATTR_LOADING)) {
+                $this->node->setAttribute(DeferConstant::ATTR_LOADING, 'lazy');
             }
 
             $lazied = true;

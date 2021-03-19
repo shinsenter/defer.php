@@ -68,14 +68,14 @@ $defer = new AppSeeds\Defer([
     'custom_splash_screen' => '',
 
     // Blacklists
-    // 'ignore_lazyload_css_class' => [
-    //     'zoom-lens',
-    // ],
-    // 'ignore_lazyload_css_selectors' => [
-    //     '.header_top_icon_list img',
-    //     '.header_logo img',
-    //     '.banner img',
-    // ],
+    'ignore_lazyload_css_class' => [
+        'zoom-lens',
+    ],
+    'ignore_lazyload_css_selectors' => [
+        '.header_top_icon_list img',
+        '.header_logo img',
+        '.banner img',
+    ],
 ]);
 
 // Debug IN/OUT paths
@@ -128,7 +128,8 @@ foreach ($list as $out => $file) {
     $input_len  = number_format(strlen($input));
     $output     = $defer->fromHtml($input)->toHtml();
     $output_len = number_format(strlen($output));
-    mem_info("After: ${out} (${output_len}/${input_len})");
+    $percents   = number_format(strlen($output) / (strlen($input) ?: 1) * 100, 1);
+    mem_info("After: ${out} (${output_len} / ${input_len} / ${percents}%)");
 
     @file_put_contents(OUTPUT . $out, $output);
     unset($input, $output);

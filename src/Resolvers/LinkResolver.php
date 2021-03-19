@@ -137,8 +137,7 @@ class LinkResolver extends DeferResolver implements
 
         // Normalize for stylesheet
         if ($this->isCss()) {
-            $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA);
-            $media = $this->node->getAttribute('media') ?: 'all';
+            $media = $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA) ?: 'all';
 
             if ($media == 'all') {
                 $this->node->removeAttribute('media');

@@ -212,22 +212,8 @@ class DocumentNode extends DOMDocument implements DeferOptimizable, DeferNormali
      */
     public function addMissingMeta()
     {
-        $html  = $this->root();
-        $head  = $this->head();
-        $title = $this->title();
-
-        // Add missing <meta charset=""> tag
-        $meta_charset = $html->find('meta[charset],meta[http-equiv="Content-Type"]')->first();
-
-        if ($meta_charset == null) {
-            $meta_charset = $this->newNode('meta', [
-                'charset' => $this->encoding ?: 'utf-8',
-            ]);
-        } else {
-            $meta_charset->detach();
-        }
-
-        $head->prependWith($meta_charset);
+        $html = $this->root();
+        $head = $this->head();
 
         // Add missing <meta http-equiv="X-UA-Compatible"> tag
         $meta_compatible = $html->find('meta[http-equiv="X-UA-Compatible"]')->first();
@@ -241,7 +227,7 @@ class DocumentNode extends DOMDocument implements DeferOptimizable, DeferNormali
             $meta_compatible->detach();
         }
 
-        $title->follow($meta_compatible);
+        $head->prependWith($meta_compatible);
 
         // Add missing <meta name="viewport"> tag
         $meta_viewport = $html->find('meta[name="viewport"]')->first();
@@ -255,7 +241,20 @@ class DocumentNode extends DOMDocument implements DeferOptimizable, DeferNormali
             $meta_viewport->detach();
         }
 
-        $title->follow($meta_viewport);
+        $head->prependWith($meta_viewport);
+
+        // Add missing <meta charset=""> tag
+        $meta_charset = $html->find('meta[charset],meta[http-equiv="Content-Type"]')->first();
+
+        if ($meta_charset == null) {
+            $meta_charset = $this->newNode('meta', [
+                'charset' => $this->encoding ?: 'utf-8',
+            ]);
+        } else {
+            $meta_charset->detach();
+        }
+
+        $head->prependWith($meta_charset);
 
         return $this;
     }

@@ -254,13 +254,9 @@ class DeferResolver
         $blacklist = array_filter(explode(',', implode(',', $blacklist)));
 
         if (!empty($blacklist)) {
-            $class = array_filter(explode(' ', $this->node->getAttribute('class')));
-
-            if (!empty($class)) {
-                foreach ($blacklist as $name) {
-                    if (in_array($name, $class)) {
-                        return true;
-                    }
+            foreach ($blacklist as $class) {
+                if ($this->node->hasClass($class)) {
+                    return true;
                 }
             }
         }
