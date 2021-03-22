@@ -43,9 +43,6 @@
     // Backup jQuery.ready
     var _jqueryReady;
 
-    // Youtube ID parser
-    var _regexYoutubeId = /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-
     // Common texts
     var _txtAttribute   = 'Attribute';
     var _txtDataLayer   = 'dataLayer';
@@ -111,38 +108,30 @@
     }
 
     function _lazyload() {
-        defer.dom(_queryTarget, 0, _classLazied, function (element, _match, _loaded, _src, _placeholder) {
+        defer.dom(_queryTarget, 0, _classLazied, function (element, _loaded, _src, _placeholder) {
             // Loading state
             _addClass(element, _classLoading);
-
-            // Add youtube placeholder
-            _src = element[_getAttribute](_txtDataPrefix + 'src');
-            _placeholder = element[_getAttribute]('src');
-            if (_src && (_match = _regexYoutubeId.exec(_src))) {
-                element.style.background =
-                    'transparent url(https://img.youtube.com/vi/' +
-                    _match[1] +
-                    '/hqdefault.jpg) 50% 50% / cover no-repeat';
-            }
 
             function _onLoad() {
                 if (!_loaded) {
                     _loaded = true;
-                    defer.reveal(element);
                     _removeClass(element, _classLoading);
                     _addClass(element, _classLoaded);
                 }
             }
 
+            // Add youtube placeholder
+            _src = element[_getAttribute](_txtDataPrefix + 'src');
+            _placeholder = element[_getAttribute]('src');
+
             // Update loaded state
             if (element[_hasAttribute](_attrDataIgnore) ||
-                _src == _placeholder ||
-                !_src) {
+                _src == _placeholder || !_src) {
                 _onLoad();
             } else {
-                defer(_onLoad, 3000);
                 element[_addEventListener]('error', _onLoad);
                 element[_addEventListener]('load', _onLoad);
+                defer(_onLoad, 3000);
             }
         }, _options);
 
