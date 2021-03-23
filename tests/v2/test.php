@@ -85,6 +85,7 @@ debug('OUTPUT: ' . OUTPUT);
 // Test set
 $list = [
     'continentalcamera.html' => 'https://staging.continentalcamera.com/?nodefer=1',
+    'leverages.html'         => 'https://leverages.jp/?nodefer=1',
     'bike_detail_pc.html'    => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=pc',
     'bike_detail_sp.html'    => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=sp',
     'cibertareas.html'       => 'https://cibertareas.info?nodefer=1',

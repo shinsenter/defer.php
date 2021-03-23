@@ -82,9 +82,9 @@ class Defer
         $this->_patchers = [
             new BugAmpAttribute(),
             new BugHtml5DocType(),
+            new BugTemplateScripts(),
             new BugCharset($charset),
             new BugLongLine(),
-            new BugTemplateScripts(),
         ];
 
         $this->options = new DeferOptions($options ?: []);

@@ -89,7 +89,7 @@ class DeferMinifier
      *
      * @return DocumentNode
      */
-    public static function minifyDom(DocumentNode &$input)
+    public static function minifyDom(DocumentNode &$dom)
     {
         // Detach comment nodes
         $skip_comments = [
@@ -97,11 +97,11 @@ class DeferMinifier
             'not(contains(.,"[endif]"))',
             'not(contains(.,"' . DeferConstant::TXT_DEBUG . '"))',
         ];
-        $input->findXPath('//comment()[' . implode(' and ', $skip_comments) . ']')->detach();
+        $dom->findXPath('//comment()[' . implode(' and ', $skip_comments) . ']')->detach();
 
         // Trim white space
-        $input->root()->findXPath('//text()[not(.=normalize-space(.))]')->normalize();
+        $dom->root()->findXPath('//text()[not(.=normalize-space(.))]')->normalize();
 
-        return $input;
+        return $dom;
     }
 }

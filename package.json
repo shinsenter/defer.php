@@ -7,7 +7,7 @@
   },
   "scripts": {
     "cleanup": "rm -rf ./node_modules package-lock.json",
-    "tools": "npm -g i js-beautify uglify-js clean-css-cli",
+    "tools": "npm -g i eslint js-beautify uglify-js clean-css-cli",
     "pull": "npm run cleanup && npm run tools && npm i --prod",
     "copy": "cp -p ./node_modules/@shinsenter/defer.js/dist/*.js ./public/lib/",
     "lint": "eslint --config assets/.eslintrc --ext .js assets --fix",

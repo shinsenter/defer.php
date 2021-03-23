@@ -58,6 +58,21 @@ class MediaResolver extends DeferResolver implements
         return $this->node->nodeName == 'source';
     }
 
+    public function hasSrcAttr()
+    {
+        return $this->hasAttribute('src');
+    }
+
+    public function hasSrcsetAttr()
+    {
+        return ($this->isImg() || $this->isSource()) && $this->hasAttribute('srcset');
+    }
+
+    public function hasPosterAttr()
+    {
+        return $this->isVideo() && $this->hasAttribute('poster');
+    }
+
     public function isMediaChild()
     {
         $parent = $this->node->parentNode;
@@ -81,8 +96,6 @@ class MediaResolver extends DeferResolver implements
      */
     public function normalize()
     {
-        $this->resolveAttr('srcset', DeferConstant::UNIFY_SRCSET);
-        $this->resolveAttr('sizes', DeferConstant::UNIFY_SIZES);
         $src = $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
 
         if (!empty($src)) {
@@ -91,6 +104,15 @@ class MediaResolver extends DeferResolver implements
             if ($normalized != $src) {
                 $this->node->setAttribute('src', $normalized);
             }
+        }
+
+        if ($this->isImg() || $this->isSource()) {
+            $this->resolveAttr('srcset', DeferConstant::UNIFY_SRCSET);
+            $this->resolveAttr('sizes', DeferConstant::UNIFY_SIZES);
+        }
+
+        if ($this->isVideo()) {
+            $this->resolveAttr('poster', DeferConstant::UNIFY_POSTER);
         }
 
         if ($this->isImg()) {
@@ -137,18 +159,25 @@ class MediaResolver extends DeferResolver implements
         // Create lazyload attributes
         if (strstr($this->node->getAttribute('src'), 'data:') === false
             && !$this->skipLazyloading('src')) {
-            $placeholder = '';
+            $placeholder     = '';
+            $svg_placeholder = DeferAssetUtil::getSvgImage(
+                $this->node->getAttribute('width'),
+                $this->node->getAttribute('height')
+            );
 
             if (empty($placeholder) && $this->isImg()) {
-                $placeholder = $this->options->img_placeholder
-                    ?: DeferAssetUtil::getSvgImage(
-                        $this->node->getAttribute('width'),
-                        $this->node->getAttribute('height')
-                    );
+                $placeholder = $this->options->img_placeholder ?: $svg_placeholder;
             }
 
-            $this->createDataAttr('srcset', '');
             $this->createDataAttr('src', $placeholder);
+
+            if ($this->hasSrcsetAttr()) {
+                $this->createDataAttr('srcset', '');
+            }
+
+            if ($this->hasPosterAttr()) {
+                $this->createDataAttr('poster', $svg_placeholder);
+            }
 
             if ($standalone) {
                 $this->node->addClass(DeferConstant::CLASS_DEFER_LOADING);
@@ -163,7 +192,7 @@ class MediaResolver extends DeferResolver implements
         }
 
         // Add color
-        if ($this->isImg() && $this->options->use_color_placeholder) {
+        if ($standalone && $this->options->use_color_placeholder) {
             $original = $this->node->getAttribute('style');
             $grey     = $this->options->use_color_placeholder === 'grey';
             $style    = implode(';', array_filter(array_unique([

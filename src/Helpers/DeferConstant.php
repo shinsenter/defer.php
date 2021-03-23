@@ -103,6 +103,12 @@ class DeferConstant
         'data-lazy-sizes',
     ];
 
+    // Unify the poster attribute from other related attributes
+    const UNIFY_POSTER = [
+        'data-poster',
+        'data-lazy-poster',
+    ];
+
     // -------------------------------------------------------------------------
 
     // Global JS variable name to store delay time

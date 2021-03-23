@@ -48,14 +48,14 @@ class BugTemplateScripts implements PatchInterface
                         '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$|\s*\/\/$)/',
 
                         // Fixed HTMLEntity
-                        '/&(#[x0-9]+|[a-z0-9]+);/',
+                        '/&(#?[a-z0-9]+);/',
 
                         // Fix closing HTML tags inside script
                         '/<\/([^>]*)>/',
 
                         // Fix yen symbols to backslashes
                         '/\\\/',
-                    ], ['', '&#x26;$1;', '<&#92;/$1>', '&#92;'], trim($content));
+                    ], ['', '&#38;$1;', '<&#92;/$1>', '&#92;'], trim($content));
                 }
 
                 // Backup all scripts contain html-like content

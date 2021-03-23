@@ -292,13 +292,13 @@ class DeferResolver
     public function resolveAttr($attr, $attributes = [])
     {
         if (isset($this->attr_backups[$attr])) {
-            return $this->attr_backups[$attr];
+            return $this->node->getAttribute($attr);
         }
 
-        $value = $this->node->getAttribute($attr);
+        $original = $this->attr_backups[$attr] = $this->node->getAttribute($attr);
 
         if (is_array($attributes)) {
-            $unified = $value;
+            $unified = $original;
 
             foreach ($attributes as $from_attr) {
                 if (is_string($from_attr) && $this->node->hasAttribute($from_attr)) {
@@ -316,13 +316,14 @@ class DeferResolver
                 $unified = DeferAssetUtil::normalizeUrl($unified);
             }
 
-            if ($unified != $value) {
+            if ($unified != $original) {
                 $this->node->setAttribute($attr, $unified);
-                $value = $unified;
             }
+
+            return $unified;
         }
 
-        return $this->attr_backups[$attr] = $value;
+        return $original;
     }
 
     /**

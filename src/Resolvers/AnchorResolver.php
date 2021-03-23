@@ -44,6 +44,9 @@ class AnchorResolver extends DeferResolver implements DeferNormalizable
         if (empty($href)) {
             $this->node->setAttribute('href', '#');
             $this->node->setAttribute('rel', 'nofollow');
+        } elseif ($href == 'javascript:void(0);') {
+            $this->node->setAttribute('href', 'javascript:;');
+            $this->node->setAttribute('rel', 'nofollow');
         } elseif (preg_match('/^(\#|javascript)/i', $href)) {
             $this->node->setAttribute('rel', 'nofollow');
         }
