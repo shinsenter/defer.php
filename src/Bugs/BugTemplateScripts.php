@@ -44,18 +44,18 @@ class BugTemplateScripts implements PatchInterface
                 || strstr($open, '/javascript') !== false
                 || strstr($open, ' type="' . $type . '"') !== false) {
                     $content = preg_replace([
-                        // Strip HTML comments
-                        '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$)/',
+                        // Remove HTML comment from script
+                        '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$|\s*\/\/$)/',
+
+                        // Fixed HTMLEntity
+                        '/&(#[x0-9]+|[a-z0-9]+);/',
 
                         // Fix closing HTML tags inside script
                         '/<\/([^>]*)>/',
 
-                        // Remove HTML comment from script
-                        '/(^\s*<!--\s*|\s*\/\/\s*-->\s*$|\s*\/\/$)/',
-
                         // Fix yen symbols to backslashes
                         '/\\\/',
-                    ], ['', '<&#92;/$1>', '', '&#92;'], trim($content));
+                    ], ['', '&#x26;$1;', '<&#92;/$1>', '&#92;'], trim($content));
                 }
 
                 // Backup all scripts contain html-like content

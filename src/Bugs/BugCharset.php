@@ -70,7 +70,7 @@ class BugCharset implements PatchInterface
         }
 
         $cached = [];
-        $find   = '/(&#[0-9]+;|&[a-z0-9]+;)+/';
+        $find   = '/(&#[x0-9]+;|&[a-z0-9]+;)+/';
         $html   = preg_replace_callback(
             $find,
             function ($match) use ($charset, &$cached) {
