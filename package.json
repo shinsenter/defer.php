@@ -1,10 +1,17 @@
 {
-  "devDependencies": {
-    "clean-css-cli": "^4.3.0",
-    "uglify-js": "^3.12.3"
+  "homepage": "https://github.com/shinsenter/defer.php#readme",
+  "author": "Mai Nhut Tan <shin@shin.company>",
+  "license": "MIT",
+  "dependencies": {
+    "@shinsenter/defer.js": "^2.1.0"
   },
   "scripts": {
-    "css": "cleancss -o public/styles.min.css assets/styles.css",
-    "js": "uglifyjs --config-file .uglifyjs -o public/helpers.min.js assets/helpers.js"
+    "cleanup": "rm -rf ./node_modules package-lock.json",
+    "tools": "npm -g i eslint js-beautify uglify-js clean-css-cli",
+    "pull": "npm run cleanup && npm run tools && npm i --prod",
+    "copy": "cp -p ./node_modules/@shinsenter/defer.js/dist/*.js ./public/lib/",
+    "lint": "eslint --config assets/.eslintrc --ext .js assets --fix",
+    "js": "uglifyjs --config-file assets/.uglifyjs -o public/helpers.min.js assets/helpers.js",
+    "css": "cleancss -o public/styles.min.css assets/styles.css"
   }
 }

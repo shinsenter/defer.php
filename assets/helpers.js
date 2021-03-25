@@ -1,13 +1,9 @@
 /**
- *
  * Package shinsenter/defer.php
  * https://github.com/shinsenter/defer.php
  *
- * Minified by UglifyJS3
- * http://lisperator.net/uglifyjs/
- *
  * Released under the MIT license
- * https://raw.githubusercontent.com/shinsenter/defer.js/master/LICENSE
+ * https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE
  *
  * MIT License
  *
@@ -32,197 +28,177 @@
  * SOFTWARE.
  *
  */
-(function (window, document, console, name) {
 
-    var PROJECT_URL     = '   https://github.com/shinsenter/';
-    var PROJECT_NAME    = 'defer.js';
-    var CLASS_PREFIX    = 'defer-';
-    var CLASS_SUFFIX    = 'deferjs';
+(function (window, document, console) {
 
-    var COPY_COMMON     = 'font-size:14px;color:#fff;'+'padding:2px;border-radius:';
-    var COPY_TEXT       = '%c ' + PROJECT_NAME + ' ';
-    var COPY_STYLE      = COPY_COMMON + '4px;background:#2a313c';
+    /*
+    |--------------------------------------------------------------------------
+    | Define variables and constants
+    |--------------------------------------------------------------------------
+    */
 
-    var JQUERY          = 'jQuery';
-    var NOOP            = Function();
-    var DATA_PREFIX     = 'data-';
-    var GET_ATTRIBUTE   = 'getAttribute';
-    var IS_CHROME       = typeof window.chrome == 'object' && window.navigator.userAgent.indexOf('Trident/') == -1;
+    // HTML element
+    var _domHtml = document.documentElement;
 
-    var COMMON_EXCEPTIONS = ':not([' + DATA_PREFIX + 'lazied]):not([' + DATA_PREFIX + 'ignore])';
-    var COMMON_SELECTOR = '[' + DATA_PREFIX + 'src]' + COMMON_EXCEPTIONS;
+    // Backup jQuery.ready
+    var _jqueryReady;
 
-    var ADD_EVENT_LISTENER = 'addEventListener';
-    var LOAD_EVENT = 'load';
+    // Common texts
+    var _txtAttribute   = 'Attribute';
+    var _txtDataLayer   = 'dataLayer';
+    var _txtDataPrefix  = 'data-';
+    var _txtDeferClass  = 'deferjs';
+    var _txtDeferPrefix = 'defer-';
+    var _txtLazied      = 'lazied';
+    var _txtMedia       = 'media';
 
-    var IMG_SELECTOR = [
-        'img' + COMMON_SELECTOR,
-        'picture' + COMMON_EXCEPTIONS,
-        '[data-style]' + COMMON_EXCEPTIONS
-    ].join(',');
+    // Common attributes
+    var _attrClassName  = 'className';
+    var _attrDataIgnore = 'data-ignore';
 
-    var IFRAME_SELECTOR = [
-        'iframe' + COMMON_SELECTOR,
-        'frame' + COMMON_SELECTOR,
-        'audio' + COMMON_EXCEPTIONS,
-        'video' + COMMON_EXCEPTIONS
-    ].join(',');
+    // Common CSS selectors
+    var _queryIgnore = ':not([' + _attrDataIgnore + ']):not([lazied])';
+    var _queryTarget =
+        '[' + _txtDataPrefix + 'src]' + _queryIgnore + ',' +
+        '[' + _txtDataPrefix + 'srcset]' + _queryIgnore + ',' +
+        '[' + _txtDataPrefix + 'style]' + _queryIgnore;
 
-    var helper = {
-        c: CLASS_PREFIX + 'lazied',
-        l: CLASS_PREFIX + 'loading',
-        d: CLASS_PREFIX + 'loaded',
-        h: document.getElementsByTagName('html')
-            .item(0),
-        t: 10
-    };
+    // Common class names
+    var _classLazied  = _txtDeferPrefix + _txtLazied;
+    var _classLoaded  = _txtDeferPrefix + 'loaded';
+    var _classLoading = _txtDeferPrefix + 'loading';
 
-    var log         = (console.log || NOOP).bind(console);
-    var defer       = window.defer || NOOP;
-    var deferimg    = window.deferimg || NOOP;
-    var deferiframe = window.deferiframe || NOOP;
-    var old_ready;
+    // Common method names
+    var _addEventListener = 'addEventListener';
+    var _getAttribute = 'get' + _txtAttribute;
+    var _hasAttribute = 'has' + _txtAttribute;
 
-    function copyright() {
-        if (IS_CHROME) {
-            log(COPY_TEXT, COPY_STYLE);
-        }
+    /*
+    |--------------------------------------------------------------------------
+    | Check for defer.js
+    |--------------------------------------------------------------------------
+    */
 
-        log([
-            'Optimized by ' + PROJECT_NAME,
-            '(c) 2019 AppSeeds',
-            'Github: ' + PROJECT_URL + PROJECT_NAME,
-            'PHP lib:' + PROJECT_URL + 'defer.php'
-        ].join('\n'));
+    var defer    = window.Defer;
+    var _delay   = window.DEFERJS_DELAY || 8;
+    var _options = window.DEFERJS_OPTIONS || {rootMargin: '150%'};
+
+    /*
+    |--------------------------------------------------------------------------
+    | Internal functions
+    |--------------------------------------------------------------------------
+    */
+
+    function _getClass(node, find) {
+        return node[_attrClassName].
+            split(' ').
+            filter(function (name) {
+                return name != '' && name != find;
+            });
     }
 
-    /**
-     * This function aims to provide both function
-     * throttling and debouncing in as few bytes as possible.
-     *
-     * @param   {function}  func        The file URL
-     * @param   {integer}   delay       The delay time to create the tag
-     * @param   {boolean}   throttle    Set false to debounce, true to throttle
-     * @param   {integer}   ticker      Placeholder for holding timer
-     * @returns {function}              Return a new function
-     */
-    function debounce(func, delay, throttle, ticker) {
-        return function () {
-            var context = this;
-            var args    = arguments;
+    function _addClass(node, name, _tmp) {
+        _tmp = _getClass(node, name);
+        _tmp.push(name);
+        node[_attrClassName] = _tmp.join(' ');
+    }
 
-            if (!throttle) {
-                clearTimeout(ticker);
+    function _removeClass(node, name) {
+        node[_attrClassName] = _getClass(node, name).join(' ');
+    }
+
+    function _lazyload() {
+        defer.dom(_queryTarget, 0, _classLazied, function (element, _loaded, _src, _placeholder) {
+            // Loading state
+            _addClass(element, _classLoading);
+
+            function _onLoad() {
+                if (!_loaded) {
+                    _loaded = true;
+                    _removeClass(element, _classLoading);
+                    _addClass(element, _classLoaded);
+                }
             }
 
-            if (!throttle || !ticker) {
-                ticker = setTimeout(function () {
-                    ticker = null;
-                    func.apply(context, args);
-                }, delay);
+            // Add youtube placeholder
+            _src = element[_getAttribute](_txtDataPrefix + 'src');
+            _placeholder = element[_getAttribute]('src');
+
+            // Update loaded state
+            if (element[_hasAttribute](_attrDataIgnore) ||
+                _src == _placeholder || !_src) {
+                _onLoad();
+            } else {
+                element[_addEventListener]('error', _onLoad);
+                element[_addEventListener]('load', _onLoad);
+                defer(_onLoad, 3000);
             }
+        }, _options);
+
+        [].slice.call(document.querySelectorAll('style[defer]')).
+            forEach(function(node){
+                node[_txtMedia] = node[_getAttribute](_txtDataPrefix + _txtMedia) || 'all';
+            });
+    }
+
+    function _copyright(_copyText) {
+        if (console.log) {
+            console.log(_copyText || [
+                'Optimized by defer.php',
+                '(c) 2021 AppSeeds',
+                'Github: https://code.shin.company/defer.php'
+            ].join('\n'));
         }
+    }
+
+    function _boot() {
+        _copyright();
+        defer(_lazyload, _delay);
     }
 
     /*
-     * Add/remove element classnames
-     */
-    function classFilter(haystack, needle) {
-        return haystack.split(' ').filter(function (v) {
-            return v != '' && v != needle;
-        });
-    }
+    |--------------------------------------------------------------------------
+    | Define helper object
+    |--------------------------------------------------------------------------
+    */
 
-    function addClass(element, classname) {
-        var c = classFilter(element.className, classname);
-        c.push(classname);
-        element.className = c.join(' ');
-    }
+    // Remove no-deferjs class
+    _removeClass(_domHtml, 'no-' + _txtDeferClass);
 
-    function removeClass(element, classname) {
-        element.className = classFilter(element.className, classname).join(' ');
-    }
+    // Check if missing defer feature
+    if (!defer) {return;}
+
+    // Fallback for older versions
+    window.defer_helper = {defermedia: _lazyload};
 
     /*
-     * Lazy-load img and iframe elements
-     */
-    function mediafilter(media) {
-        var timer,
-            match,
-            src     = media[GET_ATTRIBUTE](DATA_PREFIX + 'src'),
-            pattern = /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    |--------------------------------------------------------------------------
+    | Fallback for external libraries
+    |--------------------------------------------------------------------------
+    */
 
-        addClass(media, helper.l);
+    // Fix missing dataLayer (for Google Analytics)
+    // See: https://developers.google.com/analytics/devguides/collection/analyticsjs
+    window.ga = window.ga || function () {(window.ga.q = window.ga.q || []).push(arguments)}; window.ga.l = Number(new Date());
+    window[_txtDataLayer] = window[_txtDataLayer] || [];
 
-        function onload() {
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
-            }
-
-            removeClass(media, helper.l);
-            addClass(media, helper.d);
-        }
-
-        if ((match = pattern.exec(src)) !== null) {
-            media.style.background = 'transparent url(https://img.youtube.com/vi/' + match[1] + '/hqdefault.jpg) 50% 50% / cover no-repeat';
-        }
-
-        if (media.hasAttribute(DATA_PREFIX + 'ignore') ||
-            (src && media.src == src) ||
-            (!src && media[GET_ATTRIBUTE](DATA_PREFIX + 'style'))) {
-            onload();
-        } else {
-            media[ADD_EVENT_LISTENER](LOAD_EVENT, onload);
-            timer = setTimeout(onload, 3000);
-        }
-    }
-
-    function imgloader() {
-        deferimg(IMG_SELECTOR, helper.t, helper.c, mediafilter, {
-            rootMargin: '150%'
-        });
-    }
-
-    function iframeloader() {
-        deferiframe(IFRAME_SELECTOR, helper.t, helper.c, mediafilter, {
-            rootMargin: '200%'
-        });
-    }
-
-    function defermedia() {
-        imgloader();
-        iframeloader();
-    }
-
-    function deferscript() {
-        if (!old_ready && JQUERY in window && 'fn' in window[JQUERY]) {
-            old_ready = window[JQUERY].fn.ready;
-
-            window[JQUERY].fn.ready = function (fn) {
-                defer(function () {
-                    old_ready(fn)
-                });
-
-                return this;
+    // Fake jQuery.ready, if jQuery loaded
+    defer(function (jquery) {
+        if (!_jqueryReady && (jquery = window.jQuery) && jquery.fn) {
+            _jqueryReady = jquery.fn.ready;
+            jquery.fn.ready = function (callback) {
+                defer(function () {_jqueryReady(callback)}, _delay);
             }
         }
-    }
+    });
 
-    // Expose global methods
-    helper.copyright    = copyright;
-    helper.debounce     = debounce;
-    helper.defermedia   = defermedia;
-    helper.addClass     = addClass;
-    helper.removeClass  = removeClass;
+    /*
+    |--------------------------------------------------------------------------
+    | Main
+    |--------------------------------------------------------------------------
+    */
 
-    removeClass(helper.h, 'no-' + CLASS_SUFFIX);
-    addClass(helper.h, CLASS_SUFFIX);
+    _addClass(_domHtml, _txtDeferClass);
+    _boot();
 
-    window[name] = helper;
-    window[ADD_EVENT_LISTENER](LOAD_EVENT, deferscript);
-
-    defermedia();
-    copyright();
-
-})(this, document, console, 'defer_helper');
+})(this, document, console);

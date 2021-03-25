@@ -1,25 +1,33 @@
 <?php
 
 /**
- * A PHP helper class to efficiently defer JavaScript for your website.
- * (c) 2019 AppSeeds https://appseeds.net/
+ * Defer.php aims to help you concentrate on web performance optimization.
+ * (c) 2021 AppSeeds https://appseeds.net/
  *
- * @package   shinsenter/defer.php
- * @since     1.0.0
+ * PHP Version >=5.6
+ *
+ * @category  Web_Performance_Optimization
+ * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2019 AppSeeds
- * @see       https://github.com/shinsenter/defer.php/blob/develop/README.md
+ * @copyright 2021 AppSeeds
+ * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
+ * @link      https://code.shin.company/defer.php
+ * @see       https://code.shin.company/defer.php/blob/master/README.md
  */
 
 $header = <<<'EOF'
-A PHP helper class to efficiently defer JavaScript for your website.
-(c) 2019 AppSeeds https://appseeds.net/
+Defer.php aims to help you concentrate on web performance optimization.
+(c) 2021 AppSeeds https://appseeds.net/
 
-@package   shinsenter/defer.php
-@since     1.0.0
+PHP Version >=5.6
+
+@category  Web_Performance_Optimization
+@package   AppSeeds
 @author    Mai Nhut Tan <shin@shin.company>
-@copyright 2019 AppSeeds
-@see       https://github.com/shinsenter/defer.php/blob/develop/README.md
+@copyright 2021 AppSeeds
+@license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
+@link      https://code.shin.company/defer.php
+@see       https://code.shin.company/defer.php/blob/master/README.md
 EOF;
 
 $rules = [
@@ -92,12 +100,16 @@ $rules = [
 ];
 
 $finder = \PhpCsFixer\Finder::create()
-    ->in(__DIR__)
+    ->in(__DIR__ . DIRECTORY_SEPARATOR)
     ->name('*.php')
-    ->exclude('.idea')
+    ->exclude('.docker')
     ->exclude('.ppm')
+    ->exclude('assets')
     ->exclude('cache')
-    ->exclude('vendor')
+    ->exclude('patches')
+    ->exclude('public')
+    ->exclude('tests/v1')
+    ->exclude('v1')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
 

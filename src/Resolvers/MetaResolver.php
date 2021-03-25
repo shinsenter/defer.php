@@ -15,20 +15,24 @@
  * @see       https://code.shin.company/defer.php/blob/master/README.md
  */
 
-if (!defined('DEFER_PHP_ROOT')) {
-    define('DEFER_PHP_ROOT', dirname(__FILE__));
-}
+namespace AppSeeds\Resolvers;
 
-if (!class_exists('AppSeeds\Defer')) {
-    $baseDir = DEFER_PHP_ROOT;
-    $localV  = DEFER_PHP_ROOT . '/vendor/autoload.php';
-    $globalV = dirname(dirname($baseDir)) . '/autoload.php';
+use AppSeeds\Contracts\DeferReorderable;
 
-    if (file_exists($localV)) {
-        require_once $localV;
-    } elseif (file_exists($globalV)) {
-        require_once $globalV;
-    } else {
-        throw new \Exception(PHP_EOL . 'Please run: php composer install' . PHP_EOL);
+class MetaResolver extends DeferResolver implements DeferReorderable
+{
+    /*
+    |--------------------------------------------------------------------------
+    | DeferReorderable functions
+    |--------------------------------------------------------------------------
+     */
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reposition()
+    {
+        $this->node->detach();
+        $this->head()->appendWith($this->node);
     }
 }
