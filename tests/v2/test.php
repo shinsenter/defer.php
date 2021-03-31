@@ -84,6 +84,7 @@ debug('OUTPUT: ' . OUTPUT);
 
 // Test set
 $list = [
+    'xsl_sitemap.xsl'        => 'http://staging.continentalcamera.com/main-sitemap.xsl?nodefer=1',
     'continentalcamera.html' => 'https://staging.continentalcamera.com/?nodefer=1',
     'leverages.html'         => 'https://leverages.jp/?nodefer=1',
     'bike_detail_pc.html'    => 'https://moto.webike.net/bike_detail/1538248/?nodefer=1&ua=pc',

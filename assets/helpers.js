@@ -81,7 +81,7 @@
 
     var defer    = window.Defer;
     var _delay   = window.DEFERJS_DELAY || 8;
-    var _options = window.DEFERJS_OPTIONS || {rootMargin: '150%'};
+    var _options = window.DEFERJS_OPTIONS || {'rootMargin': '150%'};
 
     /*
     |--------------------------------------------------------------------------
@@ -136,7 +136,7 @@
         }, _options);
 
         [].slice.call(document.querySelectorAll('style[defer]')).
-            forEach(function(node){
+            forEach(function(node) {
                 node[_txtMedia] = node[_getAttribute](_txtDataPrefix + _txtMedia) || 'all';
             });
     }
@@ -169,7 +169,7 @@
     if (!defer) {return;}
 
     // Fallback for older versions
-    window.defer_helper = {defermedia: _lazyload};
+    window.defer_helper = {'defermedia': _lazyload};
 
     /*
     |--------------------------------------------------------------------------
@@ -184,7 +184,13 @@
 
     // Fake jQuery.ready, if jQuery loaded
     defer(function (jquery) {
-        if (!_jqueryReady && (jquery = window.jQuery) && jquery.fn) {
+        if (_jqueryReady) {
+            return;
+        }
+
+        jquery = window.jQuery;
+
+        if (jquery && jquery.fn) {
             _jqueryReady = jquery.fn.ready;
             jquery.fn.ready = function (callback) {
                 defer(function () {_jqueryReady(callback)}, _delay);

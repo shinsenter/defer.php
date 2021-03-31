@@ -40,7 +40,7 @@ class TextNode extends DOMText
      *
      * @return void
      */
-    protected function normalizeWhitespaces()
+    private function normalizeWhitespaces()
     {
         $parent = $this->parentNode;
 
