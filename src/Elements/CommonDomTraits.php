@@ -282,7 +282,7 @@ trait CommonDomTraits
      * @param mixed  $name
      * @param mixed  $addValue
      */
-    protected function _pushAttrValue($name, $value, $addValue = false)
+    private function _pushAttrValue($name, $value, $addValue = false)
     {
         if ($this instanceof DOMElement) {
             $attr = $this->getAttribute($name);

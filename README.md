@@ -52,17 +52,8 @@
 
 ### Install with composer
 
-Install the latest version
-
 ```bash
 composer require shinsenter/defer.php
-```
-
-
-Install older version (for PHP <7.1.3)
-
-```bash
-composer require shinsenter/defer.php:^2.0
 ```
 
 
@@ -77,11 +68,13 @@ require_once __DIR__ . '/vendor/autoload.php';
 ```
 
 
-### Backward compatible
+### Requirements
 
-This library recommends that the server is running PHP version 7.3 or greater for better performance and support.
+This library requires PHP 5.6 or above so you need this version or the latest version of PHP installed on your system.
 
-Library's options of v2.x version are not backward compatible with previous release's options. Please read the library manual for more details.
+It recommends that the server is running PHP version 7.3+ or above for better performance and supports.
+
+Library options from v2.x are not backward compatible with previous release's options. Please read [library manual](#options) for more details.
 
 
 ## Usages
@@ -109,7 +102,7 @@ var_dump($result2);
 ```
 
 
-### Customize the options of the library
+### Options
 
 ```php
 // Include the library
@@ -132,7 +125,7 @@ $options = [
   'manually_add_deferjs' => false,
 
   // URL to defer.js javascript file.
-  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.1.0/dist/defer_plus.min.js
+  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.3.0/dist/defer_plus.min.js
   'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
 
   // URL to javascript contains fixes.
@@ -375,16 +368,16 @@ Only few options of this library are applicable to AMP pages (minifying HTML con
 
 ### Defer.js
 
-https://github.com/shinsenter/defer.js/
+[https://github.com/shinsenter/defer.js/](https://github.com/shinsenter/defer.js/)
 
 🥇 A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
 
 
 ### Wordpress plugin
 
-https://github.com/shinsenter/defer-wordpress/
+[https://github.com/shinsenter/defer-wordpress/](https://github.com/shinsenter/defer-wordpress/)
 
-⚡️ A native, blazing fast lazy loader. ✅ Legacy browsers support (IE9+). 💯 SEO friendly. 🧩 Lazy load almost anything.
+⚡️ A native, blazing fast lazy loader. ✅ Legacy browsers support (IE9+). 💯 SEO friendly. 🧩 Lazy-load everything.
 
 
 ### Laravel package

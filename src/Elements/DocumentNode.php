@@ -75,6 +75,7 @@ class DocumentNode extends DOMDocument implements DeferOptimizable, DeferNormali
         $disableEntities = @libxml_disable_entity_loader(true);
         parent::loadHTML($html, $this->libxmlOptions);
 
+        @libxml_clear_errors();
         @libxml_use_internal_errors($internalErrors);
         @libxml_disable_entity_loader($disableEntities);
 

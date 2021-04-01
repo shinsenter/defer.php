@@ -204,7 +204,7 @@ class DeferCache implements CacheInterface
         $this->path = $path;
     }
 
-    protected function rmdir($dirPath)
+    private function rmdir($dirPath)
     {
         $files = $this->scan($dirPath);
 
@@ -219,12 +219,12 @@ class DeferCache implements CacheInterface
         @rmdir($dirPath);
     }
 
-    protected function exists($path)
+    private function exists($path)
     {
         return (bool) stream_resolve_include_path($path);
     }
 
-    protected function scan($path, $type = null)
+    private function scan($path, $type = null)
     {
         $list   = [];
         $handle = @opendir($path);
@@ -248,7 +248,7 @@ class DeferCache implements CacheInterface
         return $list;
     }
 
-    protected function hashedPath($key)
+    private function hashedPath($key)
     {
         $hashed = $this->hash($key);
         $path   = $this->path;
@@ -268,7 +268,7 @@ class DeferCache implements CacheInterface
         return $path;
     }
 
-    protected function hash($key)
+    private function hash($key)
     {
         return hash('adler32', $key);
     }

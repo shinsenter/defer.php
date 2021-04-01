@@ -179,10 +179,6 @@ class MediaResolver extends DeferResolver implements
                 $this->createDataAttr('poster', $svg_placeholder);
             }
 
-            if ($standalone) {
-                $this->node->addClass(DeferConstant::CLASS_DEFER_LOADING);
-            }
-
             // Browser-level image lazy-loading for the web
             if (!$this->node->hasAttribute(DeferConstant::ATTR_LOADING)) {
                 $this->node->setAttribute(DeferConstant::ATTR_LOADING, 'lazy');

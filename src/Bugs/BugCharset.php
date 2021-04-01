@@ -111,7 +111,7 @@ class BugCharset implements PatchInterface
      * Get charset from html
      * @param mixed $html
      */
-    protected function detectCharset($html)
+    private function detectCharset($html)
     {
         $charset = null;
 
@@ -141,7 +141,7 @@ class BugCharset implements PatchInterface
      * @param  bool   $revert = false
      * @return string
      */
-    protected function escapeHtmlEntity($html, $revert = false)
+    private function escapeHtmlEntity($html, $revert = false)
     {
         static $__html_mapping;
 

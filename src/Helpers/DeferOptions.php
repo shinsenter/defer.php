@@ -168,6 +168,33 @@ class DeferOptions
     }
 
     /**
+     * Set options from request
+     *
+     * @param  array $allows
+     * @return self
+     */
+    public function mergeFromRequest($allows = [])
+    {
+        $flags = array_filter($this->defaultOptions(), function ($value) {
+            return is_bool($value);
+        });
+
+        if (empty($allows)) {
+            $allows = array_keys($flags);
+        }
+
+        foreach ($allows as $key) {
+            if (isset($flags[$key], $_REQUEST[$key])) {
+                $flags[$key] = (bool) $_REQUEST[$key];
+            }
+        }
+
+        $this->setOption($flags);
+
+        return $this;
+    }
+
+    /**
      * Get merged list of well known third-party pattern
      *
      * @param  mixed $useCache
@@ -214,7 +241,7 @@ class DeferOptions
      *  'manually_add_deferjs' => false,
      *
      *  // URL to defer.js javascript file.
-     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.1.0/dist/defer_plus.min.js
+     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.3.0/dist/defer_plus.min.js
      *  'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
      *
      *  // URL to javascript contains fixes.
@@ -361,11 +388,11 @@ class DeferOptions
      *  'ignore_lazyload_css_selectors'  => [],
      *
      * @since  2.0.0
-     * @return self
+     * @return array
      */
-    protected function configureOptions()
+    private function defaultOptions()
     {
-        $this->resolver->setDefaults([
+        return [
             // Disable the library
             'disable' => !empty($_REQUEST[DeferConstant::ARG_NODEFER]),
 
@@ -431,7 +458,12 @@ class DeferOptions
             // Blacklists using CSS class names
             'ignore_lazyload_css_class'     => [],
             'ignore_lazyload_css_selectors' => [],
-        ]);
+        ];
+    }
+
+    private function configureOptions()
+    {
+        $this->resolver->setDefaults($this->defaultOptions());
 
         return $this;
     }

@@ -128,7 +128,7 @@ class Defer
         $this->cleanup();
 
         if ($this->options()->disable || !$this->isFullPageHtml($html)) {
-            $this->_html = $html;
+            $this->_html = trim($html);
         } else {
             $this->document                      = new DocumentNode('1.0', 'UTF-8');
             $this->document->formatOutput        = true;
@@ -340,16 +340,15 @@ class Defer
      */
 
     /**
-     * Returns true if the data from $html is an normal HTML document
+     * Returns true if the data from $html is a normal HTML document
      *
      * @since  2.0.0
      * @param  string $html
      * @return bool
      */
-    protected function isFullPageHtml($html)
+    private function isFullPageHtml($html)
     {
-        return strstr($html, '<html') !== false
-            && strstr($html, '</html>') !== false;
+        return preg_match('/<\!DOCTYPE.+<html.+<\/html>/is', $html);
     }
 
     /**
@@ -359,7 +358,7 @@ class Defer
      * @param  string $html
      * @return string
      */
-    protected function patchBefore(&$html)
+    private function patchBefore(&$html)
     {
         foreach ($this->_patchers as $fixer) {
             $html = $fixer->before($html, $this->options);
@@ -375,7 +374,7 @@ class Defer
      * @param  string $html
      * @return string
      */
-    protected function patchAfter(&$html)
+    private function patchAfter(&$html)
     {
         $patchers = array_reverse($this->_patchers);
 
