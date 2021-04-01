@@ -128,7 +128,7 @@ class Defer
         $this->cleanup();
 
         if ($this->options()->disable || !$this->isFullPageHtml($html)) {
-            $this->_html = $html;
+            $this->_html = trim($html);
         } else {
             $this->document                      = new DocumentNode('1.0', 'UTF-8');
             $this->document->formatOutput        = true;

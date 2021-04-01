@@ -37,41 +37,28 @@
     |--------------------------------------------------------------------------
     */
 
-    // HTML element
-    var _domHtml = document.documentElement;
-
     // Backup jQuery.ready
     var _jqueryReady;
 
     // Common texts
-    var _txtAttribute   = 'Attribute';
-    var _txtDataLayer   = 'dataLayer';
-    var _txtDataPrefix  = 'data-';
-    var _txtDeferClass  = 'deferjs';
-    var _txtDeferPrefix = 'defer-';
-    var _txtLazied      = 'lazied';
-    var _txtMedia       = 'media';
+    var _dataLayer   = 'dataLayer';
+    var _deferClass  = 'deferjs';
+    var _deferPrefix = 'defer-';
+    var _lazied      = 'lazied';
+    var _dataPrefix  = 'data-';
+    var _media       = 'media';
+
+    // Common class names
+    var _classLazied  = _deferPrefix + _lazied;
+    var _classLoaded  = _deferPrefix + 'loaded';
+    var _classLoading = _deferPrefix + 'loading';
 
     // Common attributes
     var _attrClassName  = 'className';
     var _attrDataIgnore = 'data-ignore';
 
     // Common CSS selectors
-    var _queryIgnore = ':not([' + _attrDataIgnore + ']):not([lazied])';
-    var _queryTarget =
-        '[' + _txtDataPrefix + 'src]' + _queryIgnore + ',' +
-        '[' + _txtDataPrefix + 'srcset]' + _queryIgnore + ',' +
-        '[' + _txtDataPrefix + 'style]' + _queryIgnore;
-
-    // Common class names
-    var _classLazied  = _txtDeferPrefix + _txtLazied;
-    var _classLoaded  = _txtDeferPrefix + 'loaded';
-    var _classLoading = _txtDeferPrefix + 'loading';
-
-    // Common method names
-    var _addEventListener = 'addEventListener';
-    var _getAttribute = 'get' + _txtAttribute;
-    var _hasAttribute = 'has' + _txtAttribute;
+    var _queryTarget = '.' + _classLoading + ':not([' + _attrDataIgnore + ']):not([lazied])';
 
     /*
     |--------------------------------------------------------------------------
@@ -89,55 +76,19 @@
     |--------------------------------------------------------------------------
     */
 
-    function _getClass(node, find) {
-        return node[_attrClassName].
-            split(' ').
-            filter(function (name) {
-                return name != '' && name != find;
-            });
-    }
-
-    function _addClass(node, name, _tmp) {
-        _tmp = _getClass(node, name);
-        _tmp.push(name);
-        node[_attrClassName] = _tmp.join(' ');
-    }
-
-    function _removeClass(node, name) {
-        node[_attrClassName] = _getClass(node, name).join(' ');
+    function _replaceClass(node, find, replace) {
+        node[_attrClassName] = (' ' + node[_attrClassName] + ' ').
+            replace(' ' + find + ' ',  ' ' + replace + ' ').trim();
     }
 
     function _lazyload() {
-        defer.dom(_queryTarget, 0, _classLazied, function (element, _loaded, _src, _placeholder) {
-            // Loading state
-            _addClass(element, _classLoading);
-
-            function _onLoad() {
-                if (!_loaded) {
-                    _loaded = true;
-                    _removeClass(element, _classLoading);
-                    _addClass(element, _classLoaded);
-                }
-            }
-
-            // Add youtube placeholder
-            _src = element[_getAttribute](_txtDataPrefix + 'src');
-            _placeholder = element[_getAttribute]('src');
-
-            // Update loaded state
-            if (element[_hasAttribute](_attrDataIgnore) ||
-                _src == _placeholder || !_src) {
-                _onLoad();
-            } else {
-                element[_addEventListener]('error', _onLoad);
-                element[_addEventListener]('load', _onLoad);
-                defer(_onLoad, 3000);
-            }
+        defer.dom(_queryTarget, 0, _classLazied, function (node) {
+            _replaceClass(node, _classLoading, _classLoaded);
         }, _options);
 
         [].slice.call(document.querySelectorAll('style[defer]')).
             forEach(function(node) {
-                node[_txtMedia] = node[_getAttribute](_txtDataPrefix + _txtMedia) || 'all';
+                node[_media] = node.getAttribute(_dataPrefix + _media) || 'all';
             });
     }
 
@@ -152,8 +103,9 @@
     }
 
     function _boot() {
-        _copyright();
         defer(_lazyload, _delay);
+        _replaceClass(document.documentElement, 'no-' + _deferClass, _deferClass);
+        _copyright();
     }
 
     /*
@@ -161,9 +113,6 @@
     | Define helper object
     |--------------------------------------------------------------------------
     */
-
-    // Remove no-deferjs class
-    _removeClass(_domHtml, 'no-' + _txtDeferClass);
 
     // Check if missing defer feature
     if (!defer) {return;}
@@ -179,8 +128,8 @@
 
     // Fix missing dataLayer (for Google Analytics)
     // See: https://developers.google.com/analytics/devguides/collection/analyticsjs
-    window.ga = window.ga || function () {(window.ga.q = window.ga.q || []).push(arguments)}; window.ga.l = Number(new Date());
-    window[_txtDataLayer] = window[_txtDataLayer] || [];
+    window.ga = window.ga || function () {(window.ga.q = window.ga.q || []).push(arguments)}; window.ga.l = Number(Date());
+    window[_dataLayer] = window[_dataLayer] || [];
 
     // Fake jQuery.ready, if jQuery loaded
     defer(function (jquery) {
@@ -204,7 +153,7 @@
     |--------------------------------------------------------------------------
     */
 
-    _addClass(_domHtml, _txtDeferClass);
+
     _boot();
 
 })(this, document, console);

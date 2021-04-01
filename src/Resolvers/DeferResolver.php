@@ -295,7 +295,8 @@ class DeferResolver
             return $this->node->getAttribute($attr);
         }
 
-        $original = $this->attr_backups[$attr] = $this->node->getAttribute($attr);
+        $original = $this->node->getAttribute($attr);
+        $this->attr_backups[$attr] = DeferAssetUtil::normalizeUrl($original);
 
         if (is_array($attributes)) {
             $unified = $original;
@@ -323,7 +324,7 @@ class DeferResolver
             return $unified;
         }
 
-        return $original;
+        return $this->attr_backups[$attr];
     }
 
     /**

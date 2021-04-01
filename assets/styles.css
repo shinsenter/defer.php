@@ -16,13 +16,13 @@ embed {
 }
 
 .defer-loaded {
-  background-color: transparent!important;
+  background-color: initial!important;
 }
 
-.defer-faded .defer-lazied{
-  transition: opacity 0.5s ease-in-out;
+.defer-faded [lazied]{
+  transition: opacity 0.3s;
 }
 
 .defer-faded .defer-loading:not([data-ignore]) {
-  opacity: 0.5 !important;
+  opacity: 0.1!important;
 }
