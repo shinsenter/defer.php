@@ -88,6 +88,7 @@ class Defer
         ];
 
         $this->options = new DeferOptions($options ?: []);
+        $this->options->mergeFromRequest();
 
         $this->fromHtml($html);
     }
@@ -176,8 +177,10 @@ class Defer
      */
     public function optimize()
     {
-        $dom  = $this->document;
-        $html = $dom->root();
+        $dom   = $this->document;
+        $html  = $dom->root();
+        $debug = $this->options->debug_mode || $this->options->debug_time;
+        $isAmp = $dom->isAmpHtml();
 
         // Skip if already _optimized
         if ($this->_optimized || empty($html)) {
@@ -188,7 +191,7 @@ class Defer
         $dom->optimize($this->options);
 
         // Embed defer.js library
-        if (!$dom->isAmpHtml()) {
+        if (!$isAmp) {
             $node = null;
             $lib  = $this->deferjs();
 
@@ -207,23 +210,30 @@ class Defer
             // Optimize the script tag
             if (!empty($node)) {
                 $node->optimize($this->options);
-                $lib->cleanHelperTags($this->document);
+                $lib->cleanHelperTags($dom);
+
+                // Debug
+                if ($debug) {
+                    $node->precede($lib->getDebugJsNode($dom, 'time'));
+                    $node->follow($lib->getDebugJsNode($dom, 'timeLog', 'defer.js finished.'));
+                    $dom->body()->appendWith(($lib->getDebugJsNode($dom, 'timeEnd', 'body finished.')));
+                }
 
                 // Append helper CSS
-                $node->precede($lib->getHelperCssNode($this->document));
+                $node->precede($lib->getHelperCssNode($dom));
 
                 // Append helper script
                 $defer_time = $this->options->default_defer_time;
                 $copy       = $this->options->console_copyright;
-                $node->follow($lib->getHelperJsNode($this->document, $defer_time, $copy));
+                $node->follow($lib->getHelperJsNode($dom, $defer_time, $copy));
 
                 // Append polyfill
-                $node->follow($lib->getPolyfillNode($this->document));
+                $node->follow($lib->getPolyfillNode($dom));
 
                 // Custom type for deferred script tags
                 if ($this->options->deferjs_type_attribute != '') {
                     $dom->body()->appendWith($lib->getCustomDeferTypeNode(
-                        $this->document,
+                        $dom,
                         $this->options->deferjs_type_attribute
                     ));
                 }

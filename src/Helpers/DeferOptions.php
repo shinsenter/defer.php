@@ -397,6 +397,7 @@ class DeferOptions
             'disable' => !empty($_REQUEST[DeferConstant::ARG_NODEFER]),
 
             // Debug optimized tags (instead of optimized HTML)
+            'debug_time' => false,
             'debug_mode' => !empty($_REQUEST[DeferConstant::ARG_DEBUG]),
 
             // Manually add deferjs
