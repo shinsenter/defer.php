@@ -175,7 +175,7 @@ class DeferOptions
      */
     public function mergeFromRequest($allows = [])
     {
-        $flags = array_filter($this->defaultOptions(), function ($value) {
+        $flags = array_filter($this->options, function ($value) {
             return is_bool($value);
         });
 
