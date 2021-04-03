@@ -238,8 +238,6 @@ class DeferOptimizer
             $lazied = $resolver->lazyload();
 
             if ($lazied) {
-                $node->addClass(DeferConstant::CLASS_DEFER_LOADING);
-
                 if (!empty($fallback)) {
                     $fallback->detach();
                     $node->follow($fallback);

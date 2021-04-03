@@ -48,7 +48,7 @@ class DeferMinifier
         // Minify the css code
         // See: https://gist.github.com/clipperhouse/1201239/cad48570925a4f5ff0579b654e865db97d73bcc4
         $minified = preg_replace('/\s*([,\+\*\/>~;:!}{]{1})\s*/', '$1', $input);
-        $minified = strtr($minified, [';}' => '}', "\r" => '', "\n" => '', '0.' => '.']);
+        $minified = strtr($minified, [';}' => '}', "\r" => '', "\n" => '']);
 
         // Strip comments
         // See: https://gist.github.com/orangexception/1292778

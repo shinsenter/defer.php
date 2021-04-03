@@ -359,6 +359,7 @@ class DeferResolver
         if ($placeholder != $value) {
             $this->node->setAttribute($attr, $placeholder);
             $this->node->setAttribute($data_attr, $value);
+            $this->node->addClass(DeferConstant::CLASS_DEFER_LOADING);
         }
 
         return $this;
