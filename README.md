@@ -2,7 +2,7 @@
 
 🚀 A PHP library that aims to help you concentrate on web performance optimization.
 
-- **Package**: [@shinsenter/defer.php](https://www.npmjs.com/package/@shinsenter/defer.php)
+- **Package**: [@shinsenter/defer.php](https://packagist.org/packages/shinsenter/defer.php)
 - **Version**: 2.2.0
 - **Author**: Mai Nhut Tan <shin@shin.company>
 - **Copyright**: 2021 AppSeeds <https://code.shin.company/>
