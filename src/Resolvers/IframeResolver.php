@@ -48,7 +48,7 @@ class IframeResolver extends DeferResolver implements
         }
 
         if (empty($this->node->getAttribute('title'))) {
-            $this->node->setAttribute('title', basename($src ?: ''));
+            $this->node->setAttribute('title', basename($src ?: 'blank'));
         }
 
         // Browser-level image lazy-loading for the web

@@ -156,6 +156,27 @@ class DeferJs
     }
 
     /**
+     * Return new <script> node with debug information
+     * @param  mixed       $method
+     * @param  mixed       $label
+     * @param  mixed       $message
+     * @return ElementNode
+     */
+    public function getDebugJsNode(DocumentNode $dom, $method = 'time', $message = '')
+    {
+        $label = 'defer.js perf';
+
+        if ($message) {
+            $message = strtr($message, ["'" => "\\'"]);
+            $message = ";console.info('${label}: ${message}')";
+        }
+
+        $script = "try{console.${method}('${label}')${message}}finally{}";
+
+        return $dom->newNode('script', $script);
+    }
+
+    /**
      * Return polyfill script node
      *
      * @return null|ElementNode

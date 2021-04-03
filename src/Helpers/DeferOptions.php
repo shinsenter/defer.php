@@ -175,7 +175,7 @@ class DeferOptions
      */
     public function mergeFromRequest($allows = [])
     {
-        $flags = array_filter($this->defaultOptions(), function ($value) {
+        $flags = array_filter($this->options, function ($value) {
             return is_bool($value);
         });
 
@@ -241,7 +241,7 @@ class DeferOptions
      *  'manually_add_deferjs' => false,
      *
      *  // URL to defer.js javascript file.
-     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.3.0/dist/defer_plus.min.js
+     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.4.0/dist/defer_plus.min.js
      *  'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
      *
      *  // URL to javascript contains fixes.
@@ -397,6 +397,7 @@ class DeferOptions
             'disable' => !empty($_REQUEST[DeferConstant::ARG_NODEFER]),
 
             // Debug optimized tags (instead of optimized HTML)
+            'debug_time' => false,
             'debug_mode' => !empty($_REQUEST[DeferConstant::ARG_DEBUG]),
 
             // Manually add deferjs

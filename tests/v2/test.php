@@ -28,11 +28,14 @@ require_once AUTOLOAD;
 require_once BASE . DS . 'helpers.php';
 
 // Test request arguments
-$_REQUEST['nodefer'] = 0;
-$_REQUEST['debug']   = 0;
+$_REQUEST['nodefer']    = 0;
+$_REQUEST['debug']      = 0;
+$_REQUEST['debug_time'] = 1;
 
 // New instance
 $defer = new AppSeeds\Defer([
+    'deferjs_src' => dirname(ROOT) . '/defer.js/dist/defer_plus.min.js',
+
     // Library injection
     'inline_deferjs'     => true,
     'default_defer_time' => 200,
@@ -75,6 +78,7 @@ $defer = new AppSeeds\Defer([
         '.header_top_icon_list img',
         '.header_logo img',
         '.banner img',
+        '.logo',
     ],
 ]);
 

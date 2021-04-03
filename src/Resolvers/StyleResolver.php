@@ -119,10 +119,7 @@ class StyleResolver extends DeferResolver implements
         // Only defer when it is a CSS node
         // and "onload" attribute is not provided
         $media = $this->node->getAttribute('media');
-
-        if (!empty($media)) {
-            $this->node->setAttribute('data-media', $media);
-        }
+        $this->node->setAttribute('data-media', $media ?: 'all');
 
         // Lazyload the style
         $this->node->setAttribute('media', DeferConstant::TEMPLATE_LAZY_MEDIA_ATTR);

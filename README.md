@@ -3,7 +3,7 @@
 🚀 A PHP library that aims to help you concentrate on web performance optimization.
 
 - **Package**: [@shinsenter/defer.php](https://www.npmjs.com/package/@shinsenter/defer.php)
-- **Version**: 2.0
+- **Version**: 2.2.0
 - **Author**: Mai Nhut Tan <shin@shin.company>
 - **Copyright**: 2021 AppSeeds <https://code.shin.company/>
 - **License**: [MIT](https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE)
@@ -125,7 +125,7 @@ $options = [
   'manually_add_deferjs' => false,
 
   // URL to defer.js javascript file.
-  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.3.0/dist/defer_plus.min.js
+  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.4.0/dist/defer_plus.min.js
   'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
 
   // URL to javascript contains fixes.

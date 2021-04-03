@@ -20,9 +20,9 @@ embed {
 }
 
 .defer-faded [lazied]{
-  transition: opacity 0.3s;
+  transition: opacity 0.2s;
 }
 
-.defer-faded .defer-loading:not([data-ignore]) {
-  opacity: 0.1!important;
+.defer-faded .defer-loading {
+  opacity: 0.5!important;
 }
