@@ -189,7 +189,7 @@ trait CommonDomTraits
 
             if ($this->parentNode instanceof DOMNode) {
                 foreach ($input as $node) {
-                    $this->parentNode->insertBefore($node, $this);
+                    $this->parentNode->insertBefore($this->_safeNode($node), $this);
                 }
             }
         }
@@ -211,6 +211,8 @@ trait CommonDomTraits
 
             if ($this->parentNode instanceof DOMNode) {
                 foreach ($input as $node) {
+                    $node = $this->_safeNode($node);
+
                     if (is_null($this->nextSibling)) {
                         $this->parentNode->appendChild($node);
                     } else {
@@ -236,7 +238,7 @@ trait CommonDomTraits
             }
 
             foreach ($input as $node) {
-                $this->insertBefore($node, $this->firstChild);
+                $this->insertBefore($this->_safeNode($node), $this->firstChild);
             }
         }
 
@@ -256,7 +258,7 @@ trait CommonDomTraits
             }
 
             foreach ($input as $node) {
-                $this->appendChild($node);
+                $this->appendChild($this->_safeNode($node));
             }
         }
 
@@ -309,5 +311,23 @@ trait CommonDomTraits
                 $this->setAttribute($name, implode(' ', $values));
             }
         }
+    }
+
+    /**
+     * @internal
+     *
+     * @param  \DOMNode|string   $input
+     * @return \DOMNode
+     */
+    private function _safeNode($input)
+    {
+        if ($input instanceof DOMNode) {
+            return $input;
+        }
+
+        $fragment = $this->document()->createDocumentFragment();
+        $fragment->appendXML($input);
+
+        return $fragment;
     }
 }
