@@ -68,9 +68,12 @@ $defer = new AppSeeds\Defer([
     'iframe_placeholder' => 'about:blank',
 
     // Splash screen
-    'custom_splash_screen' => '',
+    'custom_splash_screen' => '<div id="loading"></div>',
 
     // Blacklists
+    'ignore_lazyload_paths' => [
+        'jquery',
+    ],
     'ignore_lazyload_css_class' => [
         'zoom-lens',
     ],

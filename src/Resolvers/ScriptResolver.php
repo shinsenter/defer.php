@@ -195,7 +195,9 @@ class ScriptResolver extends DeferResolver implements
      */
     public function lazyload()
     {
-        if ($this->isDeferJs() || $this->isCriticalJavascript()) {
+        if ($this->isDeferJs() ||
+            $this->isCriticalJavascript() ||
+            $this->skipLazyloading('src')) {
             return false;
         }
 
