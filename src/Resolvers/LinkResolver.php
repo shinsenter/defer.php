@@ -287,7 +287,9 @@ class LinkResolver extends DeferResolver implements
     {
         // Only defer when it is a CSS node
         // and "onload" attribute is not provided
-        if (!$this->isCss() || $this->node->hasAttribute('onload')) {
+        if (!$this->isCss() ||
+            $this->node->hasAttribute('onload') ||
+            $this->skipLazyloading('href')) {
             return false;
         }
 

@@ -229,7 +229,7 @@ class DeferResolver
 
             if (!empty($value)) {
                 foreach ($blacklist as $keyword) {
-                    if (strstr($value, $keyword) !== true) {
+                    if (strstr($value, $keyword) !== false) {
                         return true;
                     }
                 }
@@ -243,7 +243,7 @@ class DeferResolver
 
             if (!empty($text)) {
                 foreach ($blacklist as $keyword) {
-                    if (strstr($text, $keyword) !== true) {
+                    if (strstr($text, $keyword) !== false) {
                         return true;
                     }
                 }
