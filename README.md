@@ -3,7 +3,7 @@
 🚀 A PHP library that aims to help you concentrate on web performance optimization.
 
 - **Package**: [@shinsenter/defer.php](https://packagist.org/packages/shinsenter/defer.php)
-- **Version**: 2.2.0
+- **Version**: 2.4.0
 - **Author**: Mai Nhut Tan <shin@shin.company>
 - **Copyright**: 2021 AppSeeds <https://code.shin.company/>
 - **License**: [MIT](https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE)
@@ -383,7 +383,9 @@ Only few options of this library are applicable to AMP pages (minifying HTML con
 
 ### Laravel package
 
-Under development.
+[https://github.com/shinsenter/defer-laravel/](https://github.com/shinsenter/defer-laravel/)
+
+🚀 A Laravel package that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.
 
 
 ## Support my activities
