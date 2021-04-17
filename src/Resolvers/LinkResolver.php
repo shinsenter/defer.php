@@ -289,6 +289,7 @@ class LinkResolver extends DeferResolver implements
         // and "onload" attribute is not provided
         if (!$this->isCss() ||
             $this->node->hasAttribute('onload') ||
+            $this->node->hasAttribute('onerror') ||
             $this->skipLazyloading('href')) {
             return false;
         }
