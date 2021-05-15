@@ -195,16 +195,14 @@ class ScriptResolver extends DeferResolver implements
      */
     public function lazyload()
     {
-        if ($this->isDeferJs() ||
-            $this->isCriticalJavascript() ||
-            $this->skipLazyloading('src')) {
-            return false;
-        }
-
-        $lazied = true;
-
         // Only defer for javascript
         if ($this->isJavascript()) {
+            if ($this->isDeferJs() ||
+                $this->isCriticalJavascript() ||
+                $this->skipLazyloading('src')) {
+                return false;
+            }
+
             // Remove lazy attributes
             $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
             $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
@@ -212,10 +210,10 @@ class ScriptResolver extends DeferResolver implements
             // Convert to type=deferjs node
             $this->node->setAttribute('type', $this->options->deferjs_type_attribute);
 
-            $lazied = true;
+            return true;
         }
 
-        return $lazied;
+        return false;
     }
 
     /**
