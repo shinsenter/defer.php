@@ -140,6 +140,16 @@ class ScriptResolver extends DeferResolver implements
             if ($normalized != $src) {
                 $this->node->setAttribute('src', $normalized);
             }
+        } elseif ($this->isJavascript()) {
+            if ($this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
+                $this->node->removeAttribute(DeferConstant::ATTR_ASYNC);
+                $this->node->setAttribute(DeferConstant::ATTR_LAZY, 'true');
+            }
+
+            if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)) {
+                $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
+                $this->node->setAttribute(DeferConstant::ATTR_LAZY, 'true');
+            }
         }
 
         if ($this->isJavascript()) {
@@ -188,6 +198,22 @@ class ScriptResolver extends DeferResolver implements
     {
         return parent::shouldLazyload()
             && ($this->hasLazyloadFlag() || $this->isThirdParty());
+    }
+
+    /**
+     * Check if the node contains "data-lazy" or "defer" attribute
+     *
+     * @return bool
+     */
+    public function hasLazyloadFlag()
+    {
+        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)
+            || $this->node->hasAttribute(DeferConstant::ATTR_ASYNC)
+            || $this->node->hasAttribute(DeferConstant::ATTR_LAZY)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -247,7 +273,7 @@ class ScriptResolver extends DeferResolver implements
     public function getPreloadNode()
     {
         if ($this->isSrcJavascript()
-            && ($this->isThirdParty() || !$this->node->hasAttribute('async'))) {
+            && !$this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
             $preload = $this->newNode('link', [
                 'rel'         => LinkResolver::PRELOAD,
                 'as'          => 'script',

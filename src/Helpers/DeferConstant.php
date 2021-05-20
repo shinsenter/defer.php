@@ -50,6 +50,7 @@ class DeferConstant
     const ATTR_NOLAZY = 'data-nolazy';
 
     // Attribute names to lazyload CSS element
+    const ATTR_ASYNC = 'async';
     const ATTR_DEFER = 'defer';
     const ATTR_LAZY  = 'data-lazy';
 
@@ -179,6 +180,7 @@ class DeferConstant
         '.bootstrapcdn.com',
         '.disqus.com',
         '.doubleclick.net',
+        '.facebook.net',
         '.fontawesome.com',
         '.google-analytics.com',
         '.googlesyndication.com',
@@ -192,8 +194,8 @@ class DeferConstant
         '.youtube.com',
         '//api.pinterest.com',
         '//apis.google.com',
+        '//b.st-hatena.com',
         '//cdnjs.cloudflare.com',
-        '//connect.facebook.net',
         '//disqus.com',
         '//fonts.googleapis.com',
         '//google-analytics.com',
@@ -208,6 +210,7 @@ class DeferConstant
         '//s.yimg.',
         '//syndication.twitter.com',
         '//youtube.com',
+        '//www.youtube.com',
         'adservice.google.',
     ];
 }
