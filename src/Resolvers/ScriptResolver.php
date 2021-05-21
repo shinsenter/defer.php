@@ -140,6 +140,16 @@ class ScriptResolver extends DeferResolver implements
             if ($normalized != $src) {
                 $this->node->setAttribute('src', $normalized);
             }
+        } elseif ($this->isJavascript()) {
+            if ($this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
+                $this->node->removeAttribute(DeferConstant::ATTR_ASYNC);
+                $this->node->setAttribute(DeferConstant::ATTR_LAZY, 'true');
+            }
+
+            if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)) {
+                $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
+                $this->node->setAttribute(DeferConstant::ATTR_LAZY, 'true');
+            }
         }
 
         if ($this->isJavascript()) {
@@ -191,20 +201,34 @@ class ScriptResolver extends DeferResolver implements
     }
 
     /**
+     * Check if the node contains "data-lazy" or "defer" attribute
+     *
+     * @return bool
+     */
+    public function hasLazyloadFlag()
+    {
+        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)
+            || $this->node->hasAttribute(DeferConstant::ATTR_ASYNC)
+            || $this->node->hasAttribute(DeferConstant::ATTR_LAZY)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function lazyload()
     {
-        if ($this->isDeferJs() ||
-            $this->isCriticalJavascript() ||
-            $this->skipLazyloading('src')) {
-            return false;
-        }
-
-        $lazied = true;
-
         // Only defer for javascript
         if ($this->isJavascript()) {
+            if ($this->isDeferJs() ||
+                $this->isCriticalJavascript() ||
+                $this->skipLazyloading('src')) {
+                return false;
+            }
+
             // Remove lazy attributes
             $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
             $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
@@ -212,10 +236,10 @@ class ScriptResolver extends DeferResolver implements
             // Convert to type=deferjs node
             $this->node->setAttribute('type', $this->options->deferjs_type_attribute);
 
-            $lazied = true;
+            return true;
         }
 
-        return $lazied;
+        return false;
     }
 
     /**
@@ -249,7 +273,7 @@ class ScriptResolver extends DeferResolver implements
     public function getPreloadNode()
     {
         if ($this->isSrcJavascript()
-            && ($this->isThirdParty() || !$this->node->hasAttribute('async'))) {
+            && !$this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
             $preload = $this->newNode('link', [
                 'rel'         => LinkResolver::PRELOAD,
                 'as'          => 'script',

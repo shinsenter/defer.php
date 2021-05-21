@@ -316,7 +316,7 @@ trait CommonDomTraits
     /**
      * @internal
      *
-     * @param  \DOMNode|string   $input
+     * @param  \DOMNode|string $input
      * @return \DOMNode
      */
     private function _safeNode($input)

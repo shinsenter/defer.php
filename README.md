@@ -125,7 +125,7 @@ $options = [
   'manually_add_deferjs' => false,
 
   // URL to defer.js javascript file.
-  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.4.0/dist/defer_plus.min.js
+  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.4.2/dist/defer_plus.min.js
   'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
 
   // URL to javascript contains fixes.

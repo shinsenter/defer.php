@@ -285,17 +285,18 @@ class LinkResolver extends DeferResolver implements
      */
     public function lazyload()
     {
+        // Remove lazy attributes
+        $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
+        $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
+
         // Only defer when it is a CSS node
         // and "onload" attribute is not provided
         if (!$this->isCss() ||
             $this->node->hasAttribute('onload') ||
+            $this->node->hasAttribute('onerror') ||
             $this->skipLazyloading('href')) {
             return false;
         }
-
-        // Remove lazy attributes
-        $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
-        $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
 
         // Convert to preload tag
         $this->node->setAttribute('rel', 'preload');

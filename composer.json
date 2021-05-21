@@ -59,7 +59,7 @@
         }
     },
     "scripts": {
-        "fixer": "php-cs-fixer fix --show-progress=estimating --verbose --ansi",
+        "fixer": "php-cs-fixer fix --show-progress=dots --verbose --ansi",
         "test": "@php tests/v2/test.php --ansi",
         "bf": "blackfire run php tests/v2/test.php --ansi",
         "assets": [
