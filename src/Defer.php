@@ -358,7 +358,7 @@ class Defer
      */
     private function isFullPageHtml($html)
     {
-        return preg_match('/<\!DOCTYPE.+<html.+<\/html>/is', $html);
+        return preg_match('/<\!DOCTYPE.+html.+<html/is', substr($html, 0, 1000));
     }
 
     /**
