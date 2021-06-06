@@ -197,6 +197,7 @@ class DeferConstant
         '//b.st-hatena.com',
         '//cdnjs.cloudflare.com',
         '//disqus.com',
+        '//facebook.net',
         '//fonts.googleapis.com',
         '//google-analytics.com',
         '//googlesyndication.com',
@@ -210,7 +211,6 @@ class DeferConstant
         '//s.yimg.',
         '//syndication.twitter.com',
         '//youtube.com',
-        '//www.youtube.com',
         'adservice.google.',
     ];
 }
