@@ -1022,20 +1022,20 @@
         },
         {
             "name": "psr/cache",
-            "version": "1.0.1",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/cache.git",
-                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8"
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/cache/zipball/d11b50ad223250cf17b86e38383413f5a6764bf8",
-                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8",
+                "url": "https://api.github.com/repos/php-fig/cache/zipball/aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=8.0.0"
             },
             "type": "library",
             "extra": {
@@ -1055,7 +1055,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for caching libraries",
@@ -1065,9 +1065,9 @@
                 "psr-6"
             ],
             "support": {
-                "source": "https://github.com/php-fig/cache/tree/master"
+                "source": "https://github.com/php-fig/cache/tree/3.0.0"
             },
-            "time": "2016-08-06T20:24:11+00:00"
+            "time": "2021-02-03T23:26:27+00:00"
         },
         {
             "name": "psr/container",
@@ -1219,16 +1219,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v5.3.0",
+            "version": "v5.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "058553870f7809087fa80fa734704a21b9bcaeb2"
+                "reference": "649730483885ff2ca99ca0560ef0e5f6b03f2ac1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/058553870f7809087fa80fa734704a21b9bcaeb2",
-                "reference": "058553870f7809087fa80fa734704a21b9bcaeb2",
+                "url": "https://api.github.com/repos/symfony/console/zipball/649730483885ff2ca99ca0560ef0e5f6b03f2ac1",
+                "reference": "649730483885ff2ca99ca0560ef0e5f6b03f2ac1",
                 "shasum": ""
             },
             "require": {
@@ -1297,7 +1297,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v5.3.0"
+                "source": "https://github.com/symfony/console/tree/v5.3.2"
             },
             "funding": [
                 {
@@ -1313,7 +1313,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-26T17:43:10+00:00"
+            "time": "2021-06-12T09:42:48+00:00"
         },
         {
             "name": "symfony/event-dispatcher",
@@ -1481,16 +1481,16 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v5.3.0",
+            "version": "v5.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "348116319d7fb7d1faa781d26a48922428013eb2"
+                "reference": "19b71c8f313b411172dd5f470fd61f24466d79a9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/348116319d7fb7d1faa781d26a48922428013eb2",
-                "reference": "348116319d7fb7d1faa781d26a48922428013eb2",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/19b71c8f313b411172dd5f470fd61f24466d79a9",
+                "reference": "19b71c8f313b411172dd5f470fd61f24466d79a9",
                 "shasum": ""
             },
             "require": {
@@ -1523,7 +1523,7 @@
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/filesystem/tree/v5.3.0"
+                "source": "https://github.com/symfony/filesystem/tree/v5.3.3"
             },
             "funding": [
                 {
@@ -1539,7 +1539,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-26T17:43:10+00:00"
+            "time": "2021-06-30T07:27:52+00:00"
         },
         {
             "name": "symfony/finder",
@@ -1992,16 +1992,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v5.3.0",
+            "version": "v5.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "53e36cb1c160505cdaf1ef201501669c4c317191"
+                "reference": "714b47f9196de61a196d86c4bad5f09201b307df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/53e36cb1c160505cdaf1ef201501669c4c317191",
-                "reference": "53e36cb1c160505cdaf1ef201501669c4c317191",
+                "url": "https://api.github.com/repos/symfony/process/zipball/714b47f9196de61a196d86c4bad5f09201b307df",
+                "reference": "714b47f9196de61a196d86c4bad5f09201b307df",
                 "shasum": ""
             },
             "require": {
@@ -2034,7 +2034,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v5.3.0"
+                "source": "https://github.com/symfony/process/tree/v5.3.2"
             },
             "funding": [
                 {
@@ -2050,7 +2050,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-26T12:52:38+00:00"
+            "time": "2021-06-12T10:15:01+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -2195,16 +2195,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v5.3.0",
+            "version": "v5.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "a9a0f8b6aafc5d2d1c116dcccd1573a95153515b"
+                "reference": "bd53358e3eccec6a670b5f33ab680d8dbe1d4ae1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/a9a0f8b6aafc5d2d1c116dcccd1573a95153515b",
-                "reference": "a9a0f8b6aafc5d2d1c116dcccd1573a95153515b",
+                "url": "https://api.github.com/repos/symfony/string/zipball/bd53358e3eccec6a670b5f33ab680d8dbe1d4ae1",
+                "reference": "bd53358e3eccec6a670b5f33ab680d8dbe1d4ae1",
                 "shasum": ""
             },
             "require": {
@@ -2258,7 +2258,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v5.3.0"
+                "source": "https://github.com/symfony/string/tree/v5.3.3"
             },
             "funding": [
                 {
@@ -2274,7 +2274,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-26T17:43:10+00:00"
+            "time": "2021-06-27T11:44:38+00:00"
         }
     ],
     "aliases": [],
