@@ -98,12 +98,6 @@ class DeferJs
             $defer = $this->getFromCache();
         }
 
-        $name = $this->isWebUrl($this->deferjs_src)
-                ? $this->deferjs_src
-                : '@shinsenter/defer.js';
-
-        $defer = '/*!' . $name . '*/' . PHP_EOL . DeferMinifier::minifyJs($defer);
-
         return $dom->newNode('script', $defer, [
             'id' => self::DEFERJS_ID,
         ]);
@@ -336,11 +330,11 @@ class DeferJs
             if (empty($defer)) {
                 $defer = @file_get_contents(DeferConstant::SRC_DEFERJS_FALLBACK);
 
-                if (empty($defer)) {
-                    throw new DeferException('Could not load defer.js library! Please check your configuration.');
+                if (!empty($defer)) {
+                    return $defer;
                 }
 
-                return $defer;
+                throw new DeferException('Could not load defer.js library! Please check your configuration.');
             }
         }
 
@@ -367,6 +361,9 @@ class DeferJs
         if (empty($defer)) {
             return false;
         }
+
+        $defer = '/*!' . $this->deferjs_src . '*/'
+                . PHP_EOL . DeferMinifier::minifyJs($defer);
 
         $this->cache()->set($key ?: $this->cacheKey(), $defer, $duration);
 

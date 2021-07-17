@@ -41,7 +41,7 @@
     var _dataLayer   = 'dataLayer';
 
     // Common CSS selectors
-    var _queryTarget = '.defer-loading:not([data-ignore]):not([lazied])';
+    var _queryTarget = '.defer-loading:not([data-ignore])';
 
     /*
     |--------------------------------------------------------------------------
