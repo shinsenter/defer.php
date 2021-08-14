@@ -75,13 +75,17 @@ class DeferMinifier
      */
     public static function minifyJson($input, $flag = null)
     {
-        try {
-            $flag = $flag ?: (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (is_string($input) && !empty($input)) {
+            try {
+                $flag = $flag ?: (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-            return json_encode(json_decode(trim($input), true), $flag);
-        } catch (\Exception $th) {
-            return $input;
+                return json_encode(json_decode(trim($input), true), $flag);
+            } catch (\Exception $th) {
+                return $input;
+            }
         }
+
+        return '';
     }
 
     /**

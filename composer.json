@@ -70,7 +70,7 @@
         ],
         "pull": [
             "rm -rf ./cache/*/ ./vendor/ ./composer.lock",
-            "composer update -o -a -n --no-dev --prefer-dist --ansi",
+            "composer update -o -a -n --prefer-dist --ansi",
             "npm run pull --ansi",
             "@assets"
         ],
@@ -91,7 +91,7 @@
         "symfony/polyfill-mbstring": "^1.0"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^2.0"
+        "friendsofphp/php-cs-fixer": ">=2"
     },
     "suggest": {
         "ext-mbstring": "*"

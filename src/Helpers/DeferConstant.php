@@ -68,6 +68,7 @@ class DeferConstant
 
     // Class name will be inserted for fade-in animation
     const CLASS_DEFER_LOADING = 'defer-loading';
+    const CLASS_DEFER_LOADED  = 'defer-loaded';
     const CLASS_DEFER_FADED   = 'defer-faded';
 
     // -------------------------------------------------------------------------
@@ -153,7 +154,7 @@ class DeferConstant
     // -------------------------------------------------------------------------
 
     // Source files
-    const SRC_DEFERJS_CDN      = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.4.2/dist/defer_plus.min.js';
+    const SRC_DEFERJS_CDN      = 'https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.5.0/dist/defer_plus.min.js';
     const SRC_POLYFILL_CDN     = 'https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver';
     const SRC_DEFERJS_FALLBACK = DEFER_PHP_ROOT . '/public/lib/defer_plus.min.js';
     const SCR_DEFERJS_CACHE    = DEFER_PHP_ROOT . DIRECTORY_SEPARATOR . 'cache' . DIRECTORY_SEPARATOR;
@@ -197,6 +198,7 @@ class DeferConstant
         '//b.st-hatena.com',
         '//cdnjs.cloudflare.com',
         '//disqus.com',
+        '//facebook.net',
         '//fonts.googleapis.com',
         '//google-analytics.com',
         '//googlesyndication.com',
@@ -210,7 +212,6 @@ class DeferConstant
         '//s.yimg.',
         '//syndication.twitter.com',
         '//youtube.com',
-        '//www.youtube.com',
         'adservice.google.',
     ];
 }
