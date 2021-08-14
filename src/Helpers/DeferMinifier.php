@@ -77,9 +77,12 @@ class DeferMinifier
     {
         if (is_string($input) && !empty($input)) {
             try {
+                $obj  = json_decode(trim($input), true);
                 $flag = $flag ?: (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-                return json_encode(json_decode(trim($input), true), $flag);
+                return !empty($obj)
+                    ? json_encode(json_decode(trim($input), true), $flag)
+                    : $input;
             } catch (\Exception $th) {
                 return $input;
             }
