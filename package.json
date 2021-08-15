@@ -3,7 +3,7 @@
   "author": "Mai Nhut Tan <shin@shin.company>",
   "license": "MIT",
   "dependencies": {
-    "@shinsenter/defer.js": "^2.4.2"
+    "@shinsenter/defer.js": "^2.5.0"
   },
   "scripts": {
     "cleanup": "rm -rf ./node_modules package-lock.json",

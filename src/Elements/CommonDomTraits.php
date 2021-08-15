@@ -170,7 +170,9 @@ trait CommonDomTraits
             $input = new DOMText($input);
         }
 
-        $this->_empty()->appendWith($input);
+        if ($input instanceof DOMNode) {
+            $this->_empty()->appendWith($input);
+        }
 
         return $this;
     }
