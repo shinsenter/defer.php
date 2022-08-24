@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  main:
+    container_name: defer-php-main
+    build:
+      context: ./
+    volumes:
+      - "..:/var/www/html"
+    entrypoint: "/usr/bin/tail -f /dev/null"
+    working_dir: /var/www/html
+
+  fixer:
+    container_name: defer-php-fixer
+    build:
+      context: ./
+      args:
+        - PHP_VERSION=8.1
+    volumes:
+      - "..:/var/www/html"
+    entrypoint: "/usr/bin/tail -f /dev/null"
+    working_dir: /var/www/html/.config

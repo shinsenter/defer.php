@@ -1,0 +1,21 @@
+{
+  "homepage": "https://code.shin.company/defer.php#readme",
+  "author": "Mai Nhut Tan <shin@shin.company>",
+  "license": "MIT",
+  "devDependencies": {
+    "@shinsenter/defer.js": "^3.1"
+  },
+  "scripts": {
+    "format": "js-beautify --config .config/.beautify -r -f src/assets/*.js",
+    "minify": "uglifyjs --name-cache node_modules/name-cache.json --config-file .config/.minify -o",
+    "js": "npm run minify public/script.min.js src/assets/script.js",
+    "js-full": "npm run minify public/script.defer.js node_modules/@shinsenter/defer.js/dist/defer.min.js src/assets/script.js",
+    "css": "cleancss -o public/style.min.css src/assets/style.css",
+    "test": "eslint --config .config/.eslintrc --ext .js src --fix",
+    "prepull": "rm -rf ./node_modules package-lock.json && npm -g cache clear -f",
+    "pull": "npm -g install npm clean-css-cli eslint js-beautify uglify-js@3 && npm i && npm up",
+    "postpull": "npm audit fix",
+    "prebuild": "npm run test",
+    "build": "npm run js && npm run js-full && npm run css"
+  }
+}

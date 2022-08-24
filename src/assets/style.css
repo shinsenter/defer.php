@@ -1,0 +1,9 @@
+body [data-deferjs] {
+    min-width: 1px;
+    min-height: 1px;
+    visibility: visible;
+}
+
+.no-deferjs .has-noscript {
+    display: none !important
+}

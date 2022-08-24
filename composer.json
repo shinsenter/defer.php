@@ -1,0 +1,70 @@
+{
+    "name": "shinsenter/defer.php",
+    "description": "🚀 (PHP) A PHP library that aims to help you concentrate on web performance optimization.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mai Nhut Tan",
+            "email": "shin@shin.company",
+            "homepage": "https://code.shin.company",
+            "role": "Owner"
+        }
+    ],
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://code.shin.company/defer.php/stargazers"
+        },
+        {
+            "type": "paypal",
+            "url": "https://www.patreon.com/appseeds"
+        },
+        {
+            "type": "patreon",
+            "url": "https://www.patreon.com/shinsenter"
+        }
+    ],
+    "support": {
+        "issues": "https://code.shin.company/defer.php/issues",
+        "source": "https://code.shin.company/defer.php"
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "platform": {},
+        "sort-packages": true
+    },
+    "require": {
+        "php": ">=7.3",
+        "ext-libxm": "*",
+        "garfix/js-minify": "*",
+        "masterminds/html5": "*",
+        "symfony/css-selector": "^5.4||^6.0",
+        "symfony/dom-crawler": "^5.4||^6.0",
+        "symfony/options-resolver": "^5.4||^6.0"
+    },
+    "require-dev": {
+        "bvanhoekelen/performance": "*",
+        "symfony/var-dumper": "*"
+    },
+    "suggest": {
+        "ext-ctype": "For better performance",
+        "ext-iconv": "To convert non-UTF-8 strings to UTF-8",
+        "ext-intl": "To show region name in time zone dump",
+        "ext-mbstring": "For better performance"
+    },
+    "extra": {
+        "branch-alias": {
+            "3.0-dev": "v3-dev"
+        },
+        "thanks": {
+            "name": "symfony/dom-crawler",
+            "url": "https://github.com/symfony/dom-crawler"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "AppSeeds\\": "src/"
+        }
+    }
+}

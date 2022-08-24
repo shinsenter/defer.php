@@ -1,0 +1,14 @@
+parameters:
+	level: 5
+	paths:
+		- ../src
+		- ../tests
+	excludePaths:
+		- ../src/assets/*
+	scanFiles:
+	    - ../defer.php
+	scanDirectories:
+	    - ../vendor/
+	fileExtensions:
+		- php
+	ignoreErrors:

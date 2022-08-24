@@ -1,0 +1,8 @@
+_*
+.DS_Store
+composer.lock
+composer.phar
+node_modules/
+package-lock.json
+tests/output/
+vendor/

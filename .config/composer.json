@@ -1,0 +1,19 @@
+{
+    "type": "library",
+    "minimum-stability": "dev",
+    "scripts": {
+        "phpstan": "vendor/bin/phpstan analyse",
+        "rector": "vendor/bin/rector process",
+        "fixer": "vendor/bin/php-cs-fixer fix --show-progress=dots --verbose --ansi",
+        "test": [
+            "@rector",
+            "@fixer",
+            "@phpstan"
+        ]
+    },
+    "require": {
+        "friendsofphp/php-cs-fixer": "*",
+        "phpstan/phpstan": "*",
+        "rector/rector": "dev-main"
+    }
+}
