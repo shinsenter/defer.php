@@ -3,7 +3,7 @@
   "author": "Mai Nhut Tan <shin@shin.company>",
   "license": "MIT",
   "devDependencies": {
-    "@shinsenter/defer.js": "^3.1"
+    "@shinsenter/defer.js": "^3.4"
   },
   "scripts": {
     "format": "js-beautify --config .config/.beautify -r -f src/assets/*.js",

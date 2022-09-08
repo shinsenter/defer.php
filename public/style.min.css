@@ -1,1 +1,1 @@
-body [data-deferjs]{min-width:1px;min-height:1px;visibility:visible}.no-deferjs .has-noscript{display:none!important}
+body.no-deferjs .has-noscript{display:none!important}body.deferjs [data-deferjs]:not([data-ignore]){min-width:1px;min-height:1px;visibility:visible}

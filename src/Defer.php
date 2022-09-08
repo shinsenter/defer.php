@@ -22,6 +22,7 @@ namespace AppSeeds;
 use AppSeeds\Defer\Utilities\DeferOptions;
 use AppSeeds\Defer\Utilities\DeferParser;
 use Performance\Lib\Handlers\PerformanceHandler;
+use Performance\Performance;
 
 /**
  * @mixin DeferOptions;
@@ -37,17 +38,17 @@ final class Defer
     */
 
     /**
-     * @var null|DeferOptions
+     * @var DeferOptions|null
      */
     private $options;
 
     /**
-     * @var null|DeferParser
+     * @var DeferParser|null
      */
     private $parser;
 
     /**
-     * @var null|PerformanceHandler
+     * @var PerformanceHandler|null
      */
     private $profiler;
 
@@ -83,8 +84,8 @@ final class Defer
     public function __construct(array $options = [], $content = null)
     {
         $this->options  = new DeferOptions($options);
-        $this->parser   = new DeferParser($content, $this->options->currentUri);
-        $this->profiler = class_exists(PerformanceHandler::class) ? new PerformanceHandler() : null;
+        $this->parser   = new DeferParser($content, $this->options->current_uri);
+        $this->profiler = class_exists(Performance::class) ? Performance::instance() : null;
     }
 
     public function __destruct()
@@ -110,7 +111,7 @@ final class Defer
         }
 
         if ($this->profiler && method_exists($this->profiler, $name)) {
-            $proxy = [$this->profiler, $name];
+            $proxy = [Performance::class, $name];
         }
 
         if ($this->options && method_exists($this->options, $name)) {

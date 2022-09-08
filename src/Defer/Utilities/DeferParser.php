@@ -27,10 +27,10 @@ final class DeferParser extends Crawler
     /**
      * Returns DOM document.
      *
-     * @return null|DOMDocument
+     * @return DOMDocument|null
      */
     public function getDocument()
     {
-        return $this->getNode(0)->ownerDocument ?? null;
+        return isset($this->getNode(0)->ownerDocument) ? $this->getNode(0)->ownerDocument : null;
     }
 }

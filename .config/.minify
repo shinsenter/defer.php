@@ -4,7 +4,8 @@
         "reserved":     ["log", "debug"]
     },
     "compress": {
-        "drop_console": true,
+        "drop_console": false,
+        "hoist_funs":   true,
         "passes":       5,
         "pure_getters": true,
         "pure_funcs":   ["log", "debug"]

@@ -12,3 +12,6 @@ parameters:
 	fileExtensions:
 		- php
 	ignoreErrors:
+	parallel:
+		processTimeout: 300.0
+	treatPhpDocTypesAsCertain: false

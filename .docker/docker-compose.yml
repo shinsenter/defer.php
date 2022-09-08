@@ -5,6 +5,8 @@ services:
     container_name: defer-php-main
     build:
       context: ./
+      args:
+        - PHP_VERSION=7.3
     volumes:
       - "..:/var/www/html"
     entrypoint: "/usr/bin/tail -f /dev/null"
@@ -14,8 +16,6 @@ services:
     container_name: defer-php-fixer
     build:
       context: ./
-      args:
-        - PHP_VERSION=8.1
     volumes:
       - "..:/var/www/html"
     entrypoint: "/usr/bin/tail -f /dev/null"

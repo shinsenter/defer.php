@@ -74,7 +74,7 @@ final class DeferMinifier
      * Minify JSON source.
      *
      * @param string     $input
-     * @param null|mixed $flag
+     * @param mixed|null $flag
      *
      * @return string
      */

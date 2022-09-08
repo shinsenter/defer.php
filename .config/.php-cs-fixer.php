@@ -26,7 +26,7 @@ $preload = @file_get_contents(__DIR__ . '/copyright.txt');
 $header  = $preload ?: '@copyright AppSeeds';
 
 $rules = [
-    '@PhpCsFixer'            => true,
+    '@Symfony'               => true,
     'array_syntax'           => ['syntax' => 'short'],
     'braces'                 => ['allow_single_line_closure' => true],
     'concat_space'           => ['spacing' => 'one'],
@@ -34,6 +34,7 @@ $rules = [
     'increment_style'        => ['style' => 'post'],
     'phpdoc_summary'         => false,
     'single_quote'           => true,
+    'visibility_required'    => false,
     'yoda_style'             => false,
     'binary_operator_spaces' => [
         'default'   => 'single_space',

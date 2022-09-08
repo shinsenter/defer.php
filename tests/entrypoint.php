@@ -32,53 +32,54 @@ defined('DEFER_TEST_DIR') || define('DEFER_TEST_DIR', DEFER_PHP_DIR . '/tests/ou
 
 // list
 $test_list = [
-    'webike' => 'https://www.webike.net/sd/24654130/',
+    'kenh14'    => 'https://kenh14.vn/',
+    'tuoitre'   => 'https://tuoitre.vn/',
+    'vnexpress' => 'https://vnexpress.net/',
+    'webike'    => 'https://www.webike.net/sd/24654130/',
 ];
 
-// initialize profiler
-Performance::point('Initial');
-
 foreach ($test_list as $name => $url) {
-    Performance::point(sprintf('[%s] Fetching', $name));
-    $html = trim(@file_get_contents($url) ?: '');
-    $html = preg_replace('/<\?xml.*?\?>/i', '', $html);
-
-    Performance::point(sprintf('[%s] Saving', $name));
-    @file_put_contents(DEFER_TEST_DIR . '/' . $name . '.html', $html);
-
-    Performance::point(sprintf('[%s] Parsing', $name));
     $instance = new Defer();
+
+    if (file_exists(DEFER_TEST_DIR . '/' . $name . '.html')) {
+        $html = @file_get_contents(DEFER_TEST_DIR . '/' . $name . '.html');
+    } else {
+        $instance->point(sprintf('[%s] Fetching', $name));
+        $html = trim(@file_get_contents($url) ?: '');
+        $html = preg_replace('/<\?xml.*?\?>/i', '', $html);
+
+        $instance->point(sprintf('[%s] Saving', $name));
+        @file_put_contents(DEFER_TEST_DIR . '/' . $name . '.html', $html);
+    }
+
+    $instance->point(sprintf('[%s] Parsing', $name));
     $instance->add($html);
 
-    Performance::point(sprintf('[%s] Finding tags', $name));
+    $instance->point(sprintf('[%s] Finding tags', $name));
     $scripts = $instance->filter('script');
     $css     = $instance->filter('style');
 
-    Performance::point(sprintf('[%s] Looping JS tags', $name));
+    $instance->point(sprintf('[%s] Looping JS tags', $name));
     $scripts->each(function ($node) {
         $dom = &$node->getNode(0);
         $dom->setAttribute('type', 'deferjs');
         $content          = $dom->textContent;
         $dom->textContent = DeferMinifier::minifyJs($content);
-        // dump($node->outerHtml());
     });
 
-    Performance::point(sprintf('[%s] Looping CSS tags', $name));
+    $instance->point(sprintf('[%s] Looping CSS tags', $name));
     $css->each(function ($node) {
         $dom              = &$node->getNode(0);
         $dom->textContent = DeferMinifier::minifyCss($dom->textContent);
-        // dump($node->outerHtml());
     });
 
-    Performance::point(sprintf('[%s] Export HTML', $name));
+    $instance->point(sprintf('[%s] Export HTML', $name));
     $out_html = $instance->outerHtml();
 
-    Performance::point(sprintf('[%s] Saving HTML', $name));
+    $instance->point(sprintf('[%s] Saving HTML', $name));
     @file_put_contents(DEFER_TEST_DIR . '/' . $name . '_out.html', $out_html);
 
-    Performance::point(sprintf('[%s] GC', $name));
-    unset($html, $out_html, $instance, $scripts);
-}
+    $instance->results();
 
-// show result
-Performance::results();
+    unset($instance, $html, $out_html, $css, $scripts);
+}

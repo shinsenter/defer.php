@@ -36,7 +36,7 @@
     },
     "require": {
         "php": ">=7.3",
-        "ext-libxm": "*",
+        "ext-libxml": "*",
         "garfix/js-minify": "*",
         "masterminds/html5": "*",
         "symfony/css-selector": "^5.4||^6.0",

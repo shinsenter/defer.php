@@ -20,15 +20,24 @@ declare(strict_types=1);
  */
 
 use Rector\CodeQuality\Rector\Class_\CompleteDynamicPropertiesRector;
+use Rector\CodingStyle\Rector\ClassConst\VarConstantCommentRector;
 use Rector\CodingStyle\Rector\Closure\StaticClosureRector;
+use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\CodingStyle\Rector\FuncCall\ConsistentPregDelimiterRector;
+use Rector\CodingStyle\Rector\Stmt\NewlineAfterStatementRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassConst\RemoveUnusedPrivateClassConstantRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\Property\RemoveUnusedPrivatePropertyRector;
+use Rector\DeadCode\Rector\StaticCall\RemoveParentCallWithoutParentRector;
 use Rector\EarlyReturn\Rector\If_\RemoveAlwaysElseRector;
+use Rector\Naming\Rector\ClassMethod\RenameParamToMatchTypeRector;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php70\Rector\If_\IfToSpaceshipRector;
+use Rector\Php73\Rector\ConstFetch\SensitiveConstantNameRector;
+use Rector\Php73\Rector\FuncCall\JsonThrowOnErrorRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
+use Rector\Php80\Rector\FunctionLike\MixedTypeRector;
 use Rector\Php80\Rector\FunctionLike\UnionTypesRector;
 use Rector\Set\ValueObject\DowngradeLevelSetList;
 use Rector\Set\ValueObject\LevelSetList;
@@ -56,14 +65,23 @@ return static function (RectorConfig $rectorConfig): void {
         // rules
         ClosureToArrowFunctionRector::class,
         CompleteDynamicPropertiesRector::class,
+        EncapsedStringsToSprintfRector::class,
         IfToSpaceshipRector::class,
+        JsonThrowOnErrorRector::class,
+        MixedTypeRector::class,
+        NewlineAfterStatementRector::class,
         RemoveAlwaysElseRector::class,
+        RemoveParentCallWithoutParentRector::class,
         RemoveUnusedPrivateClassConstantRector::class,
         RemoveUnusedPrivateMethodRector::class,
         RemoveUnusedPrivatePropertyRector::class,
+        RenameParamToMatchTypeRector::class,
         ReturnTypeDeclarationRector::class,
         StaticClosureRector::class,
         UnionTypesRector::class,
+        VarConstantCommentRector::class,
+        SensitiveConstantNameRector::class,
+        StringClassNameToClassConstantRector::class,
     ]);
 
     // rule sets
@@ -73,7 +91,7 @@ return static function (RectorConfig $rectorConfig): void {
         SetList::CODE_QUALITY,
         SetList::CODING_STYLE,
         LevelSetList::UP_TO_PHP_82,
-        DowngradeLevelSetList::DOWN_TO_PHP_70,
+        DowngradeLevelSetList::DOWN_TO_PHP_56,
     ]);
 
     // extra rules
