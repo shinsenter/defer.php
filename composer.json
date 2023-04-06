@@ -12,21 +12,21 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/shinsenter/defer.php/issues",
-        "source": "https://github.com/shinsenter/defer.php"
+        "issues": "https://code.shin.company/defer.php/issues",
+        "source": "https://code.shin.company/defer.php"
     },
     "funding": [
         {
             "type": "github",
-            "url": "https://github.com/shinsenter/defer.php/stargazers"
+            "url": "https://code.shin.company/defer.php/stargazers"
         },
         {
             "type": "paypal",
-            "url": "https://www.patreon.com/appseeds"
+            "url": "https://www.paypal.me/shinsenter"
         },
         {
             "type": "patreon",
-            "url": "https://www.patreon.com/shinsenter"
+            "url": "https://www.patreon.com/appseeds"
         }
     ],
     "keywords": [
@@ -105,7 +105,7 @@
     },
     "extra": {
         "branch-alias": {
-
+            "dev-master": "2.5-dev"
         }
     }
 }
