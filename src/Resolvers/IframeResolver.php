@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -22,19 +22,17 @@ use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
 
-class IframeResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferLazyable
+final class IframeResolver extends DeferResolver implements DeferNormalizable, DeferLazyable
 {
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
-
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         $src = $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
@@ -42,7 +40,7 @@ class IframeResolver extends DeferResolver implements
         if (!empty($src)) {
             $normalized = DeferAssetUtil::normalizeUrl($src);
 
-            if ($normalized != $src) {
+            if ($normalized !== $src) {
                 $this->node->setAttribute('src', $normalized);
             }
         }
@@ -55,12 +53,15 @@ class IframeResolver extends DeferResolver implements
         if (!$this->node->hasAttribute(DeferConstant::ATTR_LOADING)) {
             $this->node->setAttribute(DeferConstant::ATTR_LOADING, 'lazy');
         }
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**

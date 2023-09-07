@@ -1,0 +1,15 @@
+parameters:
+	level: 8
+	phpVersion: 70100
+	fileExtensions:
+		- php
+	paths:
+		- /var/www/html/
+	excludePaths:
+		- /var/www/html/_*/*
+		- /var/www/html/mode_modules/*
+		- /var/www/html/vendor/*
+	ignoreErrors:
+		- '#has no return type specified#'
+	checkMissingIterableValueType: false
+	checkGenericClassInNonGenericObjectType: false

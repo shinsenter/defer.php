@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -26,33 +26,53 @@ use AppSeeds\Elements\ElementNode;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
 
-class LinkResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferReorderable,
-    DeferPreloadable,
-    DeferMinifyable,
-    DeferLazyable
+final class LinkResolver extends DeferResolver implements DeferNormalizable, DeferReorderable, DeferPreloadable, DeferMinifyable, DeferLazyable
 {
-    const STYLESHEET   = 'stylesheet';
-    const PRELOAD      = 'preload';
-    const PRECONNECT   = 'preconnect';
-    const PREFETCH     = 'prefetch';
+    /**
+     * @var string
+     */
+    const STYLESHEET = 'stylesheet';
+
+    /**
+     * @var string
+     */
+    const PRELOAD = 'preload';
+
+    /**
+     * @var string
+     */
+    const PRECONNECT = 'preconnect';
+
+    /**
+     * @var string
+     */
+    const PREFETCH = 'prefetch';
+
+    /**
+     * @var string
+     */
     const DNS_PREFETCH = 'dns-prefetch';
 
+    /**
+     * @var array<string,ElementNode>
+     */
     public static $preload_cache = [];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Static functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Static functions
+     * |-----------------------------------------------------------------------.
      */
-
     public static function reset()
     {
         static::$preload_cache = [];
     }
 
-    public static function registerPreload(ElementNode &$node, $name)
+    /**
+     * @param ElementNode $node
+     * @param string      $name
+     */
+    public static function registerPreload(&$node, $name)
     {
         if (static::registered($name)) {
             $node->detach();
@@ -63,17 +83,19 @@ class LinkResolver extends DeferResolver implements
         return static::$preload_cache[$name];
     }
 
+    /**
+     * @param string $name
+     */
     public static function registered($name)
     {
         return isset(static::$preload_cache[$name]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Resolver functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Resolver functions
+     * |-----------------------------------------------------------------------.
      */
-
     public function isCss()
     {
         return strtolower($this->node->getAttribute('rel')) == self::STYLESHEET;
@@ -109,15 +131,15 @@ class LinkResolver extends DeferResolver implements
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
-
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         // Normalize the URL
@@ -130,7 +152,7 @@ class LinkResolver extends DeferResolver implements
                 $normalized = DeferAssetUtil::normalizeUrl($href);
             }
 
-            if ($href != $normalized) {
+            if (!empty($normalized) && $href !== $normalized) {
                 $this->node->setAttribute('href', $normalized);
             }
         }
@@ -145,12 +167,15 @@ class LinkResolver extends DeferResolver implements
 
             $this->node->removeAttribute('type');
         }
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferReorderable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferReorderable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -173,27 +198,39 @@ class LinkResolver extends DeferResolver implements
         // Add stylesheet tag to the bottom of the head tag
         if ($this->isCss() && $this->options->fix_render_blocking) {
             $node = $this->nodeOrNoscript();
-            $this->head()->appendWith($node);
+            $head = $this->head();
+
+            if ($head instanceof ElementNode) {
+                $head->appendWith($node);
+            }
         }
 
         // Add preconnect, dns-prefetch tag to the top of the head tag
         elseif ($this->isPreconnect() || $this->isDnsPrefetch()) {
-            $this->title()->precede($this->node);
+            $title = $this->title();
+
+            if ($title instanceof ElementNode) {
+                $title->precede($this->node);
+            }
         }
 
         // Add preload, prefetch tag to the top of the head tag
         elseif ($this->isPreload() || $this->isPrefetch()) {
-            $this->title()->precede($this->node);
+            $title = $this->title();
+
+            if ($title instanceof ElementNode) {
+                $title->precede($this->node);
+            }
         }
 
         // Prevent duplicated preload
         static::registerPreload($this->node, $this->name());
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferPreloadable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferPreloadable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -212,11 +249,15 @@ class LinkResolver extends DeferResolver implements
      */
     public function getPreloadNode()
     {
-        if ($this->isPreload() && !$this->skipPreloading('href')) {
-            return $this->node;
+        if (!$this->isPreload()) {
+            return null;
         }
 
-        return null;
+        if ($this->skipLazyloading('href')) {
+            return null;
+        }
+
+        return $this->node;
     }
 
     /**
@@ -229,13 +270,11 @@ class LinkResolver extends DeferResolver implements
         }
 
         if ($this->isCss()) {
-            $preconnect = $this->newNode('link', [
+            return $this->newNode('link', [
                 'rel'         => LinkResolver::PRECONNECT,
                 'href'        => $this->node->getAttribute('href'),
                 'crossorigin' => $this->node->getAttribute('crossorigin'),
             ]);
-
-            return $preconnect;
         }
 
         return null;
@@ -246,11 +285,15 @@ class LinkResolver extends DeferResolver implements
      */
     public function getPrefetchNode()
     {
-        if ($this->isPrefetch() && !$this->skipPreloading('href')) {
-            return $this->node;
+        if (!$this->isPrefetch()) {
+            return null;
         }
 
-        return null;
+        if ($this->skipLazyloading('href')) {
+            return null;
+        }
+
+        return $this->node;
     }
 
     /**
@@ -265,10 +308,10 @@ class LinkResolver extends DeferResolver implements
         return null;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -276,8 +319,15 @@ class LinkResolver extends DeferResolver implements
      */
     public function shouldLazyload()
     {
-        return parent::shouldLazyload()
-            && ($this->hasLazyloadFlag() || $this->isThirdParty());
+        if (!parent::shouldLazyload()) {
+            return false;
+        }
+
+        if ($this->hasLazyloadFlag()) {
+            return true;
+        }
+
+        return $this->isThirdParty();
     }
 
     /**
@@ -288,13 +338,21 @@ class LinkResolver extends DeferResolver implements
         // Remove lazy attributes
         $this->node->removeAttribute(DeferConstant::ATTR_DEFER);
         $this->node->removeAttribute(DeferConstant::ATTR_LAZY);
-
         // Only defer when it is a CSS node
         // and "onload" attribute is not provided
-        if (!$this->isCss() ||
-            $this->node->hasAttribute('onload') ||
-            $this->node->hasAttribute('onerror') ||
-            $this->skipLazyloading('href')) {
+        if (!$this->isCss()) {
+            return false;
+        }
+
+        if ($this->node->hasAttribute('onload')) {
+            return false;
+        }
+
+        if ($this->node->hasAttribute('onerror')) {
+            return false;
+        }
+
+        if ($this->skipLazyloading('href')) {
             return false;
         }
 
@@ -306,10 +364,10 @@ class LinkResolver extends DeferResolver implements
         return true;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferMinifyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferMinifyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**

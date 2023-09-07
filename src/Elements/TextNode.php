@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -18,33 +18,36 @@
 namespace AppSeeds\Elements;
 
 use AppSeeds\Helpers\DeferConstant;
-use DOMNode;
-use DOMText;
 
-class TextNode extends DOMText
+final class TextNode extends \DOMText
 {
     use CommonDomTraits;
 
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
-        // Strip whitespaces
         parent::normalize();
         $this->normalizeWhitespaces();
     }
 
     /**
-     * Strip whitespaces around text
-     *
-     * @return void
+     * Strip whitespaces around text.
      */
     private function normalizeWhitespaces()
     {
         $parent = $this->parentNode;
+        if (!$parent instanceof \DOMNode) {
+            return;
+        }
 
-        if (!($parent instanceof DOMNode) || in_array($parent->nodeName, DeferConstant::DOM_SPACE_IN)) {
+        if (empty($this->nodeValue)) {
+            return;
+        }
+
+        if (in_array($parent->nodeName, DeferConstant::DOM_SPACE_IN)) {
             return;
         }
 

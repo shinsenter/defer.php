@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -20,10 +20,13 @@ namespace AppSeeds\Bugs;
 use AppSeeds\Contracts\PatchInterface;
 
 /**
- * Escape script tags contain UI templates that break DOMDocument::loadHTML()
+ * Escape script tags contain UI templates that break DocumentNode::loadHTML().
  */
-class BugTemplateScripts implements PatchInterface
+final class BugTemplateScripts implements PatchInterface
 {
+    /**
+     * @var array<string,string>
+     */
     private $_script_backups = [];
 
     /**
@@ -31,12 +34,16 @@ class BugTemplateScripts implements PatchInterface
      */
     public function before($html, $options)
     {
+        if (empty($html)) {
+            return '';
+        }
+
         $type = $options->deferjs_type_attribute;
 
-        $html = preg_replace_callback(
+        return preg_replace_callback(
             '/(<script[^>]*>)(.*?)(<\/script>)/si',
             function ($matches) use ($type) {
-                $open = strtolower($matches[1]);
+                $open    = strtolower($matches[1]);
                 $content = $matches[2];
 
                 // Escape invalid syntax from javascript
@@ -55,23 +62,21 @@ class BugTemplateScripts implements PatchInterface
 
                         // Fix yen symbols to backslashes
                         '/\\\/',
-                    ], ['', '&#38;$1;', '<&#92;/$1>', '&#92;'], trim($content));
+                    ], ['', '&#38;$1;', '<&#92;/$1>', '&#92;'], trim($content)) ?: '';
                 }
 
                 // Backup all scripts contain html-like content
                 if (preg_match('/<\/([^>]*)>/', $content)) {
-                    $placeholder = '/** ' . uniqid('@@@SCRIPT@@@:') . ' **/';
+                    $placeholder                         = '/** ' . uniqid('@@@SCRIPT@@@:') . ' **/';
                     $this->_script_backups[$placeholder] = $content;
-                    $content = $placeholder;
+                    $content                             = $placeholder;
                 }
 
                 // Return modified tag
-                return "{$matches[1]}{$content}{$matches[3]}";
+                return sprintf('%s%s%s', $matches[1], $content, $matches[3]);
             },
             $html
-        );
-
-        return $html;
+        ) ?: '';
     }
 
     /**
@@ -79,9 +84,13 @@ class BugTemplateScripts implements PatchInterface
      */
     public function after($html, $options)
     {
+        if (empty($html)) {
+            return '';
+        }
+
         // Restore scripts from backup
         if (!empty($this->_script_backups)) {
-            $html = strtr($html, $this->_script_backups);
+            return strtr($html, $this->_script_backups);
         }
 
         return $html;

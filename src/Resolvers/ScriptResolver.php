@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -22,24 +22,28 @@ use AppSeeds\Contracts\DeferMinifyable;
 use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Contracts\DeferPreloadable;
 use AppSeeds\Contracts\DeferReorderable;
+use AppSeeds\Elements\ElementNode;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
 use AppSeeds\Helpers\DeferJs;
 use AppSeeds\Helpers\DeferMinifier;
 
-class ScriptResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferReorderable,
-    DeferMinifyable,
-    DeferLazyable,
-    DeferPreloadable
+final class ScriptResolver extends DeferResolver implements DeferNormalizable, DeferReorderable, DeferMinifyable, DeferLazyable, DeferPreloadable
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Internal methods
-    |--------------------------------------------------------------------------
+    /**
+     * @var string[]
      */
+    const CHECK = [
+        'eval(',
+        'document.write(',
+        'dataLayer.push(',
+    ];
 
+    /**
+     * |-----------------------------------------------------------------------
+     * | Internal methods
+     * |-----------------------------------------------------------------------.
+     */
     public function isDeferJs()
     {
         $id = $this->node->getAttribute('id');
@@ -48,7 +52,7 @@ class ScriptResolver extends DeferResolver implements
     }
 
     /**
-     * Return true if it is a JSON tag
+     * Return true if it is a JSON tag.
      *
      * @return bool
      */
@@ -57,33 +61,30 @@ class ScriptResolver extends DeferResolver implements
         $type = strtolower($this->node->getAttribute('type')) ?: '';
 
         // Check script type
-        if (in_array($type, ['application/json', 'application/ld+json'])) {
-            return true;
-        }
-
-        return false;
+        return in_array($type, ['application/json', 'application/ld+json']);
     }
 
     /**
-     * Return true if it is a JavaScript tag
+     * Return true if it is a JavaScript tag.
      *
      * @return bool
      */
     public function isJavascript()
     {
         $type = strtolower($this->node->getAttribute('type')) ?: '';
-
-        if (empty($type)
-        || strstr($type, '/javascript') !== false
-        || $type === $this->options->deferjs_type_attribute) {
+        if (empty($type)) {
             return true;
         }
 
-        return false;
+        if (strstr($type, '/javascript') !== false) {
+            return true;
+        }
+
+        return $type === $this->options->deferjs_type_attribute;
     }
 
     /**
-     * Return true if JavaScript contains eval() or document.write()
+     * Return true if JavaScript contains eval() or document.write().
      *
      * @return bool
      */
@@ -93,13 +94,7 @@ class ScriptResolver extends DeferResolver implements
             $text = $this->node->getText();
 
             if (!empty($text)) {
-                $check = [
-                    'eval(',
-                    'document.write(',
-                    'dataLayer.push(',
-                ];
-
-                foreach ($check as $bad_word) {
+                foreach (self::CHECK as $bad_word) {
                     if (strstr($text, $bad_word) !== false) {
                         return true;
                     }
@@ -111,25 +106,28 @@ class ScriptResolver extends DeferResolver implements
     }
 
     /**
-     * Return true if it is a async JavaScript tag
+     * Return true if it is a async JavaScript tag.
      *
      * @return bool
      */
     public function isSrcJavascript()
     {
-        return $this->isJavascript()
-            && $this->node->hasAttribute('src');
+        if (!$this->isJavascript()) {
+            return false;
+        }
+
+        return $this->node->hasAttribute('src');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
-
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         $src = $this->node->getAttribute('src');
@@ -137,7 +135,7 @@ class ScriptResolver extends DeferResolver implements
         if (!empty($src)) {
             $normalized = DeferAssetUtil::normalizeUrl($src);
 
-            if ($normalized != $src) {
+            if ($normalized !== $src) {
                 $this->node->setAttribute('src', $normalized);
             }
         } elseif ($this->isJavascript()) {
@@ -155,12 +153,15 @@ class ScriptResolver extends DeferResolver implements
         if ($this->isJavascript()) {
             $this->node->removeAttribute('type');
         }
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferReorderable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferReorderable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -170,25 +171,39 @@ class ScriptResolver extends DeferResolver implements
     {
         if ($this->isDeferJs()) {
             $this->node->detach();
-            $this->title()->follow($this->node);
+            $title = $this->title();
+
+            if ($title instanceof ElementNode) {
+                // @var ElementNode $title
+                $title->follow($this->node);
+            }
 
             return;
         }
 
-        if (!$this->isJavascript() || $this->isCriticalJavascript()) {
+        if (!$this->isJavascript()) {
+            return;
+        }
+
+        if ($this->isCriticalJavascript()) {
             return;
         }
 
         if ($this->options->fix_render_blocking) {
             $this->node->detach();
-            $this->body()->appendWith($this->node);
+            $body = $this->body();
+
+            if ($body instanceof ElementNode) {
+                // @var ElementNode $body
+                $body->appendWith($this->node);
+            }
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -196,24 +211,33 @@ class ScriptResolver extends DeferResolver implements
      */
     public function shouldLazyload()
     {
-        return parent::shouldLazyload()
-            && ($this->hasLazyloadFlag() || $this->isThirdParty());
+        if (!parent::shouldLazyload()) {
+            return false;
+        }
+
+        if ($this->hasLazyloadFlag()) {
+            return true;
+        }
+
+        return $this->isThirdParty();
     }
 
     /**
-     * Check if the node contains "data-lazy" or "defer" attribute
+     * Check if the node contains "data-lazy" or "defer" attribute.
      *
      * @return bool
      */
     public function hasLazyloadFlag()
     {
-        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)
-            || $this->node->hasAttribute(DeferConstant::ATTR_ASYNC)
-            || $this->node->hasAttribute(DeferConstant::ATTR_LAZY)) {
+        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)) {
             return true;
         }
 
-        return false;
+        if ($this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
+            return true;
+        }
+
+        return $this->node->hasAttribute(DeferConstant::ATTR_LAZY);
     }
 
     /**
@@ -223,9 +247,15 @@ class ScriptResolver extends DeferResolver implements
     {
         // Only defer for javascript
         if ($this->isJavascript()) {
-            if ($this->isDeferJs() ||
-                $this->isCriticalJavascript() ||
-                $this->skipLazyloading('src')) {
+            if ($this->isDeferJs()) {
+                return false;
+            }
+
+            if ($this->isCriticalJavascript()) {
+                return false;
+            }
+
+            if ($this->skipLazyloading('src')) {
                 return false;
             }
 
@@ -250,10 +280,10 @@ class ScriptResolver extends DeferResolver implements
         return null;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferPreloadable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferPreloadable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -272,21 +302,22 @@ class ScriptResolver extends DeferResolver implements
      */
     public function getPreloadNode()
     {
-        if ($this->isSrcJavascript()
-            && !$this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
-            $preload = $this->newNode('link', [
-                'rel'         => LinkResolver::PRELOAD,
-                'as'          => 'script',
-                'href'        => $this->node->getAttribute('src'),
-                'charset'     => $this->node->getAttribute('charset'),
-                'integrity'   => $this->node->getAttribute('integrity'),
-                'crossorigin' => $this->node->getAttribute('crossorigin'),
-            ]);
-
-            return $preload;
+        if (!$this->isSrcJavascript()) {
+            return null;
         }
 
-        return null;
+        if ($this->node->hasAttribute(DeferConstant::ATTR_ASYNC)) {
+            return null;
+        }
+
+        return $this->newNode('link', [
+            'rel'         => LinkResolver::PRELOAD,
+            'as'          => 'script',
+            'href'        => $this->node->getAttribute('src'),
+            'charset'     => $this->node->getAttribute('charset'),
+            'integrity'   => $this->node->getAttribute('integrity'),
+            'crossorigin' => $this->node->getAttribute('crossorigin'),
+        ]);
     }
 
     /**
@@ -295,14 +326,14 @@ class ScriptResolver extends DeferResolver implements
     public function getPreconnectNode()
     {
         if ($this->isSrcJavascript()) {
-            $preconnect = $this->newNode('link', [
+            return $this->newNode('link', [
                 'rel'         => LinkResolver::PRECONNECT,
                 'href'        => $this->node->getAttribute('src'),
                 'crossorigin' => $this->node->getAttribute('crossorigin'),
             ]);
-
-            return $preconnect;
         }
+
+        return null;
     }
 
     /**
@@ -321,10 +352,10 @@ class ScriptResolver extends DeferResolver implements
         return null;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferMinifyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferMinifyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -332,8 +363,8 @@ class ScriptResolver extends DeferResolver implements
      */
     public function minify()
     {
-        $minified = $script = $this->node->getText();
-
+        $minified = $this->node->getText();
+        $script   = $minified;
         if (!empty($script) && !$this->isDeferJs()) {
             if ($this->isJavascript()) {
                 $minified = DeferMinifier::minifyJs($script);
@@ -344,7 +375,7 @@ class ScriptResolver extends DeferResolver implements
 
         if (empty($minified) && !$this->node->hasAttribute('src')) {
             $this->node->detach();
-        } elseif ($minified != $script) {
+        } elseif ($minified !== $script) {
             $this->node->nodeValue = '';
             $this->node->setText($minified);
         }

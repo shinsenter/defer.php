@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -19,15 +19,69 @@ namespace AppSeeds\Helpers;
 
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class DeferOptions
+/**
+ * @property bool          $disabled
+ * @property bool          $debug_time
+ * @property bool          $debug_mode
+ * @property bool          $manually_add_deferjs
+ * @property string        $deferjs_type_attribute
+ * @property string        $deferjs_src
+ * @property string        $polyfill_src
+ * @property string        $offline_cache_path
+ * @property int           $offline_cache_ttl
+ * @property string        $copyright
+ * @property string        $long_copyright
+ * @property string        $console_copyright
+ * @property bool          $inline_deferjs
+ * @property int           $default_defer_time
+ * @property bool          $add_missing_meta_tags
+ * @property bool          $enable_preloading
+ * @property bool          $enable_dns_prefetch
+ * @property bool          $enable_lazyloading
+ * @property bool          $minify_output_html
+ * @property bool          $fix_render_blocking
+ * @property bool          $optimize_css
+ * @property bool          $optimize_scripts
+ * @property bool          $optimize_images
+ * @property bool          $optimize_iframes
+ * @property bool          $optimize_background
+ * @property bool          $optimize_anchors
+ * @property bool          $optimize_fallback
+ * @property array|bool    $defer_third_party
+ * @property bool          $use_css_fadein_effects
+ * @property string        $use_color_placeholder
+ * @property string        $img_placeholder
+ * @property string        $iframe_placeholder
+ * @property string        $custom_splash_screen
+ * @property array<string> $ignore_lazyload_paths
+ * @property array<string> $ignore_lazyload_texts
+ * @property array<string> $ignore_lazyload_css_class
+ * @property array<string> $ignore_lazyload_css_selectors
+ */
+final class DeferOptions
 {
-    protected $resolver;
-    protected $options        = [];
-    protected $backup_options = [];
-    protected $wellknown3rd;
+    /**
+     * @var OptionsResolver
+     */
+    private $resolver;
 
     /**
-     * Constructor for library options
+     * @var array<string,mixed>
+     */
+    private $options = [];
+
+    /**
+     * @var array<string,mixed>
+     */
+    private $backup_options = [];
+
+    /**
+     * @var array<string>|null
+     */
+    private $wellknown3rd;
+
+    /**
+     * Constructor for library options.
      *
      * @since 2.0.0
      */
@@ -38,10 +92,11 @@ class DeferOptions
     }
 
     /**
-     * Option getter
+     * Option getter.
      *
      * @since 2.0.0
-     * @param mixed $property
+     *
+     * @param string $property
      */
     public function __get($property)
     {
@@ -49,11 +104,12 @@ class DeferOptions
     }
 
     /**
-     * Option setter
+     * Option setter.
      *
      * @since 2.0.0
-     * @param mixed      $property
-     * @param null|mixed $value
+     *
+     * @param string     $property
+     * @param mixed|null $value
      */
     public function __set($property, $value = null)
     {
@@ -61,170 +117,7 @@ class DeferOptions
     }
 
     /**
-     * Get option value by key
-     * If no key given, return all options
-     *
-     * @since  2.0.0
-     * @param  null|mixed $key
-     * @return mixed
-     */
-    public function getOptionArray()
-    {
-        return $this->options;
-    }
-
-    /**
-     * Get option value by key
-     * If no key given, return all options
-     *
-     * @since  2.0.0
-     * @param  null|mixed $key
-     * @return mixed
-     */
-    public function getOption($key = null)
-    {
-        if (is_null($key)) {
-            return $this->getOptionArray();
-        }
-
-        if (isset($this->options[$key])) {
-            return $this->options[$key];
-        }
-
-        return null;
-    }
-
-    /**
-     * Set option value by given key
-     * Set multiple options by give it an array of options
-     *
-     * @since  2.0.0
-     * @param  mixed      $key
-     * @param  null|mixed $value
-     * @return self
-     */
-    public function setOption($key, $value = null)
-    {
-        if (is_array($key)) {
-            $options = $key;
-        } else {
-            $options = [$key => $value];
-        }
-
-        if (!empty($this->options)) {
-            $options = array_merge($this->options, $options);
-        }
-
-        $this->options      = $this->resolver->resolve($options);
-        $this->wellknown3rd = null;
-
-        return $this;
-    }
-
-    /**
-     * Backup options
-     *
-     * @return self
-     */
-    public function backup()
-    {
-        $this->backup_options = $this->options;
-
-        return $this;
-    }
-
-    /**
-     * Restore previous options from backup
-     *
-     * @since  2.0.0
-     * @return self
-     */
-    public function restore()
-    {
-        $this->options = $this->backup_options;
-
-        return $this;
-    }
-
-    /**
-     * Set options for AMP page
-     *
-     * @return self
-     */
-    public function forAmp()
-    {
-        $this->setOption([
-            'manually_add_deferjs'   => true,
-            'enable_lazyloading'     => false,
-            'enable_preloading'      => false,
-            'fix_render_blocking'    => false,
-            'defer_third_party'      => false,
-            'use_css_fadein_effects' => false,
-            'use_color_placeholder'  => false,
-            'custom_splash_screen'   => '',
-        ]);
-
-        return $this;
-    }
-
-    /**
-     * Set options from request
-     *
-     * @param  array $allows
-     * @return self
-     */
-    public function mergeFromRequest($allows = [])
-    {
-        $flags = array_filter($this->options, function ($value) {
-            return is_bool($value);
-        });
-
-        if (empty($allows)) {
-            $allows = array_keys($flags);
-        }
-
-        foreach ($allows as $key) {
-            if (isset($flags[$key], $_REQUEST[$key])) {
-                $flags[$key] = (bool) $_REQUEST[$key];
-            }
-        }
-
-        $this->setOption($flags);
-
-        return $this;
-    }
-
-    /**
-     * Get merged list of well known third-party pattern
-     *
-     * @param  mixed $useCache
-     * @return array
-     */
-    public function getWellKnown3rd($useCache = true)
-    {
-        $extended = $this->defer_third_party;
-
-        if ($extended == false) {
-            return [];
-        }
-
-        if ($useCache && !is_null($this->wellknown3rd)) {
-            return $this->wellknown3rd;
-        }
-
-        $list = DeferConstant::WELL_KNOWN_THIRDPARTY;
-
-        if (is_array($extended)) {
-            $list = array_merge($list, $extended);
-        }
-
-        $this->wellknown3rd = array_filter(array_unique($list));
-
-        return $this->wellknown3rd;
-    }
-
-    /**
-     * Initial default values for options
+     * Initial default values for options.
      *
      *  // Insert debug information inside the output HTML after optimization.
      *  // Debug information will contain outer HTMLs of tags before being optimized.
@@ -241,7 +134,7 @@ class DeferOptions
      *  'manually_add_deferjs' => false,
      *
      *  // URL to defer.js javascript file.
-     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.5.0/dist/defer_plus.min.js
+     *  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@3.6.0/dist/defer_plus.min.js
      *  'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
      *
      *  // URL to javascript contains fixes.
@@ -389,13 +282,14 @@ class DeferOptions
      *  ],
      *
      * @since  2.0.0
+     *
      * @return array
      */
-    private function defaultOptions()
+    public function defaultOptions()
     {
         return [
             // Disable the library
-            'disable' => !empty($_REQUEST[DeferConstant::ARG_NODEFER]),
+            'disabled' => !empty($_REQUEST[DeferConstant::ARG_NODEFER]),
 
             // Debug optimized tags (instead of optimized HTML)
             'debug_time' => false,
@@ -461,6 +355,171 @@ class DeferOptions
             'ignore_lazyload_css_class'     => [],
             'ignore_lazyload_css_selectors' => [],
         ];
+    }
+
+    /**
+     * Get option array.
+     *
+     * @since  2.0.0
+     *
+     * @return array
+     */
+    public function getOptionArray()
+    {
+        return $this->options;
+    }
+
+    /**
+     * Get option value by key
+     * If no key given, return all options.
+     *
+     * @since  2.0.0
+     *
+     * @param string|null $key
+     *
+     * @return mixed|null
+     */
+    public function getOption($key = null)
+    {
+        if (is_null($key)) {
+            return $this->getOptionArray();
+        }
+
+        if (isset($this->options[$key])) {
+            return $this->options[$key];
+        }
+
+        return null;
+    }
+
+    /**
+     * Set option value by given key
+     * Set multiple options by give it an array of options.
+     *
+     * @since  2.0.0
+     *
+     * @param string|array $key
+     * @param mixed|null   $value
+     *
+     * @return self
+     */
+    public function setOption($key, $value = null)
+    {
+        $options = is_array($key) ? $key : [$key => $value];
+
+        if (!empty($this->options)) {
+            $options = array_merge($this->options, $options);
+        }
+
+        $this->options      = $this->resolver->resolve($options);
+        $this->wellknown3rd = null;
+
+        return $this;
+    }
+
+    /**
+     * Backup options.
+     *
+     * @return self
+     */
+    public function backup()
+    {
+        $this->backup_options = $this->options;
+
+        return $this;
+    }
+
+    /**
+     * Restore previous options from backup.
+     *
+     * @since  2.0.0
+     *
+     * @return self
+     */
+    public function restore()
+    {
+        $this->options = $this->backup_options;
+
+        return $this;
+    }
+
+    /**
+     * Set options for AMP page.
+     *
+     * @return self
+     */
+    public function forAmp()
+    {
+        $this->setOption([
+            'manually_add_deferjs'   => true,
+            'enable_lazyloading'     => false,
+            'enable_preloading'      => false,
+            'fix_render_blocking'    => false,
+            'defer_third_party'      => false,
+            'use_css_fadein_effects' => false,
+            'use_color_placeholder'  => false,
+            'custom_splash_screen'   => '',
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Set options from request.
+     *
+     * @param array $allows
+     *
+     * @return self
+     */
+    public function mergeFromRequest($allows = [])
+    {
+        $flags = array_filter($this->options, static function ($value) {
+            return is_bool($value);
+        });
+
+        if (empty($allows)) {
+            $allows = array_keys($flags);
+        }
+
+        foreach ($allows as $key) {
+            if (isset($flags[$key], $_REQUEST[$key])) {
+                $flags[$key] = (bool) $_REQUEST[$key];
+            }
+        }
+
+        $this->setOption($flags);
+
+        return $this;
+    }
+
+    /**
+     * Get merged list of well known third-party pattern.
+     *
+     * @param bool $useCache
+     *
+     * @return array
+     */
+    public function getWellKnown3rd($useCache = true)
+    {
+        $extended = $this->defer_third_party;
+
+        if ($extended == false) {
+            return [];
+        }
+
+        if ($useCache && !is_null($this->wellknown3rd)) {
+            return $this->wellknown3rd;
+        }
+
+        $list = DeferConstant::WELL_KNOWN_THIRDPARTY;
+
+        if (is_array($extended)) {
+            $list = array_merge($list, $extended);
+        }
+
+        $this->wellknown3rd = array_filter(array_unique($list));
+
+        return $this->wellknown3rd;
     }
 
     private function configureOptions()

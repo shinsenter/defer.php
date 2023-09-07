@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -22,56 +22,71 @@ use AppSeeds\Bugs\BugCharset;
 use AppSeeds\Bugs\BugHtml5DocType;
 use AppSeeds\Bugs\BugLongLine;
 use AppSeeds\Bugs\BugTemplateScripts;
+use AppSeeds\Contracts\PatchInterface;
 use AppSeeds\Elements\DocumentNode;
+use AppSeeds\Elements\ElementNode;
 use AppSeeds\Helpers\DeferJs;
 use AppSeeds\Helpers\DeferOptions;
 
-if (!date_default_timezone_get()) {
+if (date_default_timezone_get() === '' || date_default_timezone_get() === '0') {
     try {
-        date_default_timezone_get('GMT');
-    } catch (\Exception $th) {
-        unset($th);
+        date_default_timezone_set('GMT');
+    } catch (\Exception $exception) {
+        unset($exception);
     }
 }
 
 if (!defined('DEFER_PHP_ROOT')) {
-    define('DEFER_PHP_ROOT', dirname(dirname(__FILE__)));
+    define('DEFER_PHP_ROOT', dirname(__DIR__));
 }
 
-class Defer
+final class Defer
 {
-    protected $options;
-    protected $document;
+    /**
+     * @var DeferOptions
+     */
+    private $options;
 
     /**
-     * Hotfix array
-     * @property bool $_patchers
+     * @var DocumentNode|null
+     */
+    private $document;
+
+    /**
+     * Hotfix array.
+     *
+     * @var array<PatchInterface>
      */
     private $_patchers = [];
 
     /**
-     * Optimized flag
-     * @property bool $_optimized
+     * Optimized flag.
+     *
+     * @var bool
      */
     private $_optimized = false;
 
     /**
-     * Store compiled HTML output
-     * @property string $_html
+     * Store compiled HTML output.
+     *
+     * @var string|null
      */
     private $_html;
 
     /**
-     * Init Defer instance
+     * Init Defer instance.
      *
      * @since  2.0.0
-     * @param  mixed $html
+     *
+     * @param string|array|null $html
+     * @param string            $charset
+     *
      * @return self
      */
     public function __construct(
         $html = '',
         array $options = null,
-        string $charset = null
+        $charset = null
     ) {
         if (is_array($html)) {
             $options = $html;
@@ -90,11 +105,11 @@ class Defer
         $this->options = new DeferOptions($options ?: []);
         $this->options->mergeFromRequest();
 
-        $this->fromHtml($html);
+        $this->fromHtml($html ?: '');
     }
 
     /**
-     * Cleanup memory when destructed
+     * Cleanup memory when destructed.
      *
      * @since  2.0.0
      */
@@ -103,17 +118,21 @@ class Defer
         $this->cleanup();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Main functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Main functions
+     * |-----------------------------------------------------------------------.
+     *
+     * @param mixed $html
      */
 
     /**
-     * Load HTML from string
+     * Load HTML from string.
      *
      * @since  2.0.0
-     * @param  string $html
+     *
+     * @param string $html
+     *
      * @return self
      */
     public function fromHtml($html)
@@ -128,7 +147,7 @@ class Defer
 
         $this->cleanup();
 
-        if ($this->options()->disable || !$this->isFullPageHtml($html)) {
+        if ($this->options()->disabled || !$this->isFullPageHtml($html)) {
             $this->_html = trim($html);
         } else {
             $this->document                      = new DocumentNode('1.0', 'UTF-8');
@@ -154,6 +173,7 @@ class Defer
      * With debug_mode = true, this only returns the optmized tags.
      *
      * @since  2.0.0
+     *
      * @return string
      */
     public function toHtml()
@@ -166,26 +186,39 @@ class Defer
             unset($html);
         }
 
-        return $this->_html;
+        return $this->_html ?: '';
     }
 
     /**
-     * Optimize the document
+     * Optimize the document.
      *
      * @since  2.0.0
+     *
      * @return self
      */
     public function optimize()
     {
-        $dom   = $this->document;
-        $html  = $dom->root();
-        $debug = $this->options->debug_mode || $this->options->debug_time;
-        $isAmp = $dom->isAmpHtml();
-
         // Skip if already _optimized
-        if ($this->_optimized || empty($html)) {
+        if ($this->_optimized) {
             return $this;
         }
+
+        if ($this->document == null) {
+            return $this;
+        }
+
+        /** @var DocumentNode $dom */
+        $dom = $this->document;
+
+        /** @var ElementNode|null $html */
+        $html = $dom->root();
+
+        if (empty($html)) {
+            return $this;
+        }
+
+        $debug = $this->options->debug_mode || $this->options->debug_time;
+        $isAmp = $dom->isAmpHtml();
 
         // Optimize entire document
         $dom->optimize($this->options);
@@ -196,15 +229,13 @@ class Defer
             $lib  = $this->deferjs();
 
             if ($this->options->manually_add_deferjs) {
-                $node = $lib->getInlineGuide($dom, true)->optimize($this->options);
+                $node = $lib->getInlineGuide($dom)->optimize($this->options);
             } else {
                 $lib->cleanDeferTags($dom);
 
-                if ($this->options->inline_deferjs) {
-                    $node = $lib->getInlineScript($dom, true);
-                } else {
-                    $node = $lib->getDeferJsNode($dom, true);
-                }
+                $node = $this->options->inline_deferjs
+                    ? $lib->getInlineScript($dom)
+                    : $lib->getDeferJsNode($dom);
             }
 
             // Optimize the script tag
@@ -216,7 +247,7 @@ class Defer
                 if ($debug) {
                     $node->precede($lib->getDebugJsNode($dom, 'time'));
                     $node->follow($lib->getDebugJsNode($dom, 'timeLog', 'defer.js finished.'));
-                    $dom->body()->appendWith(($lib->getDebugJsNode($dom, 'timeEnd', 'body finished.')));
+                    $dom->body()->appendWith($lib->getDebugJsNode($dom, 'timeEnd', 'body finished.'));
                 }
 
                 // Append helper CSS
@@ -241,14 +272,15 @@ class Defer
         }
 
         // Copyright
-        if ($this->options->long_copyright) {
+        if ($this->options->long_copyright !== '') {
             $copy = trim($this->options->long_copyright, "\t\n\r\0\x0B");
             $node = $dom->createComment(PHP_EOL . $copy . PHP_EOL);
             $html->appendWith($node);
         }
 
         // Add missing <meta name="meta_generator"> tag
-        if ($this->options->copyright) {
+        if ($this->options->copyright !== '') {
+            /** @var ElementNode $meta_generator */
             $meta_generator = $html->find('meta[name="generator"]')->first();
 
             if ($meta_generator == null) {
@@ -269,29 +301,29 @@ class Defer
         return $this;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Other functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Other functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
-     * Clean up DOM document
+     * Clean up DOM document.
      *
      * @since  2.0.0
-     * @return void
      */
     public function cleanupDocument()
     {
-        unset($this->document);
-        $this->document = null;
+        if ($this->document instanceof DocumentNode) {
+            unset($this->document);
+            $this->document = null;
+        }
     }
 
     /**
-     * Clean up memory
+     * Clean up memory.
      *
      * @since  2.0.0
-     * @return void
      */
     public function cleanup()
     {
@@ -306,9 +338,10 @@ class Defer
     }
 
     /**
-     * Get the DeferJs instance
+     * Get the DeferJs instance.
      *
      * @since  2.0.0
+     *
      * @return DeferJs
      */
     public function deferjs()
@@ -322,9 +355,10 @@ class Defer
     }
 
     /**
-     * Get the DeferOptions instance
+     * Get the DeferOptions instance.
      *
      * @since  2.0.0
+     *
      * @return DeferOptions
      */
     public function options()
@@ -333,9 +367,10 @@ class Defer
     }
 
     /**
-     * Get all options in DeferOptions
+     * Get all options in DeferOptions.
      *
      * @since  2.0.0
+     *
      * @return array
      */
     public function optionArray()
@@ -343,29 +378,35 @@ class Defer
         return $this->options->getOptionArray();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Internal functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Internal functions
+     * |-----------------------------------------------------------------------.
+     *
+     * @param mixed $html
      */
 
     /**
-     * Returns true if the data from $html is a normal HTML document
+     * Returns true if the data from $html is a normal HTML document.
      *
      * @since  2.0.0
-     * @param  string $html
+     *
+     * @param string $html
+     *
      * @return bool
      */
     private function isFullPageHtml($html)
     {
-        return preg_match('/<\!DOCTYPE.+html.+<html/is', substr($html, 0, 1000));
+        return preg_match('/<\!DOCTYPE.+html.+<html/is', substr($html, 0, 1000)) !== false;
     }
 
     /**
-     * Patch the HTML before optimizing
+     * Patch the HTML before optimizing.
      *
      * @since  2.0.0
-     * @param  string $html
+     *
+     * @param string $html
+     *
      * @return string
      */
     private function patchBefore(&$html)
@@ -378,10 +419,12 @@ class Defer
     }
 
     /**
-     * Patch the HTML after optimizing
+     * Patch the HTML after optimizing.
      *
      * @since  2.0.0
-     * @param  string $html
+     *
+     * @param string $html
+     *
      * @return string
      */
     private function patchAfter(&$html)

@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -17,39 +17,68 @@
 
 namespace AppSeeds\Helpers;
 
-use DateInterval;
 use Psr\SimpleCache\CacheInterface;
 
-class DeferCache implements CacheInterface
+final class DeferCache implements CacheInterface
 {
+    /**
+     * @var string
+     */
     const FORMAT = "<?php\n\n/*\n%s\n*/\n\$expire=%d;\n\$value=%s;\n";
-    const LEVEL  = 2;
 
-    protected $path;
-    protected $defaultTtl;
-    protected $defaultChmod;
+    /**
+     * @var int
+     */
+    const LEVEL = 2;
 
+    /**
+     * @var string
+     */
+    private $path;
+
+    /**
+     * @var int
+     */
+    private $defaultTtl;
+
+    /**
+     * @var int
+     */
+    private $defaultChmod;
+
+    /**
+     * @param array<string,mixed> $options
+     */
     public function __construct($options = [])
     {
-        $path         = !empty($options['path']) ? $options['path'] : sys_get_temp_dir();
-        $defaultTtl   = !empty($options['defaultTtl']) ? $options['defaultTtl'] : null;
-        $defaultChmod = !empty($options['defaultChmod']) ? $options['defaultChmod'] : null;
+        $path         = empty($options['path']) ? sys_get_temp_dir() : $options['path'];
+        $defaultTtl   = empty($options['defaultTtl']) ? null : $options['defaultTtl'];
+        $defaultChmod = empty($options['defaultChmod']) ? null : $options['defaultChmod'];
 
-        $this->setPath($path);
-        $this->defaultTtl   = $defaultTtl ?: 900;
-        $this->defaultChmod = $defaultChmod ?: 0777;
+        $this->setPath((string) $path);
+        $this->defaultTtl   = (int) ($defaultTtl ?: 900);
+        $this->defaultChmod = (int) ($defaultChmod ?: 0777);
     }
 
     // -------------------------------------------------------------------------
 
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
     public function __get($key)
     {
         return $this->get($key);
     }
 
+    /**
+     * @param string $key
+     * @param mixed  $value
+     */
     public function __set($key, $value)
     {
-        return $this->set($key, $value);
+        $this->set($key, $value);
     }
 
     // -------------------------------------------------------------------------
@@ -71,8 +100,8 @@ class DeferCache implements CacheInterface
     {
         if (is_null($ttl)) {
             $ttl = $this->defaultTtl;
-        } elseif ($ttl instanceof DateInterval) {
-            $ttl = ($ttl->s)
+        } elseif ($ttl instanceof \DateInterval) {
+            $ttl = $ttl->s
                     + ($ttl->i * 60)
                     + ($ttl->h * 60 * 60)
                     + ($ttl->d * 60 * 60 * 24)
@@ -86,7 +115,7 @@ class DeferCache implements CacheInterface
             $tmp     = $path . '.lock';
             $encoded = strtr(var_export($value, true), ['stdClass::__set_state' => '(object)']);
             $comment = sprintf("%s\nKey: %s\nDuration: %d seconds", date('Y-m-d H:i:s'), $key, $ttl);
-            $cache   = (sprintf(self::FORMAT, $comment, $expire, $encoded));
+            $cache   = sprintf(self::FORMAT, $comment, $expire, $encoded);
 
             @mkdir(dirname($path), $this->defaultChmod, true);
             @file_put_contents($tmp, $cache, LOCK_EX);
@@ -94,6 +123,8 @@ class DeferCache implements CacheInterface
         } else {
             $this->delete($key);
         }
+
+        return true;
     }
 
     /**
@@ -120,6 +151,8 @@ class DeferCache implements CacheInterface
         foreach ($dirs as $child) {
             $this->rmdir($child);
         }
+
+        return true;
     }
 
     /**
@@ -144,6 +177,8 @@ class DeferCache implements CacheInterface
         foreach ($values as $key => $value) {
             $this->set($key, $value, $ttl);
         }
+
+        return true;
     }
 
     /**
@@ -168,15 +203,30 @@ class DeferCache implements CacheInterface
 
     // -------------------------------------------------------------------------
 
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
     public function validate($key)
     {
-        $expire = 0;
-        $value  = null;
-        $path   = $this->hashedPath($key);
+        $path = $this->hashedPath($key);
 
+        if (!file_exists($path)) {
+            return null;
+        }
+
+        $value  = null;
+        $expire = null;
         @include $path;
 
-        if (is_null($value) || $expire < time()) {
+        /** @var mixed $value */
+        /** @var int|null $expire */
+        if (!isset($value, $expire)) {
+            return null;
+        }
+
+        if ($expire < time()) {
             return null;
         }
 
@@ -188,12 +238,19 @@ class DeferCache implements CacheInterface
         return $this->path;
     }
 
+    /**
+     * @param string $path
+     */
     public function setPath($path)
     {
         $path = realpath(strtr($path, [
             '/'  => DIRECTORY_SEPARATOR,
             '\\' => DIRECTORY_SEPARATOR,
         ]));
+
+        if ($path === false) {
+            return;
+        }
 
         if (!$this->exists($path)) {
             @mkdir($path, $this->defaultChmod, true);
@@ -204,6 +261,9 @@ class DeferCache implements CacheInterface
         $this->path = $path;
     }
 
+    /**
+     * @param string $dirPath
+     */
     private function rmdir($dirPath)
     {
         $files = $this->scan($dirPath);
@@ -219,11 +279,18 @@ class DeferCache implements CacheInterface
         @rmdir($dirPath);
     }
 
+    /**
+     * @param string $path
+     */
     private function exists($path)
     {
         return (bool) stream_resolve_include_path($path);
     }
 
+    /**
+     * @param string $path
+     * @param string $type
+     */
     private function scan($path, $type = null)
     {
         $list   = [];
@@ -248,14 +315,17 @@ class DeferCache implements CacheInterface
         return $list;
     }
 
+    /**
+     * @param string $key
+     */
     private function hashedPath($key)
     {
         $hashed = $this->hash($key);
         $path   = $this->path;
 
-        if (strstr(php_sapi_name(), 'cli') !== false) {
+        if (strstr(PHP_SAPI, 'cli') !== false) {
             $path .= DIRECTORY_SEPARATOR . 'cli';
-        } elseif (!empty(($_SERVER['HTTP_HOST']))) {
+        } elseif (!empty($_SERVER['HTTP_HOST'])) {
             $path .= DIRECTORY_SEPARATOR . $_SERVER['HTTP_HOST'];
         }
 
@@ -263,11 +333,12 @@ class DeferCache implements CacheInterface
             $path .= DIRECTORY_SEPARATOR . substr($hashed, -$i, $i);
         }
 
-        $path = $path . DIRECTORY_SEPARATOR . $hashed . '.php';
-
-        return $path;
+        return $path . DIRECTORY_SEPARATOR . $hashed . '.php';
     }
 
+    /**
+     * @param string $key
+     */
     private function hash($key)
     {
         return hash('adler32', $key);

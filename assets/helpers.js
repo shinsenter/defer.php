@@ -1,6 +1,6 @@
 /**
  * Package shinsenter/defer.php
- * https://github.com/shinsenter/defer.php
+ * https://code.shin.company/defer.php
  *
  * Released under the MIT license
  * https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE
@@ -31,91 +31,91 @@
 
 (function (window, document, console) {
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Define variables and constants
     |--------------------------------------------------------------------------
     */
 
-    // Common texts
-    var _dataLayer   = 'dataLayer';
+  // Common texts
+  var _dataLayer   = 'dataLayer';
 
-    // Common CSS selectors
-    var _queryTarget = '.defer-loading:not([data-ignore])';
+  // Common CSS selectors
+  var _queryTarget = '.defer-loading:not([data-ignore])';
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Check for defer.js
     |--------------------------------------------------------------------------
     */
 
-    var defer    = window.Defer;
-    var _delay   = window.DEFERJS_DELAY || 8;
-    var _options = window.DEFERJS_OPTIONS || {'rootMargin': '150%'};
+  var defer    = window.Defer;
+  var _delay   = window.DEFERJS_DELAY || 8;
+  var _options = window.DEFERJS_OPTIONS || {'rootMargin': '150%'};
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Internal functions
     |--------------------------------------------------------------------------
     */
 
-    function _replaceClass(node, find, replace) {
-        node.className = ((' ' + node.className + ' ').
-            replace(' ' + find + ' ', ' ') + replace).trim();
-    }
+  function _replaceClass(node, find, replace) {
+    node.className = ((' ' + node.className + ' ').
+      replace(' ' + find + ' ', ' ') + replace).trim();
+  }
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Fallback for external libraries
     |--------------------------------------------------------------------------
     */
 
-    // Fix missing dataLayer (for Google Analytics)
-    // See: https://developers.google.com/analytics/devguides/collection/analyticsjs
-    window.ga = window.ga || function () {(window.ga.q = window.ga.q || []).push(arguments)}; window.ga.l = Number(Date());
-    window[_dataLayer] = window[_dataLayer] || [];
+  // Fix missing dataLayer (for Google Analytics)
+  // See: https://developers.google.com/analytics/devguides/collection/analyticsjs
+  window.ga = window.ga || function () {(window.ga.q = window.ga.q || []).push(arguments)}; window.ga.l = Number(Date());
+  window[_dataLayer] = window[_dataLayer] || [];
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Define helper object
     |--------------------------------------------------------------------------
     */
 
-    _replaceClass(
-        document.documentElement,
-        'no-deferjs',
-        defer ? 'deferjs' : ''
-    );
+  _replaceClass(
+    document.documentElement,
+    'no-deferjs',
+    defer ? 'deferjs' : ''
+  );
 
-    // Check if missing defer feature
-    if (!defer) {
-        return;
-    }
+  // Check if missing defer feature
+  if (!defer) {
+    return;
+  }
 
-    /*
+  /*
     |--------------------------------------------------------------------------
     | Main
     |--------------------------------------------------------------------------
     */
 
-    // Lazyload all style tags
-    defer(function() {
-        [].slice.call(document.querySelectorAll('style[defer]')).
-            forEach(defer.reveal);
-    }, _delay);
+  // Lazyload all style tags
+  defer(function() {
+    [].slice.call(document.querySelectorAll('style[defer]')).
+      forEach(defer.reveal);
+  }, _delay);
 
-    // Lazyload all media
-    defer.dom(_queryTarget, _delay, 0, function (node) {
-        _replaceClass(node, 'defer-loading', 'defer-loaded');
-    }, _options);
+  // Lazyload all media
+  defer.dom(_queryTarget, _delay, 0, function (node) {
+    _replaceClass(node, 'defer-loading', 'defer-loaded');
+  }, _options);
 
-    // Copyright
-    if (console.log) {
-        console.log([
-            'Optimized by defer.php',
-            '(c) 2021 AppSeeds',
-            'Github: https://code.shin.company/defer.php'
-        ].join('\n'));
-    }
+  // Copyright
+  if (console.log) {
+    console.log([
+      'Optimized by defer.php',
+      '(c) 2019-2023 SHIN Company',
+      'Github: https://code.shin.company/defer.php'
+    ].join('\n'));
+  }
 
 })(this, document, console);

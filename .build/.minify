@@ -1,0 +1,29 @@
+{
+    "parse": {},
+    "mangle": {
+        "reserved":     ["log", "debug", "perf_begin", "perf_end"]
+    },
+    "compress": {
+        "drop_console": true,
+        "hoist_funs":   true,
+        "passes":       10,
+        "pure_getters": true,
+        "pure_funcs":   ["log", "debug", "perf_begin", "perf_end"],
+        "reduce_funcs": true
+    },
+    "output": {
+        "comments":     "/^!/",
+        "wrap_iife":    true
+    },
+    "annotations":      false,
+    "ie":               true,
+    "keep_fargs":       false,
+    "keep_fnames":      false,
+    "module":           false,
+    "nameCache":        null,
+    "sourceMap":        false,
+    "toplevel":         false,
+    "v8":               true,
+    "warnings":         false,
+    "webkit":           true
+}
