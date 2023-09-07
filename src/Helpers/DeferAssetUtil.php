@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -17,12 +17,13 @@
 
 namespace AppSeeds\Helpers;
 
-class DeferAssetUtil
+final class DeferAssetUtil
 {
     /**
-     * Get image size from URL
+     * Get image size from URL.
      *
-     * @param  string      $url
+     * @param string $url
+     *
      * @return array|false [width, height]
      */
     public static function getImageSizeFromUrl($url)
@@ -32,11 +33,11 @@ class DeferAssetUtil
     }
 
     /**
-     * Get SVG image placeholder
+     * Get SVG image placeholder.
      *
-     * @param  string $url
-     * @param  mixed  $width
-     * @param  mixed  $height
+     * @param int $width
+     * @param int $height
+     *
      * @return string
      */
     public static function getSvgImage($width, $height)
@@ -53,9 +54,10 @@ class DeferAssetUtil
     }
 
     /**
-     * Get CSS style for adding random background color
+     * Get CSS style for adding random background color.
      *
-     * @param  bool   $grey
+     * @param bool $grey
+     *
      * @return string
      */
     public static function getBgColorStyle($grey = false)
@@ -68,47 +70,50 @@ class DeferAssetUtil
     }
 
     /**
-     * This normalises URI's based on the specification RFC 3986
+     * This normalises URI's based on the specification RFC 3986.
      *
-     * @param  string $url
+     * @param string $url
+     *
      * @return string
      */
     public static function normalizeUrl($url)
     {
-        if (preg_match('#^\/\/[^\/]#', $url)) {
-            $url = 'https:' . $url;
+        if (preg_match('/^\/\/[^\/]/', $url)) {
+            return 'https:' . $url;
         }
 
         return $url;
     }
 
     /**
-     * Get normalized URL origin
+     * Get normalized URL origin.
      *
-     * @param  string $url
-     * @return string
+     * @param string $url
+     *
+     * @return string|null
      */
     public static function normalizeUrlOrigin($url)
     {
-        if (preg_match('#^(https?:)?//#i', $url)) {
-            return preg_replace('#^(https?:)?(//[^/]+).*?.*#i', '$2', $url);
+        if (preg_match('/^(https?:)?\/\//i', $url)) {
+            return preg_replace('/^(https?:)?(\/\/[^\/]+).*?.*/i', '$2', $url);
         }
 
         return null;
     }
 
     /**
-     * Check a resource is a third-party
+     * Check a resource is a third-party.
      *
-     * @param  string $url
-     * @param  array  $lookup
+     * @param string             $url
+     * @param DeferOptions|array $lookup
+     *
      * @return bool
      */
     public static function isThirdParty($url, $lookup)
     {
         $host = '';
 
-        if (!empty(($_SERVER['HTTP_HOST']))) {
+        if (!empty($_SERVER['HTTP_HOST'])) {
             $host = '//' . $_SERVER['HTTP_HOST'];
         }
 
@@ -118,6 +123,7 @@ class DeferAssetUtil
             $lookup = DeferConstant::WELL_KNOWN_THIRDPARTY;
         }
 
+        /** @var array<string> $lookup */
         foreach ($lookup as $pattern) {
             // If server origin esists in
             // third-party list, always returns false

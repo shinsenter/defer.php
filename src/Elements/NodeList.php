@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -17,42 +17,38 @@
 
 namespace AppSeeds\Elements;
 
-use ArrayIterator;
-
-class NodeList extends ArrayIterator
+/**
+ * @mixin ElementNode
+ */
+final class NodeList extends \ArrayIterator
 {
-    public function __construct($node_list = [], $flags = 0)
-    {
-        $nodes = [];
-
-        foreach ($node_list as $node) {
-            $nodes[] = $node;
-        }
-
-        return parent::__construct($nodes, $flags);
-    }
-
+    /**
+     * @param string $method
+     * @param array  $parameters
+     */
     public function __call($method, $parameters)
     {
         foreach ($this as $node) {
-            if (method_exists($node, $method)) {
-                $node->{$method}(...$parameters);
+            /** @var ElementNode $node */
+            $callee = [$node, $method];
+
+            if (is_callable($callee)) {
+                call_user_func_array($callee, $parameters);
             }
         }
 
         return $this;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper methods
-    |--------------------------------------------------------------------------
-     */
-
     /**
-     * Get the first node in the list
+     * |-----------------------------------------------------------------------
+     * | Helper methods
+     * |-----------------------------------------------------------------------.
+     */
+    /**
+     * Get the first node in the list.
      *
-     * @return DOMNode
+     * @return \DOMNode|null
      */
     public function first()
     {
@@ -66,11 +62,13 @@ class NodeList extends ArrayIterator
     }
 
     /**
-     * Loop the list and perform action
+     * Loop the list and perform action.
+     *
+     * @param callable $function
      *
      * @return self
      */
-    public function each(callable $function)
+    public function each($function)
     {
         foreach ($this as $index => $node) {
             $result = $function($node, $index);

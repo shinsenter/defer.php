@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -21,18 +21,14 @@ use AppSeeds\Contracts\DeferLazyable;
 use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
-use DOMNode;
 
-class MediaResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferLazyable
+final class MediaResolver extends DeferResolver implements DeferNormalizable, DeferLazyable
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Resolver functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Resolver functions
+     * |-----------------------------------------------------------------------.
      */
-
     public function isImg()
     {
         return $this->node->nodeName == 'img';
@@ -65,35 +61,53 @@ class MediaResolver extends DeferResolver implements
 
     public function hasSrcsetAttr()
     {
-        return ($this->isImg() || $this->isSource()) && $this->hasAttribute('srcset');
+        if ($this->isImg()) {
+            return $this->hasAttribute('srcset');
+        }
+
+        if ($this->isSource()) {
+            return $this->hasAttribute('srcset');
+        }
+
+        return false;
     }
 
     public function hasPosterAttr()
     {
-        return $this->isVideo() && $this->hasAttribute('poster');
+        if (!$this->isVideo()) {
+            return false;
+        }
+
+        return $this->hasAttribute('poster');
     }
 
     public function isMediaChild()
     {
         $parent = $this->node->parentNode;
-
-        if (!($parent instanceof DOMNode)
-            || (!$this->isSource() && !$this->isImg())) {
+        if (!$parent instanceof \DOMNode) {
             return false;
         }
 
-        return in_array($parent->nodeName, ['picture', 'audio', 'video']);
+        if ($this->isSource()) {
+            return in_array($parent->nodeName, ['picture', 'audio', 'video']);
+        }
+
+        if ($this->isImg()) {
+            return in_array($parent->nodeName, ['picture', 'audio', 'video']);
+        }
+
+        return false;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
-
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         $src = $this->resolveAttr('src', DeferConstant::UNIFY_SRC);
@@ -101,7 +115,7 @@ class MediaResolver extends DeferResolver implements
         if (!empty($src)) {
             $normalized = DeferAssetUtil::normalizeUrl($src);
 
-            if ($normalized != $src) {
+            if ($normalized !== $src) {
                 $this->node->setAttribute('src', $normalized);
             }
         }
@@ -138,12 +152,15 @@ class MediaResolver extends DeferResolver implements
                 }
             }
         }
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -161,11 +178,11 @@ class MediaResolver extends DeferResolver implements
             && !$this->skipLazyloading('src')) {
             $placeholder     = '';
             $svg_placeholder = DeferAssetUtil::getSvgImage(
-                $this->node->getAttribute('width'),
-                $this->node->getAttribute('height')
+                (int) $this->node->getAttribute('width') ?: 0,
+                (int) $this->node->getAttribute('height') ?: 0
             );
 
-            if (empty($placeholder) && $this->isImg()) {
+            if ($this->isImg()) {
                 $placeholder = $this->options->img_placeholder ?: $svg_placeholder;
             }
 

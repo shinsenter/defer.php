@@ -1,6 +1,8 @@
-.php_cs.cache
-composer.phar
+_*
+.DS_Store
+*.cache
+/cache/
 /node_modules/
 /vendor/
-/cache/
-/.scannerwork
+composer.lock
+package-lock.json

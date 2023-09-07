@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -17,41 +17,55 @@
 
 namespace AppSeeds\Resolvers;
 
+use AppSeeds\Elements\DocumentNode;
 use AppSeeds\Elements\ElementNode;
 use AppSeeds\Helpers\DeferAssetUtil;
 use AppSeeds\Helpers\DeferConstant;
 use AppSeeds\Helpers\DeferOptions;
-use DOMNode;
 
+/**
+ * @mixin ElementNode
+ * @mixin DocumentNode
+ */
 class DeferResolver
 {
     /**
-     * @property $_uid Hold the unique id
+     * Hold the unique id.
+     *
+     * @var string
      */
     protected $_uid;
 
     /**
-     * @property $node Hold the real DOMElement
+     * Hold the real ElementNode.
+     *
+     * @var ElementNode
      */
     protected $node;
 
     /**
-     * @property $options Hold library options
+     * Hold library options.
+     *
+     * @var DeferOptions
      */
     protected $options;
 
     /**
-     * @property $backup Attribute backups
+     * Attribute backups.
+     *
+     * @var array
      */
     protected $attr_backups = [];
 
     /**
-     * @property $fallback Hold the noscript instance
+     * Hold the noscript instance.
+     *
+     * @var ElementNode|null
      */
     protected $fallback;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct(ElementNode &$node, DeferOptions $options)
     {
@@ -59,83 +73,103 @@ class DeferResolver
         $this->options = $options;
     }
 
+    /**
+     * @param string       $method
+     * @param array<mixed> $parameters
+     */
     public function __call($method, $parameters)
     {
-        if (method_exists($this->node, $method)) {
-            return $this->node->{$method}(...$parameters);
+        $callee = [$this->node, $method];
+        if (is_callable($callee)) {
+            return call_user_func_array($callee, $parameters);
         }
 
-        $dom = $this->node->document();
+        /** @var DocumentNode $dom */
+        $dom    = $this->node->document();
+        $callee = [$dom, $method];
 
-        if (method_exists($dom, $method)) {
-            return $dom->{$method}(...$parameters);
+        if (is_callable($callee)) {
+            return call_user_func_array($callee, $parameters);
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Static functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Static functions
+     * |-----------------------------------------------------------------------.
+     *
+     * @param mixed $node
+     * @param mixed $options
      */
 
     /**
-     * Get resolver for specific node
+     * Get resolver for specific node.
      *
-     * @return static
+     * @param ElementNode  $node
+     * @param DeferOptions $options
+     *
+     * @return self
      */
-    public static function resolver(ElementNode &$node, DeferOptions $options)
+    public static function resolver(&$node, $options)
     {
         switch ($node->nodeName) {
             case 'a':
                 return new AnchorResolver($node, $options);
+
             case 'link':
                 return new LinkResolver($node, $options);
+
             case 'meta':
                 return new MetaResolver($node, $options);
+
             case 'style':
                 return new StyleResolver($node, $options);
+
             case 'script':
                 return new ScriptResolver($node, $options);
+
             case 'embed':
             case 'frame':
             case 'iframe':
                 return new IframeResolver($node, $options);
+
             case 'img':
             case 'picture':
             case 'video':
             case 'audio':
             case 'source':
                 return new MediaResolver($node, $options);
+
             case 'input':
                 if (strtolower($node->getAttribute('type')) == 'image') {
                     return new MediaResolver($node, $options);
                 }
+
                 break;
+
             default:
                 if ($node->hasAttribute('style')) {
                     return new InlineStyleResolver($node, $options);
                 }
-            break;
+
+                break;
         }
 
-        return new static($node, $options);
+        return new self($node, $options);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Common functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Common functions
+     * |-----------------------------------------------------------------------.
      */
-
     public function resolveNoScript()
     {
-        if ($this->fallback) {
+        if ($this->fallback instanceof ElementNode) {
             return $this->fallback;
         }
 
-        if (empty($fallback)) {
-            $fallback = $this->newNode('noscript');
-        }
+        $fallback = $this->newNode('noscript');
 
         $clone = $this->node->cloneNode(true);
         $fallback->prependWith($clone);
@@ -145,23 +179,26 @@ class DeferResolver
     }
 
     /**
-     * Returns the node or parent if parent is a <noscript>
+     * Returns the node or parent if parent is a <noscript>.
      *
      * @return ElementNode
      */
     public function nodeOrNoscript()
     {
         $parent = $this->node->parentNode;
-
-        if ($parent instanceof DOMNode && $parent->nodeName == 'noscript') {
-            return $parent;
+        if (!$parent instanceof ElementNode) {
+            return $this->node;
         }
 
-        return $this->node;
+        if ($parent->nodeName != 'noscript') {
+            return $this->node;
+        }
+
+        return $parent;
     }
 
     /**
-     * Check if the node should be ignored by optimizer
+     * Check if the node should be ignored by optimizer.
      *
      * @return bool
      */
@@ -174,57 +211,56 @@ class DeferResolver
         $parent = $this->node->parentNode;
 
         if ($parent instanceof ElementNode) {
-            return $parent->hasAttribute(DeferConstant::ATTR_IGNORE)
-                || $parent->nodeName == 'noscript';
+            if ($parent->hasAttribute(DeferConstant::ATTR_IGNORE)) {
+                return true;
+            }
+
+            return $parent->nodeName == 'noscript';
         }
 
         return false;
     }
 
     /**
-     * Check if the node should be lazy-loaded by optimizer
+     * Check if the node should be lazy-loaded by optimizer.
      *
      * @return bool
      */
     public function shouldLazyload()
     {
-        if ($this->options->enable_lazyloading === false) {
+        if (!$this->options->enable_lazyloading) {
             return false;
         }
 
-        if ($this->node->hasAttribute(DeferConstant::ATTR_NOLAZY)) {
-            return false;
-        }
-
-        return true;
+        return !$this->node->hasAttribute(DeferConstant::ATTR_NOLAZY);
     }
 
     /**
-     * Check if the node contains "data-lazy" or "defer" attribute
+     * Check if the node contains "data-lazy" or "defer" attribute.
      *
      * @return bool
      */
     public function hasLazyloadFlag()
     {
-        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)
-            || $this->node->hasAttribute(DeferConstant::ATTR_LAZY)) {
+        if ($this->node->hasAttribute(DeferConstant::ATTR_DEFER)) {
             return true;
         }
 
-        return false;
+        return $this->node->hasAttribute(DeferConstant::ATTR_LAZY);
     }
 
     /**
-     * Check if the node should be skipped for lazy-loading
+     * Check if the node should be skipped for lazy-loading.
      *
-     * @param  mixed $attr
+     * @param string $attr
+     *
      * @return bool
      */
     public function skipLazyloading($attr = 'src')
     {
         $blacklist = $this->options->ignore_lazyload_paths;
 
-        if (!empty($blacklist)) {
+        if ($blacklist !== []) {
             $value = $this->node->getAttribute($attr);
 
             if (!empty($value)) {
@@ -238,7 +274,7 @@ class DeferResolver
 
         $blacklist = $this->options->ignore_lazyload_texts;
 
-        if (!empty($blacklist)) {
+        if ($blacklist !== []) {
             $text = $this->node->getText();
 
             if (!empty($text)) {
@@ -253,21 +289,19 @@ class DeferResolver
         $blacklist = $this->options->ignore_lazyload_css_class;
         $blacklist = array_filter(explode(',', implode(',', $blacklist)));
 
-        if (!empty($blacklist)) {
-            foreach ($blacklist as $class) {
-                if ($this->node->hasClass($class)) {
-                    return true;
-                }
+        foreach ($blacklist as $class) {
+            if ($this->node->hasClass($class)) {
+                return true;
             }
         }
 
         return false;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Helper functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -283,11 +317,14 @@ class DeferResolver
     }
 
     /**
-     * Unify all lazy-load attributes
+     * Unify all lazy-load attributes.
      *
-     * @param  mixed    $attr
-     * @param  mixed    $attributes
-     * @return string[]
+     * @template KAttribute of string
+     *
+     * @param KAttribute             $attr
+     * @param array<KAttribute>|null $attributes
+     *
+     * @return string
      */
     public function resolveAttr($attr, $attributes = [])
     {
@@ -317,7 +354,7 @@ class DeferResolver
                 $unified = DeferAssetUtil::normalizeUrl($unified);
             }
 
-            if ($unified != $original) {
+            if ($unified !== $original) {
                 $this->node->setAttribute($attr, $unified);
             }
 
@@ -328,23 +365,22 @@ class DeferResolver
     }
 
     /**
-     * Create data-* attribute for lazy-load
+     * Create data-* attribute for lazy-load.
      *
-     * @param  string $attr
-     * @param  string $placeholder
+     * @param string $attr
+     * @param string $placeholder
+     *
      * @return self
      */
     public function createDataAttr($attr, $placeholder = '')
     {
         $data_attr = 'data-' . strtolower($attr);
-
-        if (!$this->node->hasAttribute($attr)) {
-            $value = '';
-        } else {
-            $value = $this->node->getAttribute($attr);
+        $value     = $this->node->hasAttribute($attr) ? $this->node->getAttribute($attr) : '';
+        if (empty($value)) {
+            return $this;
         }
 
-        if (empty($value) || $this->node->hasAttribute($data_attr)) {
+        if ($this->node->hasAttribute($data_attr)) {
             return $this;
         }
 

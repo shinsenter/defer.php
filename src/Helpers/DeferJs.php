@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -18,18 +18,55 @@
 namespace AppSeeds\Helpers;
 
 use AppSeeds\Elements\DocumentNode;
+use AppSeeds\Elements\ElementNode;
 
-class DeferJs
+if (!defined('DEFER_PHP_ROOT')) {
+    define('DEFER_PHP_ROOT', dirname(dirname(__DIR__)));
+}
+
+final class DeferJs
 {
-    const DEFERJS_ID  = 'defer-js';
+    /**
+     * @var string
+     */
+    const DEFERJS_ID = 'defer-js';
+
+    /**
+     * @var string
+     */
     const POLYFILL_ID = 'polyfill-js';
-    const HELPERS_JS  = 'defer-script';
+
+    /**
+     * @var string
+     */
+    const HELPERS_JS = 'defer-script';
+
+    /**
+     * @var string
+     */
     const HELPERS_CSS = 'defer-css';
 
-    protected $deferjs_src;
-    protected $polyfill_src;
+    /**
+     * @var string
+     */
+    private $deferjs_src;
+
+    /**
+     * @var string
+     */
+    private $polyfill_src;
+
+    /**
+     * @var DeferCache
+     */
     private $_cache;
 
+    /**
+     * @param string $deferjs_src
+     * @param string $polyfill_src
+     * @param string $offline_cache_path
+     * @param int    $offline_cache_ttl
+     */
     public function __construct(
         $deferjs_src,
         $polyfill_src,
@@ -45,18 +82,22 @@ class DeferJs
         ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOM related functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DOM related functions
+     * |-----------------------------------------------------------------------.
+     *
+     * @param mixed $dom
      */
 
     /**
-     * Remove all defer helpers from DOMDocument
+     * Remove all defer helpers from DocumentNode.
      *
-     * @return ElementNode
+     * @param DocumentNode $dom
+     *
+     * @return DocumentNode
      */
-    public function cleanDeferTags(DocumentNode &$dom)
+    public function cleanDeferTags(&$dom)
     {
         $tags = implode(',', [
             'script#' . self::DEFERJS_ID,
@@ -69,11 +110,13 @@ class DeferJs
     }
 
     /**
-     * Remove all defer helpers from DOMDocument
+     * Remove all defer helpers from DocumentNode.
      *
-     * @return ElementNode
+     * @param DocumentNode $dom
+     *
+     * @return DocumentNode
      */
-    public function cleanHelperTags(DocumentNode &$dom)
+    public function cleanHelperTags(&$dom)
     {
         $tags = implode(',', [
             'script#' . self::HELPERS_JS,
@@ -86,30 +129,31 @@ class DeferJs
     }
 
     /**
-     * Return new inline <script> node
+     * Return new inline <script> node.
+     *
+     * @param DocumentNode $dom
      *
      * @return ElementNode
      */
-    public function getInlineScript(DocumentNode $dom)
+    public function getInlineScript($dom)
     {
-        if ($this->isLocal($this->deferjs_src)) {
-            $defer = @file_get_contents($this->deferjs_src);
-        } else {
-            $defer = $this->getFromCache();
-        }
+        $defer = $this->isLocal($this->deferjs_src)
+        ? @file_get_contents($this->deferjs_src)
+        : $this->getFromCache();
 
-        return $dom->newNode('script', $defer, [
+        return $dom->newNode('script', $defer ?: '', [
             'id' => self::DEFERJS_ID,
         ]);
     }
 
     /**
-     * Return new inline <script> node
+     * Return new inline <script> node.
      *
-     * @param  mixed       $withPolyfill
+     * @param DocumentNode $dom
+     *
      * @return ElementNode
      */
-    public function getInlineGuide(DocumentNode $dom, $withPolyfill = true)
+    public function getInlineGuide($dom)
     {
         static $message;
 
@@ -120,8 +164,8 @@ class DeferJs
                     'You should manually add the defer.js.',
                     'Like this:',
                     strtr(
-                        $this->getDeferJsNode($dom, $withPolyfill)->getOuterHtml(),
-                        ['/' => '\/', '\'' => '\\\'', '\"' => '\\"', "\n" => '\n']
+                        $this->getDeferJsNode($dom)->getOuterHtml(),
+                        ['/' => '\/', "'" => '\\\'', '\"' => '\\"', "\n" => '\n']
                     ),
                 ])
             );
@@ -133,10 +177,13 @@ class DeferJs
     }
 
     /**
-     * Return new <script src="defer.js"> node
+     * Return new <script src="defer.js"> node.
+     *
+     * @param DocumentNode $dom
+     *
      * @return ElementNode
      */
-    public function getDeferJsNode(DocumentNode $dom)
+    public function getDeferJsNode($dom)
     {
         // Fallback to inline script when a local path given
         if (!$this->isWebUrl($this->deferjs_src)) {
@@ -150,32 +197,36 @@ class DeferJs
     }
 
     /**
-     * Return new <script> node with debug information
-     * @param  mixed       $method
-     * @param  mixed       $label
-     * @param  mixed       $message
+     * Return new <script> node with debug information.
+     *
+     * @param string|null  $method
+     * @param string|null  $message
+     * @param DocumentNode $dom
+     *
      * @return ElementNode
      */
-    public function getDebugJsNode(DocumentNode $dom, $method = 'time', $message = '')
+    public function getDebugJsNode($dom, $method = 'time', $message = '')
     {
         $label = 'defer.js perf';
 
         if ($message) {
             $message = strtr($message, ["'" => "\\'"]);
-            $message = ";console.info('${label}: ${message}')";
+            $message = sprintf(";console.info('%s: %s')", $label, $message);
         }
 
-        $script = "try{console.${method}('${label}')${message}}finally{}";
+        $script = sprintf("try{console.%s('%s')%s}finally{}", $method, $label, $message);
 
         return $dom->newNode('script', $script);
     }
 
     /**
-     * Return polyfill script node
+     * Return polyfill script node.
      *
-     * @return null|ElementNode
+     * @param DocumentNode $dom
+     *
+     * @return ElementNode|null
      */
-    public function getPolyfillNode(DocumentNode $dom)
+    public function getPolyfillNode($dom)
     {
         if ($this->isWebUrl($this->polyfill_src)) {
             $script = "'IntersectionObserver'in window||"
@@ -188,14 +239,16 @@ class DeferJs
     }
 
     /**
-     * Return helper script node
+     * Return helper script node.
      *
-     * @param  int              $default_defer_time
-     * @param  null|string      $copy
-     * @return null|ElementNode
+     * @param int          $default_defer_time
+     * @param string|null  $copy
+     * @param DocumentNode $dom
+     *
+     * @return ElementNode|null
      */
     public function getHelperJsNode(
-        DocumentNode $dom,
+        $dom,
         $default_defer_time = null,
         $copy = null
     ) {
@@ -211,7 +264,7 @@ class DeferJs
         }
 
         if ($script && $copy) {
-            $copy   = '[\'' . strtr($copy, ["\n" => '\n', "\r" => '\n', "'" => '\\\'']) . '\']';
+            $copy   = "['" . strtr($copy, ["\n" => '\n', "\r" => '\n', "'" => '\\\'']) . "']";
             $script = preg_replace('#\[\'Optimized[^\]]+\]#i', $copy, $script);
         }
 
@@ -219,11 +272,13 @@ class DeferJs
     }
 
     /**
-     * Return helper script node
+     * Return helper script node.
      *
-     * @return null|ElementNode
+     * @param DocumentNode $dom
+     *
+     * @return ElementNode|null
      */
-    public function getHelperCssNode(DocumentNode $dom)
+    public function getHelperCssNode($dom)
     {
         static $content;
 
@@ -235,12 +290,14 @@ class DeferJs
     }
 
     /**
-     * Get script when using custom defer type
+     * Get script when using custom defer type.
      *
-     * @param  mixed            $type
-     * @return null|ElementNode
+     * @param string       $type
+     * @param DocumentNode $dom
+     *
+     * @return ElementNode|null
      */
-    public function getCustomDeferTypeNode(DocumentNode $dom, $type)
+    public function getCustomDeferTypeNode($dom, $type)
     {
         if ($type == DeferConstant::TXT_DEFAULT_DEFERJS) {
             return null;
@@ -251,33 +308,35 @@ class DeferJs
         return $dom->newNode('script', $script);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helper methods
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Helper methods
+     * |-----------------------------------------------------------------------.
+     *
+     * @param mixed $path
      */
 
     /**
-     * Check a path is an URL
+     * Check a path is an URL.
      *
      * @since  2.0.0
-     * @param  mixed $path
+     *
+     * @param string $path
+     *
      * @return bool
      */
     public function isWebUrl($path)
     {
-        if (preg_match('#^(https?:)?//#i', $path)) {
-            return true;
-        }
-
-        return false;
+        return (bool) preg_match('/^(https?:)?\/\//i', $path);
     }
 
     /**
-     * Check a path is a local path
+     * Check a path is a local path.
      *
      * @since  2.0.0
-     * @param  mixed $path
+     *
+     * @param string $path
+     *
      * @return bool
      */
     public function isLocal($path)
@@ -286,11 +345,11 @@ class DeferJs
     }
 
     /**
-     * Get cache instance
+     * Get cache instance.
      *
      * @since  2.0.0
-     * @param  mixed $driver
-     * @return mixed
+     *
+     * @return DeferCache
      */
     public function cache()
     {
@@ -298,9 +357,10 @@ class DeferJs
     }
 
     /**
-     * Get cache key
+     * Get cache key.
      *
      * @since  2.0.0
+     *
      * @return string
      */
     public function cacheKey()
@@ -308,17 +368,16 @@ class DeferJs
         return gethostname() . '@' . $this->deferjs_src;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Static functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | Static functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
-     * Get deferjs from cache
+     * Get deferjs from cache.
      *
      * @since  2.0.0
-     * @return string
      */
     public function getFromCache()
     {
@@ -343,12 +402,14 @@ class DeferJs
 
     /**
      * Create fully local version of external assets
-     * For General Data Protection Regulation GDPR (DSGVO)
+     * For General Data Protection Regulation GDPR (DSGVO).
      *
      * @since  2.0.0
-     * @param  null|mixed $duration
-     * @param  null|mixed $key
-     * @return mixed
+     *
+     * @param string|null $key
+     * @param int         $duration
+     *
+     * @return string|false
      */
     public function makeOffline($key = null, $duration = 9999999999)
     {
@@ -371,14 +432,18 @@ class DeferJs
     }
 
     /**
-     * Static method to purge all cached objects in DeferCache
+     * Static method to purge all cached objects in DeferCache.
      *
      * @since  2.0.0
-     * @param  null|mixed $key
-     * @return self
+     *
+     * @param string|null $key
+     *
+     * @return $this
      */
     public function purgeOffline($key = null)
     {
         $this->cache()->delete($key ?: $this->cacheKey());
+
+        return $this;
     }
 }

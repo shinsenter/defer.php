@@ -3,20 +3,20 @@
 🚀 A PHP library that aims to help you concentrate on web performance optimization.
 
 - **Package**: [@shinsenter/defer.php](https://packagist.org/packages/shinsenter/defer.php)
-- **Version**: 2.4.0
+- **Version**: 2.5.0
 - **Author**: Mai Nhut Tan <shin@shin.company>
-- **Copyright**: 2021 AppSeeds <https://code.shin.company/>
+- **Copyright**: 2019-2023 SHIN Company <https://code.shin.company/defer.php>
 - **License**: [MIT](https://raw.githubusercontent.com/shinsenter/defer.php/master/LICENSE)
 
-[![GitHub](https://img.shields.io/github/license/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php)
-[![GitHub Release Date](https://img.shields.io/github/release-date/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php/releases)
+[![GitHub](https://img.shields.io/github/license/shinsenter/defer.php.svg)](https://code.shin.company/defer.php)
+[![GitHub Release Date](https://img.shields.io/github/release-date/shinsenter/defer.php.svg)](https://code.shin.company/defer.php/releases)
 [![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/shinsenter/defer.php)](https://www.codefactor.io/repository/github/shinsenter/defer.php)
-[![Post an issue](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/shinsenter/defer.php/issues)
-[![GitHub issues](https://img.shields.io/github/issues-raw/shinsenter/defer.php.svg)](https://github.com/shinsenter/defer.php/issues/new)
+[![Post an issue](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://code.shin.company/defer.php/issues)
+[![GitHub issues](https://img.shields.io/github/issues-raw/shinsenter/defer.php.svg)](https://code.shin.company/defer.php/issues/new)
 
 * * *
 
-🥇 Powered by [defer.js](https://github.com/shinsenter/defer.js) - A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
+🥇 Powered by [defer.js](https://code.shin.company/defer.js) - A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
 
 * * *
 
@@ -125,7 +125,7 @@ $options = [
   'manually_add_deferjs' => false,
 
   // URL to defer.js javascript file.
-  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@2.5.0/dist/defer_plus.min.js
+  // Default: https://cdn.jsdelivr.net/npm/@shinsenter/defer.js@3.6.0/dist/defer_plus.min.js
   'deferjs_src'  => \AppSeeds\DeferConstant::SRC_DEFERJS_CDN,
 
   // URL to javascript contains fixes.
@@ -369,21 +369,21 @@ Only few options of this library are applicable to AMP pages (minifying HTML con
 
 ### Defer.js
 
-[https://github.com/shinsenter/defer.js/](https://github.com/shinsenter/defer.js/)
+[https://code.shin.company/defer.js/](https://code.shin.company/defer.js/)
 
 🥇 A super small, super efficient library that helps you lazy load almost everything like images, video, audio, iframes as well as stylesheets, and JavaScript.
 
 
 ### Wordpress plugin
 
-[https://github.com/shinsenter/defer-wordpress/](https://github.com/shinsenter/defer-wordpress/)
+[https://code.shin.company/defer-wordpress/](https://code.shin.company/defer-wordpress/)
 
 ⚡️ A native, blazing fast lazy loader. ✅ Legacy browsers support (IE9+). 💯 SEO friendly. 🧩 Lazy-load everything.
 
 
 ### Laravel package
 
-[https://github.com/shinsenter/defer-laravel/](https://github.com/shinsenter/defer-laravel/)
+[https://code.shin.company/defer-laravel/](https://code.shin.company/defer-laravel/)
 
 🚀 A Laravel package that focuses on minimizing payload size of HTML document and optimizing processing on the browser when rendering the web page.
 
@@ -392,8 +392,8 @@ Only few options of this library are applicable to AMP pages (minifying HTML con
 
 [![Donate via Paypal](https://img.shields.io/badge/Donate-Paypal-blue)](https://www.paypal.me/shinsenter)
 [![Become a sponsor](https://img.shields.io/badge/Donate-Patreon-orange)](https://www.patreon.com/appseeds)
-[![Become a stargazer](https://img.shields.io/badge/Support-Stargazer-yellow)](https://github.com/shinsenter/defer.php/stargazers)
-[![Report an issue](https://img.shields.io/badge/Support-Issues-red)](https://github.com/shinsenter/defer.php/issues/new)
+[![Become a stargazer](https://img.shields.io/badge/Support-Stargazer-yellow)](https://code.shin.company/defer.php/stargazers)
+[![Report an issue](https://img.shields.io/badge/Support-Issues-red)](https://code.shin.company/defer.php/issues/new)
 
 
 * * *

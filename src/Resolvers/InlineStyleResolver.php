@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -23,29 +23,29 @@ use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Helpers\DeferConstant;
 use AppSeeds\Helpers\DeferMinifier;
 
-class InlineStyleResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferMinifyable,
-    DeferLazyable
+final class InlineStyleResolver extends DeferResolver implements DeferNormalizable, DeferMinifyable, DeferLazyable
 {
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
-
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         $this->resolveAttr('style', DeferConstant::UNIFY_STYLE);
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -66,7 +66,7 @@ class InlineStyleResolver extends DeferResolver implements
         $before = implode(';', $props);
         $after  = implode(';', $safe_props);
 
-        if ($after != $before) {
+        if ($after !== $before) {
             $this->createDataAttr('style', $after);
             $lazied = true;
         }
@@ -74,10 +74,10 @@ class InlineStyleResolver extends DeferResolver implements
         return $lazied;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferMinifyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferMinifyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**

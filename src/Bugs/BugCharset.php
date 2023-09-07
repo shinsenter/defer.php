@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -20,15 +20,33 @@ namespace AppSeeds\Bugs;
 use AppSeeds\Contracts\PatchInterface;
 
 /**
- * Fix document charset
+ * Fix document charset.
  */
-class BugCharset implements PatchInterface
+final class BugCharset implements PatchInterface
 {
+    /**
+     * @var string
+     */
     const DEFAULT_CHARSET = 'UTF-8';
+
+    /**
+     * @var string
+     */
     const ENCODED_CHARSET = 'HTML-ENTITIES';
 
-    protected $charset;
+    /**
+     * @var string
+     */
+    const FIND = '/(&#?[a-z0-9]+;)+/';
 
+    /**
+     * @var string|null
+     */
+    private $charset;
+
+    /**
+     * @param string|null $charset
+     */
     public function __construct($charset = null)
     {
         if ($charset) {
@@ -41,14 +59,17 @@ class BugCharset implements PatchInterface
      */
     public function before($html, $options)
     {
+        if (empty($html)) {
+            return '';
+        }
+
         if (empty($this->charset)) {
             $this->charset = $this->detectCharset($html);
         }
 
-        $html = mb_convert_encoding($html, self::ENCODED_CHARSET, $this->charset);
-        $html = '<?xml version="1.0" encoding="' . $this->charset . '"?>' . $html;
+        $html = @mb_convert_encoding($html, self::ENCODED_CHARSET, $this->charset);
 
-        return $html;
+        return '<?xml version="1.0" encoding="' . $this->charset . '"?>' . $html;
     }
 
     /**
@@ -56,10 +77,14 @@ class BugCharset implements PatchInterface
      */
     public function after($html, $options)
     {
-        $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1);
+        if (empty($html)) {
+            return '';
+        }
+
+        $html = preg_replace('/<\?xml[^>]*>/i', '', $html, 1) ?: '';
 
         $charset       = $this->charset ?: self::DEFAULT_CHARSET;
-        $after_charset = mb_detect_encoding($html, mb_detect_order(), true);
+        $after_charset = @mb_detect_encoding($html, @mb_detect_order(), true);
 
         if ($after_charset === false || $after_charset === 'ASCII') {
             $after_charset = self::ENCODED_CHARSET;
@@ -70,29 +95,27 @@ class BugCharset implements PatchInterface
         }
 
         $cached = [];
-        $find   = '/(&#?[a-z0-9]+;)+/';
         $html   = preg_replace_callback(
-            $find,
-            function ($match) use ($charset, &$cached) {
+            self::FIND,
+            static function ($match) use ($charset, &$cached) {
                 $org = $match[0];
-
                 if (isset($cached[$org])) {
                     return $cached[$org];
                 }
 
-                return $cached[$org] = mb_convert_encoding(
+                return $cached[$org] = @mb_convert_encoding(
                     $org,
                     $charset,
                     self::ENCODED_CHARSET
                 );
             },
             $html
-        );
+        ) ?: '';
 
         unset($cached);
 
         if ($after_charset == self::ENCODED_CHARSET) {
-            $html = $this->escapeHtmlEntity($html, true);
+            return $this->escapeHtmlEntity($html, true);
         }
 
         return $html;
@@ -108,20 +131,21 @@ class BugCharset implements PatchInterface
     }
 
     /**
-     * Get charset from html
-     * @param mixed $html
+     * Get charset from html.
+     *
+     * @param string $html
      */
     private function detectCharset($html)
     {
         $charset = null;
 
-        if (preg_match('@<meta.*?charset=["]?([^"\s]+)@im', $html, $matches)) {
+        if (preg_match('/<meta.*?charset=["]?([^"\s]+)/im', $html, $matches)) {
             $charset = $matches[1];
         }
 
         // Detect charset charset
         if (empty($charset)) {
-            $after_charset = mb_detect_encoding($html, mb_detect_order(), true);
+            $after_charset = @mb_detect_encoding($html, @mb_detect_order(), true);
 
             if ($after_charset === false || $after_charset === 'ASCII') {
                 $after_charset = self::DEFAULT_CHARSET;
@@ -134,15 +158,18 @@ class BugCharset implements PatchInterface
     }
 
     /**
-     * Escape / unescape regular HTML entities
+     * Escape / unescape regular HTML entities.
      *
      * @since  2.0.0
-     * @param  string $html
-     * @param  bool   $revert = false
+     *
+     * @param string $html
+     * @param bool   $revert = false
+     *
      * @return string
      */
     private function escapeHtmlEntity($html, $revert = false)
     {
+        /** @var array|null $__html_mapping */
         static $__html_mapping;
 
         // Initial HTML entity optimizer
@@ -151,7 +178,7 @@ class BugCharset implements PatchInterface
 
             $__html_mapping = [
                 'from' => $mapping,
-                'to'   => array_map(function ($value) {
+                'to'   => array_map(static function ($value) {
                     return strtr($value, ['&' => '@&@', ';' => '@;@']);
                 }, $mapping),
             ];
@@ -161,23 +188,21 @@ class BugCharset implements PatchInterface
 
         // Process the HTML
         if ($revert) {
-            $html = strtr(
+            return strtr(
                 $html,
                 array_combine(
                     $__html_mapping['to'],
                     $__html_mapping['from']
-                )
-            );
-        } else {
-            $html = strtr(
-                $html,
-                array_combine(
-                    $__html_mapping['from'],
-                    $__html_mapping['to']
-                )
+                ) ?: []
             );
         }
 
-        return $html;
+        return strtr(
+            $html,
+            array_combine(
+                $__html_mapping['from'],
+                $__html_mapping['to']
+            ) ?: []
+        );
     }
 }

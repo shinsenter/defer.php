@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  deferphp:
+    image: ${BASE_IMAGE:-shinsenter/php}:${PHP_VERSION:-8.2}
+    container_name: deferphp
+    hostname: deferphp
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    entrypoint: "tail -f /dev/stdout"

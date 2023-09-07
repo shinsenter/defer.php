@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -17,20 +17,16 @@
 
 namespace AppSeeds\Elements;
 
-use DOMElement;
-use DOMNode;
-use DOMText;
-use DOMXPath;
 use Symfony\Component\CssSelector\CssSelectorConverter;
 
 trait CommonDomTraits
 {
     /**
-     * @return \DOMDocument
+     * @return \DOMDocument|null
      */
     public function document()
     {
-        if ($this instanceof DocumentNode) {
+        if ($this instanceof \DOMDocument) {
             return $this;
         }
 
@@ -38,8 +34,9 @@ trait CommonDomTraits
     }
 
     /**
-     * @param  mixed      $selector
-     * @param  null|mixed $prefix
+     * @param string      $selector
+     * @param string|null $prefix
+     *
      * @return NodeList
      */
     public function find($selector, $prefix = null)
@@ -54,7 +51,8 @@ trait CommonDomTraits
     }
 
     /**
-     * @param  mixed    $query
+     * @param string $query
+     *
      * @return NodeList
      */
     public function findXPath($query)
@@ -63,19 +61,35 @@ trait CommonDomTraits
             return new NodeList([]);
         }
 
-        $xpath  = new DOMXPath($this->document());
-        $result = $xpath->query($query, $this);
+        $dom = $this->document();
 
-        if ($result === false) {
+        if ($dom === null) {
             return new NodeList([]);
         }
 
-        return new NodeList($result);
+        /** @var DocumentNode $dom */
+        $xpath   = new \DOMXPath($dom);
+        $results = $xpath->query($query, $this);
+
+        if ($results === false) {
+            return new NodeList([]);
+        }
+
+        $nodes = [];
+        foreach ($results as $node) {
+            $nodes[] = $node;
+        }
+
+        return new NodeList($nodes);
     }
 
     public function isRemoved()
     {
-        return !isset($this->nodeType);
+        if ($this instanceof DocumentNode) {
+            return false;
+        }
+
+        return $this->parentNode == null;
     }
 
     public function contents()
@@ -104,12 +118,14 @@ trait CommonDomTraits
             return $this->saveHTML();
         }
 
-        return $this->document()->saveHTML($this);
+        $dom = $this->document();
+
+        return $dom !== null ? $dom->saveHTML($this) : '';
     }
 
     public function detach()
     {
-        if ($this->parentNode instanceof DOMNode) {
+        if ($this->parentNode instanceof \DOMNode) {
             $this->parentNode->removeChild($this);
         }
 
@@ -117,7 +133,7 @@ trait CommonDomTraits
     }
 
     /**
-     * @param callable|string $class
+     * @param string $class
      */
     public function addClass($class)
     {
@@ -127,7 +143,7 @@ trait CommonDomTraits
     }
 
     /**
-     * @param callable|string $class
+     * @param string $class
      */
     public function removeClass($class)
     {
@@ -137,15 +153,18 @@ trait CommonDomTraits
     }
 
     /**
-     * @param  callable|string $class
+     * @param string $class
+     *
      * @return bool
      */
     public function hasClass($class)
     {
-        $attr = (string) $this->getAttribute('class');
+        if ($this instanceof ElementNode) {
+            $attr = $this->getAttribute('class');
 
-        if (!empty($class) && !empty($attr)) {
-            return strstr(' ' . $attr . ' ', ' ' . $class . ' ') != false;
+            if (!empty($class) && !empty($attr)) {
+                return strstr(' ' . $attr . ' ', ' ' . $class . ' ') != false;
+            }
         }
 
         return false;
@@ -160,17 +179,17 @@ trait CommonDomTraits
     }
 
     /**
-     * @param \DOMNode|NodeList $input
+     * @param string|\DOMNode|NodeList|null $input
      *
      * @return self
      */
     public function setText($input)
     {
         if (is_string($input)) {
-            $input = new DOMText($input);
+            $input = new TextNode($input);
         }
 
-        if ($input instanceof DOMNode) {
+        if ($input instanceof \DOMNode) {
             $this->_empty()->appendWith($input);
         }
 
@@ -178,20 +197,25 @@ trait CommonDomTraits
     }
 
     /**
-     * @param \DOMNode|NodeList $input
+     * @param string|\DOMNode|NodeList|null $input
      *
      * @return self
      */
     public function precede($input)
     {
         if ($input) {
-            if (!($input instanceof NodeList)) {
+            if (!$input instanceof NodeList) {
                 $input = new NodeList([$input]);
             }
 
-            if ($this->parentNode instanceof DOMNode) {
+            if ($this->parentNode instanceof \DOMNode) {
                 foreach ($input as $node) {
-                    $this->parentNode->insertBefore($this->_safeNode($node), $this);
+                    $node = $this->_safeNode($node);
+                    if ($node === false) {
+                        continue;
+                    }
+
+                    $this->parentNode->insertBefore($node, $this);
                 }
             }
         }
@@ -200,20 +224,23 @@ trait CommonDomTraits
     }
 
     /**
-     * @param \DOMNode|NodeList $input
+     * @param string|\DOMNode|NodeList|null $input
      *
      * @return self
      */
     public function follow($input)
     {
         if ($input) {
-            if (!($input instanceof NodeList)) {
+            if (!$input instanceof NodeList) {
                 $input = new NodeList([$input]);
             }
 
-            if ($this->parentNode instanceof DOMNode) {
+            if ($this->parentNode instanceof \DOMNode) {
                 foreach ($input as $node) {
                     $node = $this->_safeNode($node);
+                    if ($node === false) {
+                        continue;
+                    }
 
                     if (is_null($this->nextSibling)) {
                         $this->parentNode->appendChild($node);
@@ -228,19 +255,24 @@ trait CommonDomTraits
     }
 
     /**
-     * @param \DOMNode|NodeList $input
+     * @param string|\DOMNode|NodeList|null $input
      *
      * @return self
      */
     public function prependWith($input)
     {
-        if ($input) {
-            if (!($input instanceof NodeList)) {
+        if ($input && $this->firstChild !== null) {
+            if (!$input instanceof NodeList) {
                 $input = new NodeList([$input]);
             }
 
             foreach ($input as $node) {
-                $this->insertBefore($this->_safeNode($node), $this->firstChild);
+                $node = $this->_safeNode($node);
+                if ($node === false) {
+                    continue;
+                }
+
+                $this->insertBefore($node, $this->firstChild);
             }
         }
 
@@ -248,19 +280,24 @@ trait CommonDomTraits
     }
 
     /**
-     * @param \DOMNode|NodeList $input
+     * @param string|\DOMNode|NodeList|null $input
      *
      * @return self
      */
     public function appendWith($input)
     {
         if ($input) {
-            if (!($input instanceof NodeList)) {
+            if (!$input instanceof NodeList) {
                 $input = new NodeList([$input]);
             }
 
             foreach ($input as $node) {
-                $this->appendChild($this->_safeNode($node));
+                $node = $this->_safeNode($node);
+                if ($node === false) {
+                    continue;
+                }
+
+                $this->appendChild($node);
             }
         }
 
@@ -283,21 +320,21 @@ trait CommonDomTraits
      * @internal
      *
      * @param string $value
-     * @param mixed  $name
-     * @param mixed  $addValue
+     * @param string $name
+     * @param bool   $addValue
      */
     private function _pushAttrValue($name, $value, $addValue = false)
     {
-        if ($this instanceof DOMElement) {
+        if ($this instanceof ElementNode) {
             $attr = $this->getAttribute($name);
 
             // Remove any existing instances of the value, or empty values.
-            $values = array_filter(explode(' ', $attr), function ($_value) use ($value) {
-                if (strcasecmp($_value, $value) == 0 || empty($_value)) {
+            $values = array_filter(explode(' ', $attr), static function ($_value) use ($value) {
+                if (strcasecmp($_value, $value) == 0) {
                     return false;
                 }
 
-                return true;
+                return !empty($_value);
             });
 
             // If required add attr value to array
@@ -309,7 +346,7 @@ trait CommonDomTraits
             //  existed (we might be removing classes).
             //
             // Don't set the attr if it doesn't already exist.
-            if (!empty($values) || $this->hasAttribute($name)) {
+            if ($values !== [] || $this->hasAttribute($name)) {
                 $this->setAttribute($name, implode(' ', $values));
             }
         }
@@ -318,17 +355,23 @@ trait CommonDomTraits
     /**
      * @internal
      *
-     * @param  \DOMNode|string $input
-     * @return \DOMNode
+     * @param \DOMNode|string $input
+     *
+     * @return \DOMNode|false
      */
     private function _safeNode($input)
     {
-        if ($input instanceof DOMNode) {
+        if ($input instanceof \DOMNode) {
             return $input;
         }
 
-        $fragment = $this->document()->createDocumentFragment();
-        $fragment->appendXML($input);
+        /** @var DocumentNode $dom */
+        $dom      = $this->document();
+        $fragment = $dom->createDocumentFragment();
+
+        if ($fragment instanceof \DOMNode) {
+            $fragment->appendXML($input);
+        }
 
         return $fragment;
     }

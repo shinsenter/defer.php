@@ -2,18 +2,20 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
  */
+
+use AppSeeds\Defer;
 
 error_reporting(E_ALL);
 
@@ -25,6 +27,7 @@ define('OUTPUT', BASE . DS . 'v2' . DS . 'output' . DS);
 define('AUTOLOAD', ROOT . DS . 'defer.php');
 
 require_once AUTOLOAD;
+
 require_once BASE . DS . 'helpers.php';
 
 // Test request arguments
@@ -33,7 +36,7 @@ $_REQUEST['debug']      = 0;
 $_REQUEST['debug_time'] = 1;
 
 // New instance
-$defer = new AppSeeds\Defer([
+$defer = new Defer([
     'deferjs_src' => dirname(ROOT) . '/defer.js/dist/defer_plus.min.js',
 
     // Library injection
@@ -45,7 +48,7 @@ $defer = new AppSeeds\Defer([
     'enable_preloading'     => true,
     'enable_dns_prefetch'   => true,
     'enable_lazyloading'    => true,
-    'minify_output_html'    => false,
+    'minify_output_html'    => true,
 
     // Tag optimizations
     'fix_render_blocking' => true,
@@ -54,7 +57,7 @@ $defer = new AppSeeds\Defer([
     'optimize_images'     => true,
     'optimize_iframes'    => true,
     'optimize_background' => true,
-    'optimize_fallback'   => false,
+    'optimize_fallback'   => true,
 
     // Web-font optimizations
     'defer_third_party' => true,
@@ -103,24 +106,18 @@ foreach ((glob(INPUT . '*.html') ?: []) as $file) {
 // Ready
 mem_info();
 
-foreach ($list as $out => $file) {
+array_walk($list, static function ($file, $out) use ($defer) {
     if (file_exists(INPUT . $out)) {
-        $input = file_get_contents(INPUT . $out);
+        $input = file_get_contents(INPUT . $out) ?: '';
     } else {
-        $input = file_get_contents($file);
+        $input = file_get_contents($file) ?: '';
         @file_put_contents(INPUT . $out, $input);
     }
-
-    debug();
-
+    $output = $defer->fromHtml($input)->toHtml();
+    $defer->cleanup();
     $input_len  = number_format(strlen($input));
-    $output     = $defer->fromHtml($input)->toHtml();
     $output_len = number_format(strlen($output));
     $percents   = number_format(strlen($output) / (strlen($input) ?: 1) * 100, 1);
-    mem_info("After: ${out} (${output_len} / ${input_len} / ${percents}%)");
-
+    mem_info(sprintf('After: %s (%s / %s / %s%%)', $out, $output_len, $input_len, $percents));
     @file_put_contents(OUTPUT . $out, $output);
-    unset($input, $output);
-
-    $defer->cleanup();
-}
+});

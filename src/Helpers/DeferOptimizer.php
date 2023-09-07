@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -26,22 +26,31 @@ use AppSeeds\Elements\DocumentNode;
 use AppSeeds\Elements\ElementNode;
 use AppSeeds\Resolvers\DeferResolver;
 use AppSeeds\Resolvers\LinkResolver;
-use DOMNode;
 
-class DeferOptimizer
+final class DeferOptimizer
 {
     /**
-     * Optimize a DocumentNode
+     * Optimize a DocumentNode.
+     *
+     * @param DocumentNode $doc
+     * @param DeferOptions $options
      */
-    public static function optimizeDocument(DocumentNode &$doc, DeferOptions &$options)
+    public static function optimizeDocument(&$doc, &$options)
     {
-        // Normalize entire document, add missing <head> and <body> tags
+        // Normalize entire document
         $doc->normalize();
+
+        // Check if AMP symbol exists
         $isAmp = $doc->isAmpHtml();
 
-        // Get the root HTML tag
+        /** @var ElementNode $html */
         $html = $doc->root();
+
+        /** @var ElementNode $body */
         $body = $doc->body();
+
+        /** @var ElementNode $head */
+        $head = $doc->head();
 
         // Set AMP options if it is an AMP page
         if ($isAmp) {
@@ -56,7 +65,7 @@ class DeferOptimizer
         // Ignore elements that match ignore_lazyload_css_selectors
         $blacklist = $options->ignore_lazyload_css_selectors;
 
-        if (!empty($blacklist)) {
+        if ($blacklist !== []) {
             $selector = implode(',', $blacklist);
 
             try {
@@ -127,7 +136,7 @@ class DeferOptimizer
         }
 
         // Add splashscreen
-        if ($options->custom_splash_screen) {
+        if ($options->custom_splash_screen !== '') {
             $body->prependWith(sprintf(
                 DeferConstant::TEMPLATE_SPLASH_ENABLE,
                 $options->custom_splash_screen
@@ -135,7 +144,7 @@ class DeferOptimizer
         }
 
         // Move all meta to bottom of <head> tag
-        $doc->head()->find('meta' . $ignore)->optimize($options);
+        $head->find('meta' . $ignore)->optimize($options);
 
         // Fix missing meta tags
         if ($options->add_missing_meta_tags) {
@@ -144,7 +153,7 @@ class DeferOptimizer
 
         // Remove nolazy attribute from the first step
         if (!empty($skipped)) {
-            $skipped->each(function ($node) {
+            $skipped->each(static function ($node) {
                 if ($node->getAttribute(DeferConstant::ATTR_NOLAZY) == 'selector') {
                     $node->removeAttribute(DeferConstant::ATTR_NOLAZY);
                 }
@@ -167,10 +176,15 @@ class DeferOptimizer
     }
 
     /**
-     * Optimize an ElementNode
+     * Optimize an ElementNode.
+     *
+     * @param ElementNode  $node
+     * @param DeferOptions $options
      */
-    public static function optimizeElement(ElementNode &$node, DeferOptions &$options)
+    public static function optimizeElement(&$node, &$options)
     {
+        $original = null;
+
         // Normalizes HTML node
         $node->normalize();
 
@@ -206,7 +220,7 @@ class DeferOptimizer
 
         // Preload resources
         // See: https://3perf.com/blog/link-rels/
-        if (($node->parentNode instanceof DOMNode) && $resolver instanceof DeferPreloadable) {
+        if (($node->parentNode instanceof \DOMNode) && $resolver instanceof DeferPreloadable) {
             $push = [];
 
             // Prefetch key requests
@@ -231,23 +245,21 @@ class DeferOptimizer
         }
 
         // Lazy-load the element
-        if (($node->parentNode instanceof DOMNode)
+        if (($node->parentNode instanceof \DOMNode)
             && $resolver instanceof DeferLazyable
             && $resolver->shouldLazyload()) {
             // Apply lazy-load
             $lazied = $resolver->lazyload();
 
-            if ($lazied) {
-                if (!empty($fallback)) {
-                    $fallback->detach();
-                    $node->follow($fallback);
-                    $node->addClass(DeferConstant::CLASS_HAS_FALLBACK);
-                }
+            if ($lazied && !empty($fallback)) {
+                $fallback->detach();
+                $node->follow($fallback);
+                $node->addClass(DeferConstant::CLASS_HAS_FALLBACK);
             }
         }
 
         // Minify HTML output
-        if (($node->parentNode instanceof DOMNode)
+        if (($node->parentNode instanceof \DOMNode)
             && $resolver instanceof DeferMinifyable
             && $options->minify_output_html) {
             $resolver->minify();
@@ -256,7 +268,7 @@ class DeferOptimizer
         // END debug
         if ($options->debug_mode && $node->getOuterHtml() != $original) {
             $debug_id    = $resolver->uid();
-            $comment_txt = ' ' . DeferConstant::TXT_DEBUG . " Original #${debug_id} from ${original} ";
+            $comment_txt = ' ' . DeferConstant::TXT_DEBUG . sprintf(' Original #%s from %s ', $debug_id, $original);
             $comment     = $node->document()->createComment($comment_txt);
             $node->setAttribute(DeferConstant::ATTR_DEBUG, $debug_id);
             $node->follow($comment);

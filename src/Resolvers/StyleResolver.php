@@ -2,14 +2,14 @@
 
 /**
  * Defer.php aims to help you concentrate on web performance optimization.
- * (c) 2021 AppSeeds https://appseeds.net/
+ * (c) 2019-2023 SHIN Company https://shin.company
  *
  * PHP Version >=5.6
  *
  * @category  Web_Performance_Optimization
  * @package   AppSeeds
  * @author    Mai Nhut Tan <shin@shin.company>
- * @copyright 2021 AppSeeds
+ * @copyright 2019-2023 SHIN Company
  * @license   https://code.shin.company/defer.php/blob/master/LICENSE MIT
  * @link      https://code.shin.company/defer.php
  * @see       https://code.shin.company/defer.php/blob/master/README.md
@@ -21,24 +21,22 @@ use AppSeeds\Contracts\DeferLazyable;
 use AppSeeds\Contracts\DeferMinifyable;
 use AppSeeds\Contracts\DeferNormalizable;
 use AppSeeds\Contracts\DeferReorderable;
+use AppSeeds\Elements\ElementNode;
 use AppSeeds\Helpers\DeferConstant;
 use AppSeeds\Helpers\DeferMinifier;
 
-class StyleResolver extends DeferResolver implements
-    DeferNormalizable,
-    DeferReorderable,
-    DeferMinifyable,
-    DeferLazyable
+final class StyleResolver extends DeferResolver implements DeferNormalizable, DeferReorderable, DeferMinifyable, DeferLazyable
 {
-    /*
-    |--------------------------------------------------------------------------
-    | DeferNormalizable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferNormalizable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
      * {@inheritdoc}
      */
+    #[\ReturnTypeWillChange]
     public function normalize()
     {
         $media = $this->resolveAttr('media', DeferConstant::UNIFY_MEDIA) ?: 'all';
@@ -49,12 +47,15 @@ class StyleResolver extends DeferResolver implements
         }
 
         $this->node->removeAttribute('type');
+
+        // Normalize the Node
+        $this->node->normalize();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferReorderable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferReorderable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -65,14 +66,20 @@ class StyleResolver extends DeferResolver implements
         if ($this->options->fix_render_blocking) {
             $node = $this->nodeOrNoscript();
             $node->detach();
-            $this->head()->appendWith($node);
+
+            $head = $this->head();
+
+            if ($head instanceof ElementNode) {
+                // @var ElementNode $head
+                $head->appendWith($node);
+            }
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferMinifyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferMinifyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -80,15 +87,15 @@ class StyleResolver extends DeferResolver implements
      */
     public function minify()
     {
-        $minified = $css = $this->node->getText();
-
+        $minified = $this->node->getText();
+        $css      = $minified;
         if (!empty($css)) {
             $minified = DeferMinifier::minifyCss($css);
         }
 
         if (empty($minified)) {
             $this->node->detach();
-        } elseif ($minified != $css) {
+        } elseif ($minified !== $css) {
             $this->node->nodeValue = '';
             $this->node->setText($minified);
         }
@@ -97,10 +104,10 @@ class StyleResolver extends DeferResolver implements
         $this->node->removeAttribute('class');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DeferLazyable functions
-    |--------------------------------------------------------------------------
+    /**
+     * |-----------------------------------------------------------------------
+     * | DeferLazyable functions
+     * |-----------------------------------------------------------------------.
      */
 
     /**
@@ -108,7 +115,11 @@ class StyleResolver extends DeferResolver implements
      */
     public function shouldLazyload()
     {
-        return parent::shouldLazyload() && $this->hasLazyloadFlag();
+        if (!parent::shouldLazyload()) {
+            return false;
+        }
+
+        return $this->hasLazyloadFlag();
     }
 
     /**
